@@ -11,22 +11,18 @@ class StreamReader:
         self.block = block
         self.last_id = '$'
 
-    def read(self, track_last=True, serialize=False):
+    def read(self, track_last=True):
         results = self.R.xread({self.name:self.last_id}, block=self.block)
         for _, entries in results:
             for entry_id, entry in entries:
                 if track_last:
                     self.last_id = entry_id
                     print(f'stream reader got : {entry}')
-                if serialize:
-                    entry = dict([(str(k), str(v)) for k,v in entry.items()])
-                    entry = dumps(entry)
 
                 yield entry
 
 class StreamReaderThread(StreamReader, Thread):
     def __init__(self, name: str, queue: Queue, redis_config={}, block=1000) -> None:
-        super().__init__()
         super().__init__()
         self.R = Redis(**redis_config)
         self.name = 'stream:' + name

@@ -1,9 +1,11 @@
+from email import generator
 from os import environ
 from subprocess import Popen
 from queue import Queue
 from signal import signal, SIGINT, SIGTERM
 
 from flask import Flask, stream_with_context
+from flask_sse import Message
 
 from redisfi.db.stream.reader import StreamReader
 
@@ -16,11 +18,15 @@ def index():
 
 @app.route('/updates')
 def updates():
+    
+    @stream_with_context
+    def sse_wrapper(stream: generator):
+        for item in stream:
+            item = dict([(k.decode('ascii'), v.decode('ascii')) for k,v in item.items()])
+            yield str(Message(item))
+
     stream_reader = StreamReader('bridge:alpaca')
-    return app.response_class(stream_with_context(stream_reader.read(serialize=True)), mimetype='text/event-stream')
-
-
-
+    return app.response_class(sse_wrapper(stream_reader.read()), mimetype='text/event-stream')
 
 def run(debug):
     # alpaca_stream_reader = StreamReader('bridge:alpaca', alpaca_queue)

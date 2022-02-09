@@ -14,6 +14,7 @@ redis = "^4.1.2"
 alpaca-trade-api = "^1.5.0"
 Flask = "^2.0.2"
 gunicorn = "^20.1.0"
+Flask-SSE = "^1.0.0"
 
 [tool.poetry.dev-dependencies]
 
