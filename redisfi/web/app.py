@@ -16,25 +16,19 @@ def index():
 
 @app.route('/updates')
 def updates():
-    @stream_with_context
-    def generator():
-        while True:
-            print('about to get from alpaca_queue')
-            item = alpaca_queue.get()
-            print(f'generator got {item}')
-    
-    return app.response_class(generator(), mimetype='text/event-stream')
+    stream_reader = StreamReader('bridge:alpaca')
+    return app.response_class(stream_with_context(stream_reader.read(serialize=True)), mimetype='text/event-stream')
 
 
 
 
 def run(debug):
-    alpaca_stream_reader = StreamReader('bridge:alpaca', alpaca_queue)
+    # alpaca_stream_reader = StreamReader('bridge:alpaca', alpaca_queue)
     
-    signal(SIGINT, alpaca_stream_reader.shutdown)
-    signal(SIGTERM, alpaca_stream_reader.shutdown)
+    # signal(SIGINT, alpaca_stream_reader.shutdown)
+    # signal(SIGTERM, alpaca_stream_reader.shutdown)
 
-    alpaca_stream_reader.start()
+    # alpaca_stream_reader.start()
 
     if debug:
         env = environ.copy()
