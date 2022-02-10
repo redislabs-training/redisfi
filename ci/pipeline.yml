@@ -1,0 +1,27 @@
+resources:
+  - name: redisfi
+    type: git
+    icon: github
+    source:
+      uri: https://github.com/redislabs-training/redisfi
+      branch: main
+      username: ((auth-github))
+      password: x-oauth-basic
+  - name: redis-enterprise
+    icon: docker
+    type: registry-image
+    source:
+      repository: redislabs/redis
+      tag: latest
+jobs: 
+  - name: run-tests
+    plan:
+    - get: redisfi
+      trigger: true
+    - get: redis-enterprise
+      trigger: true
+      params:
+        format: oci
+    - task: run
+      privileged: true
+      file: redisfi/ci/run_tests.yml

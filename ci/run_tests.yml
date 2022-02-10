@@ -1,0 +1,36 @@
+---
+platform: linux
+image_resource:
+  type: registry-image
+  source:
+    repository: taylorsilva/dcind # docker in docker
+inputs:
+  - name: redis-enterprise
+  - name: redisfi
+run:
+  path: bash
+  args:
+    - -cex
+    - |
+      source /docker-lib.sh
+      start_docker 
+      ## don't change the above code - it starts and runs docker for us ##
+      ## create cluster
+      docker load -i redis-enterprise/image.tar
+      docker run -d --cap-add sys_resource --name redis-enterprise -p 8443:8443 -p 9443:9443 -p 12345:12345 redislabs/redis
+      timeout 300 bash -c 'until $(curl --output /dev/null --silent --head --fail -k https://127.0.0.1:9443/v1/bootstrap); do printf "." && sleep 3; done'
+      docker exec redis-enterprise /opt/redislabs/bin/rladmin cluster create name test.com username test@test.com password test
+      ## load pre-release modules
+      curl http://redismodules.s3.amazonaws.com/redisearch/redisearch.Linux-ubuntu18.04-x86_64.2.2.0.zip --output search.zip
+      curl http://redismodules.s3.amazonaws.com/rejson/rejson.Linux-ubuntu18.04-x86_64.2.0.0.zip --output json.zip
+      curl -k -u "test@test.com:test" -F "module=@search.zip" https://127.0.0.1:9443/v1/modules
+      curl -k -u "test@test.com:test" -F "module=@json.zip" https://127.0.0.1:9443/v1/modules
+      # apk add git
+      # curl "https://dre.edu.redislabs.com/api/v1/cli?arch=amd64&platform=linux" --output fly
+      # chmod +x fly
+      # mv fly /usr/local/bin/.
+      # pip3 install poetry
+      # cd demo-gallery
+      # poetry install
+      # poetry run python3 demo_gallery/utils.py create_db
+      # poetry run python3 -m unittest discover tests
