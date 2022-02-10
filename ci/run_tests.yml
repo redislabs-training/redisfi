@@ -30,3 +30,4 @@ run:
       cd redisfi
       poetry install
       poetry run redisfi
+      poetry run redisfi tool create_db
