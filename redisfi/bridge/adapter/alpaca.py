@@ -13,13 +13,16 @@ class AlpacaAdapter(BaseAdapter):
         name = f'trades:{obj_dict["exchange"]}:{obj_dict["symbol"]}'
         self.write(obj_dict, name=name) 
         print(obj)
+
+    async def _stock_trade_stream_handler(self, obj: Trade):
+        print(obj)
         
     def run(self):
         s = Stream(self.api_key,
                    self.api_secret_key, 
                    base_url=URL('https://paper-api.alpaca.markets'), 
                    data_feed='iex')
-        # s.subscribe_trades(self._)
+        # s.subscribe_trades(self._stock_trade_stream_handler, 'TSLA', 'appl', 'msft')  ## TODO: Test when markets are open
         s.subscribe_crypto_trades(self._crypto_trade_stream_handler, 'BTCUSD')
         s.subscribe_crypto_trades(self._crypto_trade_stream_handler, 'ETHUSD')
         s.run()
