@@ -11,7 +11,7 @@ class StreamReader:
         self.block = block
         self.last_id = '$'
 
-    def read(self, track_last=True):
+    def read(self, track_last=False):
         results = self.R.xread({self.name:self.last_id}, block=self.block)
         for _, entries in results:
             for entry_id, entry in entries:

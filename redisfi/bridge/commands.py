@@ -14,11 +14,10 @@ class BridgeRunAll(Command):
     adapters = [AlpacaAdapter]
 
     def handle(self):
-        redis_config = {}
-        redis_config['host'] = self.option('redis-host')
-        redis_config['port'] = self.option('redis-port')
-
-        _adapters = [adapter(redis_config=redis_config) for adapter in self.adapters]
+        host = self.option('redis-host')
+        port = self.option('redis-port')
+        redis_url = f'redis://{host}:{port}'
+        _adapters = [adapter(redis_url=redis_url) for adapter in self.adapters]
 
         ## TODO: probably multithread/process this - early attempts were distracting
         _ = [adapter.run() for adapter in _adapters]
