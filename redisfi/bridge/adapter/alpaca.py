@@ -3,12 +3,13 @@ from clikit.api.io.flags import VERBOSE, VERY_VERBOSE
 
 from redisfi.bridge.adapter.base import BaseAdapter
 
-class AlpacaAdapter(BaseAdapter):
+class AlpacaBase(BaseAdapter):
     def __init__(self, name='alpaca', **kwargs) -> None:
         super().__init__(name, **kwargs)
         self.api_key = 'PKZJJYRH8S9H7CNWJ19K'
         self.api_secret_key = 'cq0gizc7bjbiAeiXhCV3wWfT7U38xKvwgWM0AIbH'
 
+class AlpacaLive(AlpacaBase):
     async def _crypto_trade_stream_handler(self, obj: Trade):
         self.update(obj.__dict__['_raw'])
         self.cli.line(str(obj), verbosity=VERY_VERBOSE)
@@ -27,3 +28,7 @@ class AlpacaAdapter(BaseAdapter):
         s.subscribe_trades(self._stock_trade_stream_handler, *self.us_stocks)
         s.subscribe_crypto_trades(self._crypto_trade_stream_handler, *self.crypto)
         s.run()
+
+class AlpacaHistoric(AlpacaBase):
+    def run(self):
+        pass
