@@ -17,6 +17,7 @@ gunicorn = "^20.1.0"
 Flask-SocketIO = "^5.1.1"
 gevent = "^21.12.0"
 gevent-websocket = "^0.10.1"
+yfinance = "^0.1.70"
 
 [tool.poetry.dev-dependencies]
 

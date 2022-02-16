@@ -8,11 +8,17 @@ class ServerStart(Command):
 
     server
         {--debug : Runs the Debug Server}
+        {--H|redis-host=localhost : Redis Hostname, defaults to localhost}
+        {--P|redis-port=6379 : Redis port, defaults to 6379}
     '''
 
     def handle(self):
         debug = self.option('debug')
-        run(debug=debug)
+        host = self.option('redis-host')
+        port = self.option('redis-port')
+        redis_url = f'redis://{host}:{port}'
+        self.line(f'<info>Redis URL:</info> <comment>{redis_url}</comment>')
+        run(debug=debug, redis_url=redis_url)
 
 class WebBase(Command):
     '''

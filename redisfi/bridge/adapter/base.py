@@ -1,9 +1,17 @@
-from redisfi.db.stream.writer import StreamWriter
+from flask_socketio import SocketIO
+from cleo import Command
 
-class BaseAdapter(StreamWriter):
-    def __init__(self, name, **kwargs) -> None:
+class BaseAdapter:
+    def __init__(self, name: str, cli: Command, us_stocks: list, crypto: list, 
+                 redis_url='redis://', **kwargs) -> None:
         name = 'bridge:' + name
-        super().__init__(name, **kwargs)
+        self.cli = cli
+        self.socket = SocketIO(message_queue=redis_url)
+        self.us_stocks = us_stocks
+        self.crypto = crypto
+
+    def update(self, obj):
+        self.socket.emit('update', obj)
 
     def run():
         raise NotImplementedError
