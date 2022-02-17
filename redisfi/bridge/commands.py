@@ -1,6 +1,7 @@
 from cleo import Command
 
 from redisfi.bridge.adapter.alpaca import AlpacaLive, AlpacaHistoric
+from redisfi.bridge.adapter.yahoo import YahooFinanceEnrich, YahooFinanceHistoric
 
 class BridgeMixin:
     ## there is circular logic in importing subcommands into the base and subclassing 
@@ -8,11 +9,11 @@ class BridgeMixin:
 
     adapters = []
 
-    def handle(self):
+    def handle(self: Command):
         adapter_config = self._adapter_config()
         _adapters = [adapter(**adapter_config) for adapter in self.adapters]
 
-        self.info(f'Starting {len(_adapters)} adapter{"s" if len(_adapters) > 1 else ""}')
+        self.line(f'<info>Starting</info> <comment>{len(_adapters)}</comment> <info>adapter{"s" if len(_adapters) > 1 else ""}</info>')
         ## TODO: multithread/process this - early attempts were distracting
         _ = [adapter.run() for adapter in _adapters]
         
@@ -35,24 +36,31 @@ class BridgeMixin:
         return adapter_config
 
 
-class BridgeHistoric(BridgeMixin, Command):
+class BridgePriceHistoric(BridgeMixin, Command):
     '''
-    Run historic data collection ingest
+    Run historic price data collection ingest
 
     historic
         {--hourly=1 : Number of years to extract hourly data}
-        {--daily=100 : Number of years to extract daily data}
     '''
 
-    adapters = [AlpacaHistoric]
+    adapters = [AlpacaHistoric, YahooFinanceHistoric]
 
     def _adapter_config(self: Command) -> dict:
         adapter_config =  super()._adapter_config()
         adapter_config['hourly'] = int(self.option('hourly'))
-        adapter_config['daily'] = int(self.option('daily'))
         return adapter_config
 
-class BridgeLive(BridgeMixin, Command):
+class BridgeCompanyMetadata(BridgeMixin, Command):
+    '''
+    Run company metadata enrichment
+
+    enrich
+    '''
+
+    adapters = [YahooFinanceEnrich]
+
+class BridgePriceLive(BridgeMixin, Command):
     '''
     Run live data bridge to stream active transactions
 
@@ -60,7 +68,6 @@ class BridgeLive(BridgeMixin, Command):
     '''
 
     adapters = [AlpacaLive]
-
 
 class BridgeBase(Command):
     '''
@@ -73,7 +80,7 @@ class BridgeBase(Command):
         {--c|crypto=BTCUSD,ETHUSD : Comma delimited list of crypto to track}
     '''
 
-    commands = [BridgeLive(), BridgeHistoric()]
+    commands = [BridgePriceLive(), BridgePriceHistoric(), BridgeCompanyMetadata()]
 
     def handle(self):
         return self.call("help", self._config.name)

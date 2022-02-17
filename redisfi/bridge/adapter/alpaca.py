@@ -36,10 +36,9 @@ class AlpacaLive(AlpacaBase):
         s.run() 
 
 class AlpacaHistoric(AlpacaBase):
-    def __init__(self, hourly: int, daily: int, **kwargs) -> None:
+    def __init__(self, hourly: int, **kwargs) -> None:
         super().__init__(**kwargs)
         self.hourly = hourly
-        self.daily = daily
         self.api = REST(self.api_key, self.api_secret_key, base_url=URL('https://paper-api.alpaca.markets'))
 
     def _bar_kwargs(self, bar: Bar):
@@ -57,7 +56,6 @@ class AlpacaHistoric(AlpacaBase):
     
     def run(self):
         self.get_hourly_data()
-        self.get_daily_data()
 
     def get_hourly_data(self):
         from_when_dt = datetime.now() - timedelta(days=self.hourly*DAYS_IN_YEAR)
@@ -76,32 +74,6 @@ class AlpacaHistoric(AlpacaBase):
             for ticker in self.crypto:
                 self.cli.line(f'<info>pulling hourly data for </info><comment>{ticker}</comment> <info>from</info> <comment>{from_when}</comment> <info>til</info> <comment>now</comment>')
                 bars = self.api.get_crypto_bars_iter(ticker, TimeFrame.Hour, from_when)
-                for bar in bars:
-                    timestamp = self._bar_timestamp(bar)
-                    DB.set_bar(pipe, ticker, timestamp, **self._bar_kwargs(bar))
-
-                pipe.execute()
-
-
-    def get_daily_data(self):
-        til_when_dt =  datetime.now() - timedelta(days=self.hourly*DAYS_IN_YEAR)
-        til_when = til_when_dt.isoformat().split('T')[0]
-        from_when_dt = til_when_dt - timedelta(days=self.daily*DAYS_IN_YEAR)
-        from_when = from_when_dt.isoformat().split('T')[0]
-        
-        with self.redis.pipeline() as pipe:
-            for ticker in self.us_stocks:
-                self.cli.line(f'<info>pulling daily data for </info><comment>{ticker}</comment> <info>from</info> <comment>{from_when}</comment> <info>til</info> <comment>{til_when}</comment>')
-                bars = self.api.get_bars_iter(ticker, TimeFrame.Day, from_when, til_when)
-                for bar in bars:
-                    timestamp = self._bar_timestamp(bar)
-                    DB.set_bar(pipe, ticker, timestamp, **self._bar_kwargs(bar))
-
-                pipe.execute()
-
-            for ticker in self.crypto:
-                self.cli.line(f'<info>pulling daily data for </info><comment>{ticker}</comment> <info>from</info> <comment>{from_when}</comment> <info>til</info> <comment>{til_when}</comment>')
-                bars = self.api.get_bars_iter(ticker, TimeFrame.Day, from_when, til_when)
                 for bar in bars:
                     timestamp = self._bar_timestamp(bar)
                     DB.set_bar(pipe, ticker, timestamp, **self._bar_kwargs(bar))
