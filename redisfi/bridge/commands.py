@@ -51,9 +51,9 @@ class BridgePriceHistoric(BridgeMixin, Command):
         adapter_config['hourly'] = int(self.option('hourly'))
         return adapter_config
 
-class BridgeCompanyMetadata(BridgeMixin, Command):
+class BridgeEnrich(BridgeMixin, Command):
     '''
-    Run company metadata enrichment
+    Run company metadata data ingest 
 
     enrich
     '''
@@ -80,7 +80,7 @@ class BridgeBase(Command):
         {--c|crypto=BTCUSD,ETHUSD : Comma delimited list of crypto to track}
     '''
 
-    commands = [BridgePriceLive(), BridgePriceHistoric(), BridgeCompanyMetadata()]
+    commands = [BridgePriceLive(), BridgePriceHistoric(), BridgeEnrich()]
 
     def handle(self):
         return self.call("help", self._config.name)
