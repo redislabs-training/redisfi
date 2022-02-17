@@ -40,16 +40,16 @@ class BridgeHistoric(BridgeMixin, Command):
     Run historic data collection ingest
 
     historic
-        {--hourly=30 : Number of days to extract hourly data}
-        {--daily=3000 : Number of days to extract daily data}
+        {--hourly=1 : Number of years to extract hourly data}
+        {--daily=100 : Number of years to extract daily data}
     '''
 
     adapters = [AlpacaHistoric]
 
     def _adapter_config(self: Command) -> dict:
-        adapter_config =  super()._adapter_config(self)
-        adapter_config['hourly'] = self.option('hourly')
-        adapter_config['daily'] = self.option('daily')
+        adapter_config =  super()._adapter_config()
+        adapter_config['hourly'] = int(self.option('hourly'))
+        adapter_config['daily'] = int(self.option('daily'))
         return adapter_config
 
 class BridgeLive(BridgeMixin, Command):
