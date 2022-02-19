@@ -28,9 +28,9 @@ class BridgeMixin:
         adapter_config = {'cli':self, 'redis_url':f'redis://{host}:{port}'}
         self.line(f'<info>Redis URL:</info> <comment>{adapter_config["redis_url"]}</comment>')
 
-        adapter_config['us_stocks'] = self.option('us-stocks').split(',')
+        adapter_config['assets'] = self.option('assets').split(',')
         adapter_config['crypto'] = self.option('crypto').split(',')
-        self.line(f'<info>US Stocks:</info> <comment>{" ".join(adapter_config["us_stocks"])}</comment>')
+        self.line(f'<info>Assets:</info> <comment>{" ".join(adapter_config["assets"])}</comment>')
         self.line(f'<info>Crypto:</info> <comment>{" ".join(adapter_config["crypto"])}</comment>')
         
         return adapter_config
@@ -76,7 +76,7 @@ class BridgeBase(Command):
     bridge
         {--H|redis-host=localhost : Redis hostname}
         {--P|redis-port=6379 : Redis port}
-        {--s|us-stocks=MSFT,TSLA : Comma delimited list of us stocks to track}
+        {--s|assets=GOOG,MSFT,TSLA,SPY,QQQ,PIMIX : Comma delimited list of asset symbols to track}
         {--c|crypto=BTCUSD,ETHUSD : Comma delimited list of crypto to track}
     '''
 

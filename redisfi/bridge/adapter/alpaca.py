@@ -31,7 +31,7 @@ class AlpacaLive(AlpacaBase):
                    self.api_secret_key, 
                    base_url=URL('https://paper-api.alpaca.markets'), 
                    data_feed='iex')
-        s.subscribe_trades(self._stock_trade_stream_handler, *self.us_stocks)
+        s.subscribe_trades(self._stock_trade_stream_handler, *self.assets)
         s.subscribe_crypto_trades(self._crypto_trade_stream_handler, *self.crypto)
         s.run() 
 
@@ -62,7 +62,7 @@ class AlpacaHistoric(AlpacaBase):
         from_when = from_when_dt.isoformat().split('T')[0]
 
         with self.redis.pipeline() as pipe:
-            for ticker in self.us_stocks:
+            for ticker in self.assets:
                 self.cli.line(f'<info>pulling hourly data for </info><comment>{ticker}</comment> <info>from</info> <comment>{from_when}</comment> <info>til</info> <comment>now</comment>')
                 bars = self.api.get_bars_iter(ticker, TimeFrame.Hour, from_when)
                 for bar in bars:
