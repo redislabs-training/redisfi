@@ -1,0 +1,14 @@
+---
+params:
+  CONTEXT: redisfi
+platform: linux
+image_resource:
+  type: registry-image
+  source:
+    repository: concourse/oci-build-task
+run:
+  path: build
+inputs:
+  - name: redisfi
+outputs:
+  - name: image
