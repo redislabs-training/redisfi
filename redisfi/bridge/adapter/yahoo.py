@@ -20,7 +20,7 @@ class YahooFinanceHistoric(BaseAdapter):
                     ## one isn't a NaN. Why they can't resolve to False or None? ¯\_(ツ)_/¯
                     if all(map(lambda x: str(x) != 'nan', (bar.Open, bar.High, bar.Low, bar.Close, bar.Volume))):
                         self.cli.line(str(bar), verbosity=VERY_VERBOSE)
-                        DB.set_bar(pipe, symbol, timestamp, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume)
+                        DB.set_bar_json(pipe, symbol, timestamp, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume)
                 
                 pipe.execute()
 

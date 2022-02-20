@@ -2,6 +2,7 @@ from cleo import Command
 
 from redisfi.tool.create_db import create_db
 
+
 class CreateDBTool(Command):
     '''
     Creates a Redis Database with Search+JSON for RedisFI

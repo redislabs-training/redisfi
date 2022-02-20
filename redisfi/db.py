@@ -1,5 +1,6 @@
 from redis import Redis
 from redis.exceptions import ResponseError
+from redis.commands.json.path import Path
 from redis.commands.search.indexDefinition import IndexDefinition, IndexType
 from redis.commands.search.field import TextField, NumericField, TagField
 
@@ -42,7 +43,7 @@ def index_bar_json(redis:Redis):
         NumericField('$.volume', as_name='volume')
     ), definition=IndexDefinition(prefix=[_key_bars('','')], index_type=IndexType.JSON))
 
-def set_bar(redis: Redis, symbol: str, timestamp: int, open: float,
+def set_bar_json(redis: Redis, symbol: str, timestamp: int, open: float,
              high: float, low: float, close: float, volume: int):
     
     obj = {'symbol':symbol,
@@ -54,7 +55,7 @@ def set_bar(redis: Redis, symbol: str, timestamp: int, open: float,
            'volume':volume}
     key = _key_bars(symbol, timestamp)
 
-    redis.json().set(key, '$', obj)
+    redis.json().set(key, Path.rootPath, obj)
    
 
 def set_stock_json(redis: Redis, symbol: str, name: str, description: str, website: str, 
@@ -66,5 +67,5 @@ def set_stock_json(redis: Redis, symbol: str, name: str, description: str, websi
            'sector':sector, 
            'industry':industry}
 
-    redis.json().set(_key_stock(symbol), '$', obj)
+    redis.json().set(_key_stock(symbol), Path.rootPath, obj)
 

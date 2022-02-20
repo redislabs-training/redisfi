@@ -67,7 +67,7 @@ class AlpacaHistoric(AlpacaBase):
                 bars = self.api.get_bars_iter(ticker, TimeFrame.Hour, from_when)
                 for bar in bars:
                     timestamp = self._bar_timestamp(bar)
-                    DB.set_bar(pipe, ticker, timestamp, **self._bar_kwargs(bar))
+                    DB.set_bar_json(pipe, ticker, timestamp, **self._bar_kwargs(bar))
 
                 pipe.execute()
             
@@ -76,7 +76,7 @@ class AlpacaHistoric(AlpacaBase):
                 bars = self.api.get_crypto_bars_iter(ticker, TimeFrame.Hour, from_when)
                 for bar in bars:
                     timestamp = self._bar_timestamp(bar)
-                    DB.set_bar(pipe, ticker, timestamp, **self._bar_kwargs(bar))
+                    DB.set_bar_json(pipe, ticker, timestamp, **self._bar_kwargs(bar))
 
                 pipe.execute()
                 

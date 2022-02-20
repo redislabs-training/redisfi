@@ -13,6 +13,13 @@ resources:
     source:
       repository: redislabs/redis
       tag: latest
+  - name: redisfi-container
+    type: registry-image
+    icon: docker
+    source:
+      repository: gcr.io/redislabs-university/redisfi
+      username: _json_key
+      password: ((auth-gcp-te))
 jobs: 
   - name: run-tests
     plan:
@@ -25,3 +32,17 @@ jobs:
     - task: run
       privileged: true
       file: redisfi/ci/run_tests.yml
+  - name: build-container
+    plan:
+      - get: redisfi
+        passed: [run-tests]
+        trigger: true
+        params:
+          format: oci
+      - task: build
+        privileged: true
+        file: redisfi/ci/build.yml
+      - put: redisfi-container
+        params:
+          image: image/image.tar
+          version: 99.99.99
