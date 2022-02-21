@@ -23,6 +23,7 @@ poetry run redisfi-compose
 Once the dependancies are installed, you can use `poetry run redisfi-compose up` to start using remote containers or add the `--build` arg to build it locally.
 
 ## full
+
 `redisfi` is the full CLI that allows access to the various components of RedisFI, see its help menu for more info.
 ```
 poetry install

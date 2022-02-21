@@ -36,7 +36,7 @@ class YahooFinanceEnrich(BaseAdapter):
                 info = cursor.info
                 self.cli.line(str(info), verbosity=VERY_VERBOSE)
                 DB.set_stock_json(pipe, symbol, info['longName'], info['longBusinessSummary'],
-                                  info['website'], info['sector'], info['industry'])
+                                  info.get('website', ''), info.get('sector', ''), info.get('industry', ''))
 
             pipe.execute()
                 # import pdb; pdb.set_trace()

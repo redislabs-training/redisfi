@@ -55,7 +55,7 @@ def set_bar_json(redis: Redis, symbol: str, timestamp: int, open: float,
            'volume':volume}
     key = _key_bars(symbol, timestamp)
 
-    redis.json().set(key, Path.rootPath, obj)
+    redis.json().set(key, Path.rootPath(), obj)
    
 
 def set_stock_json(redis: Redis, symbol: str, name: str, description: str, website: str, 
@@ -67,5 +67,5 @@ def set_stock_json(redis: Redis, symbol: str, name: str, description: str, websi
            'sector':sector, 
            'industry':industry}
 
-    redis.json().set(_key_stock(symbol), Path.rootPath, obj)
+    redis.json().set(_key_stock(symbol), Path.rootPath(), obj)
 

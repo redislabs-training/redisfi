@@ -3,29 +3,53 @@ services:
   frontend-pull:
     env_file: .env
     image: gcr.io/redislabs-university/redisfi:99.99.99
-    command:  poetry run redisfi web server --redis-host=${REDIS_HOST} --redis-port=${REDIS_PORT}
+    command:  poetry run redisfi web server
     ports:
       - 8000:8000
     profiles:
       - pull
-  backend-pull:
+  historic-pull:
     env_file: .env
     image: gcr.io/redislabs-university/redisfi:99.99.99
-    command: poetry run redisfi bridge live --redis-host=${REDIS_HOST} --redis-port=${REDIS_PORT}
+    command: poetry run redisfi bridge historic 
+    profiles:
+      - pull
+  enrich-pull:
+    env_file: .env
+    image: gcr.io/redislabs-university/redisfi:99.99.99
+    command: poetry run redisfi bridge enrich 
+    profiles:
+      - pull
+  live-pull:
+    env_file: .env
+    image: gcr.io/redislabs-university/redisfi:99.99.99
+    command:  poetry run redisfi bridge live
     profiles:
       - pull
   frontend-build:
     env_file: .env
     build: .
-    command: poetry run redisfi web server --redis-host=${REDIS_HOST} --redis-port=${REDIS_PORT}
+    command: poetry run redisfi web server
     ports:
       - 8000:8000
     profiles:
       - build
-  backend-build:
+  historic-build:
     env_file: .env
     build: .
-    command: poetry run redisfi bridge live --redis-host=${REDIS_HOST} --redis-port=${REDIS_PORT}
+    command: poetry run redisfi bridge historic
+    profiles:
+      - build
+  enrich-build:
+    env_file: .env
+    build: .
+    command: poetry run redisfi bridge enrich -vv
+    profiles:
+      - build
+  live-build:
+    env_file: .env
+    build: .
+    command: poetry run redisfi bridge live
     profiles:
       - build
   redis:

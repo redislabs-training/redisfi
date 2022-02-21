@@ -1,3 +1,4 @@
+from os import environ
 from cleo import Command
 
 from redisfi.bridge.adapter.alpaca import AlpacaLive, AlpacaHistoric
@@ -23,8 +24,12 @@ class BridgeMixin:
         ## specific to the method itself should be extracted as a 
         ## subclass with: `adapter_config = super()._adapter_config(self)` first
 
-        host = self.option('redis-host')
-        port = self.option('redis-port')
+        host = environ.get('REDIS_HOST')
+        if host is None:
+            host = self.option('redis-host')
+        port = environ.get('REDIS_PORT')
+        if port is None:
+            port = self.option('redis-port')
 
         adapter_config = {'cli':self, 'redis_url':f'redis://{host}:{port}'}
         self.line(f'<info>Redis URL:</info> <comment>{adapter_config["redis_url"]}</comment>')
@@ -75,8 +80,8 @@ class BridgeBase(Command):
     Bridge commands
 
     bridge
-        {--H|redis-host=localhost : Redis hostname - can also set with REDISFI_REDIS_HOST env var}
-        {--P|redis-port=6379 : Redis port - can also set with REDISFI_REDIS_PORT env var}
+        {--H|redis-host=localhost : Redis hostname - can also set with REDIS_HOST env var}
+        {--P|redis-port=6379 : Redis port - can also set with REDIS_PORT env var}
         {--s|assets=GOOG,MSFT,TSLA,SPY,QQQ,PIMIX : Comma delimited list of asset symbols to track}
         {--c|crypto=BTCUSD,ETHUSD : Comma delimited list of crypto to track}
     '''
