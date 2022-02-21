@@ -25,6 +25,7 @@ class BridgeMixin:
 
         host = self.option('redis-host')
         port = self.option('redis-port')
+
         adapter_config = {'cli':self, 'redis_url':f'redis://{host}:{port}'}
         self.line(f'<info>Redis URL:</info> <comment>{adapter_config["redis_url"]}</comment>')
 
@@ -74,8 +75,8 @@ class BridgeBase(Command):
     Bridge commands
 
     bridge
-        {--H|redis-host=localhost : Redis hostname}
-        {--P|redis-port=6379 : Redis port}
+        {--H|redis-host=localhost : Redis hostname - can also set with REDISFI_REDIS_HOST env var}
+        {--P|redis-port=6379 : Redis port - can also set with REDISFI_REDIS_PORT env var}
         {--s|assets=GOOG,MSFT,TSLA,SPY,QQQ,PIMIX : Comma delimited list of asset symbols to track}
         {--c|crypto=BTCUSD,ETHUSD : Comma delimited list of crypto to track}
     '''

@@ -7,9 +7,14 @@ RUN pip3 install poetry
 
 ENV INSTALL_DIR=/opt/redisfi
 WORKDIR ${INSTALL_DIR}
-COPY . .
+COPY pyproject.toml .
 
-# we don't need to virtualize a virtualization
-RUN poetry config virtualenvs.create false 
+# this takes a LONG time to do. This should cache so we only have to install with changes to pyproject.toml
 RUN poetry install 
+
+# Development workaround - make sure we don't override poetry.lock inside the container with one we're copying from local
+RUN mv poetry.lock poetry.lock.bak
+COPY . .
+RUN mv poetry.lock.bak poetry.lock
+
 

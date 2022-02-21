@@ -1,0 +1,36 @@
+
+services:
+  frontend-pull:
+    env_file: .env
+    image: gcr.io/redislabs-university/redisfi:99.99.99
+    command:  poetry run redisfi web server --redis-host=${REDIS_HOST} --redis-port=${REDIS_PORT}
+    ports:
+      - 8000:8000
+    profiles:
+      - pull
+  backend-pull:
+    env_file: .env
+    image: gcr.io/redislabs-university/redisfi:99.99.99
+    command: poetry run redisfi bridge live --redis-host=${REDIS_HOST} --redis-port=${REDIS_PORT}
+    profiles:
+      - pull
+  frontend-build:
+    env_file: .env
+    build: .
+    command: poetry run redisfi web server --redis-host=${REDIS_HOST} --redis-port=${REDIS_PORT}
+    ports:
+      - 8000:8000
+    profiles:
+      - build
+  backend-build:
+    env_file: .env
+    build: .
+    command: poetry run redisfi bridge live --redis-host=${REDIS_HOST} --redis-port=${REDIS_PORT}
+    profiles:
+      - build
+  redis:
+    image: redislabs/redisearch:2.4.0
+    ports: 
+     - 6379:6379
+    profiles:
+      - pull_redis
