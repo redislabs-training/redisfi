@@ -7,7 +7,7 @@ from redisfi.bridge.adapter.base import BaseAdapter
 
 class YahooFinanceHistoric(BaseAdapter):
     def run(self):
-        self.cli.line(f'<info>Downloading Historic Data for</info> <comment>{len(self.assets)}</comment> <info>Stocks</info>')
+        self.cli.line(f'<info>Downloading Historic Data for</info> <comment>{len(self.assets)}</comment> <info>Assets</info>')
         items = Y.download(" ".join(self.assets), group_by="ticker")
         with self.redis.pipeline(transaction=False) as pipe:
             for symbol in self.assets:
@@ -27,7 +27,7 @@ class YahooFinanceHistoric(BaseAdapter):
 class YahooFinanceEnrich(BaseAdapter):
     def __init__(self, **kwargs) -> None:
         super().__init__( **kwargs)
-        DB.index_stock_json(self.redis)
+        DB.index_asset_json(self.redis)
 
     def run(self):
         tickers = Y.Tickers(' '.join(self.assets))

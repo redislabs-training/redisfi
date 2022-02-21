@@ -61,7 +61,7 @@ class AlpacaHistoric(AlpacaBase):
         from_when_dt = datetime.now() - timedelta(days=self.hourly*DAYS_IN_YEAR)
         from_when = from_when_dt.isoformat().split('T')[0]
 
-        with self.redis.pipeline() as pipe:
+        with self.redis.pipeline(transaction=False) as pipe:
             for ticker in self.assets:
                 self.cli.line(f'<info>pulling hourly data for </info><comment>{ticker}</comment> <info>from</info> <comment>{from_when}</comment> <info>til</info> <comment>now</comment>')
                 bars = self.api.get_bars_iter(ticker, TimeFrame.Hour, from_when)

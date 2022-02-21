@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block header %}
+<style type="text/css">
+    .container-main{
+        margin-top: 20px;
+        margin-left: 10px;
+    }
+    .container-data{
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
+{% block body %}
+<div class="container-fluid container-main">
+    <h1>{{asset.name}} | {{asset.symbol}}</h1>
+    <h2 class="display-5">$ 1234.56</h2>
+    <div class="container-fluid container-data">
+        <div class="row">
+            <div class="col-lg">
+                <div class="border bg-light" id="chart"></div>
+            </div>
+            <div class="col-lg">
+                <div class="container-fluid">
+                    <div class="row"><div class="col">&nbsp;</div></div>
+                    <h4>About {{asset.name}}</h4><hr>
+                    <div class="row p-2 bg-light">
+                        <div class="col-sm">
+                            <strong>Website:</strong>&nbsp;&nbsp;<a href="{{asset.website}}" target="_blank">{{asset.website}}</a>
+                        </div>
+                        <div class="col-sm">
+                            <strong>Sector:</strong>&nbsp;&nbsp;{{asset.sector}}
+                        </div>
+                        <div class="col-sm">
+                            <strong>Industry:</strong>&nbsp;&nbsp;{{asset.industry}}
+                        </div>
+                    </div>
+                    <div class="row"><div class="col">&nbsp;</div></div>
+                    <div class="col">
+                        <div class="p-4 border bg-light" id="description">
+                            <h5>Description:</h5><hr>
+                            {{ asset.description }}
+                        </div>
+                    </div>                    
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
+</div>
+  
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-color/2.1.2/jquery.color.min.js" integrity="sha512-VjRpiWhUqdNa9bwBV7LnlG8CwsCVPenFyOQTSRTOGHw/tjtME96zthh0Vv9Itf3i8w4CkUrdYaS6+dAt1m1YXQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <script type="text/javascript">
+      var options = {
+  chart: {
+    type: 'line',
+    height: '500px'
+  },
+  series: [{
+    name: 'sales',
+    data: [30,40,35,50,49,60,70,91,125]
+  }],
+  xaxis: {
+    categories: [1991,1992,1993,1994,1995,1996,1997, 1998,1999]
+  }
+}
+
+var chart = new ApexCharts(document.querySelector("#chart"), options);
+
+chart.render();
+  </script>
+  <!-- <script type="text/javascript">
+    let tslaPrice = -1;
+    const socket = io();
+    socket.on('connect', () => {
+        socket.emit('message', {data: 'I\'m connected!'});
+    });
+    socket.on('update', (message) => {
+      // console.log(message);
+      // console.log(message.exchange);
+      // console.log(message.symbol);
+      // console.log(message.price);
+      let elementName = `${message.exchange}-${message.symbol}-price`;
+      $(`#${elementName}`).text(`$ ${message.price.toFixed(2)}`);
+      if (message.symbol === 'TSLA') {
+        if (tslaPrice === -1) {
+          tslaPrice = message.price
+        } else {
+          if (tslaPrice < message.price) {
+            $('#V-TSLA-price').css({'background-color':'red'}).animate({'background-color':'white'}, 200)
+          } else if(tslaPrice > message.price) {
+            $('#V-TSLA-price').css({'background-color':'green'}).animate({'background-color':'white'}, 200)
+          }
+        }
+      }
+    });
+  </script> -->
+{% endblock %}
