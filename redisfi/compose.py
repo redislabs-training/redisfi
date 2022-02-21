@@ -1,13 +1,13 @@
 from subprocess import Popen
 
 from clikit.api.io.flags import  DEBUG
-from cleo import Command
+from cleo import Command, Application
 
 class RunCommand(Command):
     '''
     Use docker compose to run RedisFI
 
-    run
+    up
         {--b|build : Build containers from local source}
         {--d|detach : Run in Detached Mode}
         {--redis-host=redis : Location of Redis Server to Use - Defaults to Pulling Container Locally}
@@ -53,3 +53,7 @@ class RunCommand(Command):
         with Popen(cmd) as p:
             p.communicate()
 
+def run():
+    app = Application(name='redisfi-compose')
+    app.add(RunCommand())
+    app.run()

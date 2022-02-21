@@ -6,10 +6,13 @@ authors = ["Adi Wabisabi <adi.wabisabi@redis.com>"]
 
 [tool.poetry.scripts]
 redisfi = "redisfi.cli:run"
+redisfi-compose = "redisfi.compose:run"
 
 [tool.poetry.dependencies]
 python = "~3.9"
 cleo = "^0.8.1"
+
+[tool.poetry.dev-dependencies]
 redis = "^4.1.2"
 alpaca-trade-api = "^1.5.0"
 Flask = "^2.0.2"
@@ -18,8 +21,6 @@ Flask-SocketIO = "^5.1.1"
 gevent = "^21.12.0"
 gevent-websocket = "^0.10.1"
 yfinance = "^0.1.70"
-
-[tool.poetry.dev-dependencies]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
