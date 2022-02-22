@@ -96,7 +96,7 @@ def set_asset_json(redis: Redis, symbol: str, name: str, description: str, websi
 
 
 def _build_search_query(index: SearchCommands, query: Query):
-    return ' '.join([SEARCH_CMD] + list(map(str, index._mk_query_args(query)[0])))
+    return ' '.join([SEARCH_CMD] + list(map(str, index._mk_query_args(query, None)[0])))
 
 def _deserialize_results(results) -> list:
     '''turn a list of json at results.docs into a list of dicts'''

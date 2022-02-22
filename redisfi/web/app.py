@@ -14,6 +14,7 @@ from redisfi.web.api import api
 app = Flask(__name__)
 app.register_blueprint(api, url_prefix='/api')
 app.config['SECRET_KEY'] = 'supersecret!'
+app.config['REDIS'] = Redis.from_url(environ.get('REDIS_URL', 'redis://localhost:6379'))
 socketio = SocketIO(app, message_queue=environ.get('REDIS_URL'), async_mode='gevent')
 
 @app.route('/asset/<string:symbol>')
@@ -48,5 +49,4 @@ def run(debug=False, redis_url='redis://'):
             _app.communicate()
 
 if __name__ == '__main__':
-    app.config['REDIS'] = Redis.from_url(environ.get('REDIS_URL', 'redis://localhost:6379'))
     socketio.run(app, debug=True)

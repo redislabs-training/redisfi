@@ -43,7 +43,7 @@ services:
   metadata-build:
     env_file: .env
     build: .
-    command: poetry run redisfi bridge metadata -vv
+    command: poetry run redisfi bridge metadata
     profiles:
       - build
   live-build:
