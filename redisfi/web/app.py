@@ -8,9 +8,11 @@ from flask_socketio import SocketIO
 from flask import Flask, render_template
 from redis import Redis
 
-from redisfi import db as DB 
+from redisfi import db as DB
+from redisfi.web.api import api 
 
 app = Flask(__name__)
+app.register_blueprint(api, url_prefix='/api')
 app.config['SECRET_KEY'] = 'supersecret!'
 socketio = SocketIO(app, message_queue=environ.get('REDIS_URL'), async_mode='gevent')
 

@@ -23,7 +23,7 @@ services:
   live-pull:
     env_file: .env
     image: gcr.io/redislabs-university/redisfi:99.99.99
-    command:  poetry run redisfi bridge live
+    command: poetry run redisfi bridge live
     profiles:
       - pull
   frontend-build:

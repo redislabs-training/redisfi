@@ -4,6 +4,7 @@ from cleo import Command
 from redisfi.bridge.adapter.alpaca import AlpacaLive, AlpacaHistoric
 from redisfi.bridge.adapter.yahoo import YahooFinanceEnrich, YahooFinanceHistoric
 
+
 class BridgeMixin:
     ## there is circular logic in importing subcommands into the base and subclassing 
     ## the same base.  this allows for shared methods without subclassing the base command
@@ -49,7 +50,6 @@ class BridgePriceHistoric(BridgeMixin, Command):
     historic
         {--hourly=1 : Number of years to extract hourly data}
     '''
-
     adapters = [AlpacaHistoric, YahooFinanceHistoric]
 
     def _adapter_config(self: Command) -> dict:
@@ -63,7 +63,6 @@ class BridgeEnrich(BridgeMixin, Command):
 
     enrich
     '''
-
     adapters = [YahooFinanceEnrich]
 
 class BridgePriceLive(BridgeMixin, Command):

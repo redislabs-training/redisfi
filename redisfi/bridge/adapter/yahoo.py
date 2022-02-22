@@ -4,7 +4,6 @@ from clikit.api.io.flags import VERY_VERBOSE
 from redisfi import db as DB
 from redisfi.bridge.adapter.base import BaseAdapter
 
-
 class YahooFinanceHistoric(BaseAdapter):
     def run(self):
         self.cli.line(f'<info>Downloading Historic Data for</info> <comment>{len(self.assets)}</comment> <info>Assets</info>')
@@ -25,10 +24,6 @@ class YahooFinanceHistoric(BaseAdapter):
                 pipe.execute()
 
 class YahooFinanceEnrich(BaseAdapter):
-    def __init__(self, **kwargs) -> None:
-        super().__init__( **kwargs)
-        DB.index_asset_json(self.redis)
-
     def run(self):
         tickers = Y.Tickers(' '.join(self.assets))
         with self.redis.pipeline(transaction=False) as pipe:
