@@ -100,30 +100,4 @@
     });
 
   </script>
-  <!-- <script type="text/javascript">
-    let tslaPrice = -1;
-   
-    socket.on('connect', () => {
-        socket.emit('message', {data: 'I\'m connected!'});
-    });
-    socket.on('update', (message) => {
-      // console.log(message);
-      // console.log(message.exchange);
-      // console.log(message.symbol);
-      // console.log(message.price);
-      let elementName = `${message.exchange}-${message.symbol}-price`;
-      $(`#${elementName}`).text(`$ ${message.price.toFixed(2)}`);
-      if (message.symbol === 'TSLA') {
-        if (tslaPrice === -1) {
-          tslaPrice = message.price
-        } else {
-          if (tslaPrice < message.price) {
-            $('#V-TSLA-price').css({'background-color':'red'}).animate({'background-color':'white'}, 200)
-          } else if(tslaPrice > message.price) {
-            $('#V-TSLA-price').css({'background-color':'green'}).animate({'background-color':'white'}, 200)
-          }
-        }
-      }
-    });
-  </script> -->
-{% endblock %}
+ {% endblock %}

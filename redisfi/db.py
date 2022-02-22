@@ -3,6 +3,7 @@ from json import loads
 from redis import Redis
 from redis.exceptions import ResponseError
 from redis.commands.json.path import Path
+from redis.commands.search.commands import SEARCH_CMD, SearchCommands
 from redis.commands.search.query import Query
 from redis.commands.search.indexDefinition import IndexDefinition, IndexType
 from redis.commands.search.field import TextField, NumericField
@@ -17,12 +18,15 @@ def get_asset(redis: Redis, symbol: str):
 def get_asset_history(redis: Redis, symbol: str, start=0, end='inf'):
     idx = index_bar_json(redis)
     query = Query(f'@symbol:{symbol} @timestamp:[{start},{end}]').sort_by('timestamp', asc=False).paging(0, PAGE_SIZE)
+    print(_build_search_query(idx, query))
     return _deserialize_results(idx.search(query))
 
 def get_asset_latest(redis: Redis, symbol: str):
     idx = index_bar_json(redis)
     query = Query(f'@symbol:{symbol}').sort_by('timestamp', asc=False).paging(0, 1)
+    print(_build_search_query(idx, query))
     return _deserialize_results(idx.search(query))
+
 
 def index_asset_json(redis: Redis):
     idx = redis.ft(_key_asset('idx'))
@@ -90,6 +94,9 @@ def set_asset_json(redis: Redis, symbol: str, name: str, description: str, websi
 
     redis.json().set(_key_asset(symbol), Path.rootPath(), obj)
 
+
+def _build_search_query(index: SearchCommands, query: Query):
+    return ' '.join([SEARCH_CMD] + list(map(str, index._mk_query_args(query)[0])))
 
 def _deserialize_results(results) -> list:
     '''turn a list of json at results.docs into a list of dicts'''
