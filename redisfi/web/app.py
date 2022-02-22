@@ -19,7 +19,8 @@ socketio = SocketIO(app, message_queue=environ.get('REDIS_URL'), async_mode='gev
 @app.route('/asset/<string:symbol>')
 def asset(symbol:str):
     redis = app.config['REDIS']
-    asset_data = DB.get_asset(redis, symbol.upper())
+    symbol = symbol.upper()
+    asset_data = DB.get_asset(redis, symbol)
     if asset_data:
         return render_template('asset.html', asset=asset_data)
     else:

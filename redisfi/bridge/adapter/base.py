@@ -12,15 +12,15 @@ class BaseAdapter:
         self.socket = SocketIO(message_queue=redis_url)
         self.assets = assets
         self.crypto = crypto
-        
+
         self._init_indexes()
 
     def _init_indexes(self):
         for index in self.indexes:
             index(self.redis)
 
-    def live_update(self, obj):
-        self.socket.emit('update', obj)
+    def live_update(self, name, obj):
+        self.socket.emit(f'updates.{name}', obj)
 
     def run():
         raise NotImplementedError

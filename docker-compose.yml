@@ -14,10 +14,10 @@ services:
     command: poetry run redisfi bridge historic 
     profiles:
       - pull
-  enrich-pull:
+  metadata-pull:
     env_file: .env
     image: gcr.io/redislabs-university/redisfi:99.99.99
-    command: poetry run redisfi bridge enrich 
+    command: poetry run redisfi bridge metadata 
     profiles:
       - pull
   live-pull:
@@ -40,10 +40,10 @@ services:
     command: poetry run redisfi bridge historic
     profiles:
       - build
-  enrich-build:
+  metadata-build:
     env_file: .env
     build: .
-    command: poetry run redisfi bridge enrich -vv
+    command: poetry run redisfi bridge metadata -vv
     profiles:
       - build
   live-build:

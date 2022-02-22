@@ -23,15 +23,16 @@ class YahooFinanceHistoric(BaseAdapter):
                 
                 pipe.execute()
 
-class YahooFinanceEnrich(BaseAdapter):
+class YahooFinanceMetadata(BaseAdapter):
     def run(self):
         tickers = Y.Tickers(' '.join(self.assets))
         with self.redis.pipeline(transaction=False) as pipe:
             for symbol, cursor in tickers.tickers.items():
+                self.cli.line(f'<info>Pulling data for </info><comment>{symbol}</comment>')
                 info = cursor.info
                 self.cli.line(str(info), verbosity=VERY_VERBOSE)
-                DB.set_stock_json(pipe, symbol, info['longName'], info['longBusinessSummary'],
-                                  info.get('website', ''), info.get('sector', ''), info.get('industry', ''))
+                DB.set_asset_json(pipe, symbol, info['longName'], info['longBusinessSummary'],
+                                  info.get('website'), info.get('sector'), info.get('industry'))
 
             pipe.execute()
                 # import pdb; pdb.set_trace()

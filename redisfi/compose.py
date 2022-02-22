@@ -16,9 +16,6 @@ class RunCommand(Command):
 
     def handle(self):
 
-        ## TODO: before we release, invert this logic so that the default includes
-        ## a redis instance, and including a --redis-url will not
-        
         cmd = ['docker', 'compose']
         up_cmd = ['up']
         profiles = []

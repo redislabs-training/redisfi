@@ -78,8 +78,8 @@ def set_bar_json(redis: Redis, symbol: str, timestamp: int, open: float,
     redis.json().set(key, Path.rootPath(), obj)
    
 
-def set_stock_json(redis: Redis, symbol: str, name: str, description: str, website: str, 
-                   sector: str, industry: str):
+def set_asset_json(redis: Redis, symbol: str, name: str, description: str, website: str=None, 
+                   sector: str=None, industry: str=None):
     
     obj = {'symbol':symbol,
            'name':name, 

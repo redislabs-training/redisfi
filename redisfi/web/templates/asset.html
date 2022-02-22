@@ -59,9 +59,12 @@
 
   <script type="text/javascript">
     $(() => {
-
+      const socket = io();
+      let price;
+      
       $.getJSON('/api/asset/{{asset.symbol}}/latest', (data) => {
         $('#price').text(data.close.toFixed(2));
+        price = parseFloat(data.close.toFixed(2));
       });
       
       $.getJSON('/api/asset/{{asset.symbol}}/history', (data) => {
@@ -89,13 +92,17 @@
 
       chart.render();
       });
+
+      socket.on('updates.{{asset.symbol}}', (event) => {
+        $('#price').text(event.price.toFixed(2));
+      })
       
     });
 
   </script>
   <!-- <script type="text/javascript">
     let tslaPrice = -1;
-    const socket = io();
+   
     socket.on('connect', () => {
         socket.emit('message', {data: 'I\'m connected!'});
     });

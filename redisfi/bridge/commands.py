@@ -2,7 +2,8 @@ from os import environ
 from cleo import Command
 
 from redisfi.bridge.adapter.alpaca import AlpacaLive, AlpacaHistoric
-from redisfi.bridge.adapter.yahoo import YahooFinanceEnrich, YahooFinanceHistoric
+from redisfi.bridge.adapter.yahoo import YahooFinanceMetadata, YahooFinanceHistoric
+from redisfi.bridge.adapter.file import JSONMetadataFileLoader
 
 
 class BridgeMixin:
@@ -57,13 +58,13 @@ class BridgePriceHistoric(BridgeMixin, Command):
         adapter_config['hourly'] = int(self.option('hourly'))
         return adapter_config
 
-class BridgeEnrich(BridgeMixin, Command):
+class BridgeMetadata(BridgeMixin, Command):
     '''
     Run company metadata data ingest 
 
-    enrich
+    metadata
     '''
-    adapters = [YahooFinanceEnrich]
+    adapters = [JSONMetadataFileLoader, YahooFinanceMetadata]
 
 class BridgePriceLive(BridgeMixin, Command):
     '''
@@ -85,7 +86,7 @@ class BridgeBase(Command):
         {--c|crypto=BTCUSD,ETHUSD : Comma delimited list of crypto to track}
     '''
 
-    commands = [BridgePriceLive(), BridgePriceHistoric(), BridgeEnrich()]
+    commands = [BridgePriceLive(), BridgePriceHistoric(), BridgeMetadata()]
 
     def handle(self):
         return self.call("help", self._config.name)
