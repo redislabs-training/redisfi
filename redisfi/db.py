@@ -19,6 +19,11 @@ def get_asset_history(redis: Redis, symbol: str, start=0, end='inf'):
     query = Query(f'@symbol:{symbol} @timestamp:[{start},{end}]').sort_by('timestamp', asc=False).paging(0, PAGE_SIZE)
     return _deserialize_results(idx.search(query))
 
+def get_asset_latest(redis: Redis, symbol: str):
+    idx = index_bar_json(redis)
+    query = Query(f'@symbol:{symbol}').sort_by('timestamp', asc=False).paging(0, 1)
+    return _deserialize_results(idx.search(query))
+
 def index_asset_json(redis: Redis):
     idx = redis.ft(_key_asset('idx'))
     try:

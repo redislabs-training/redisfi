@@ -5,7 +5,7 @@ from gevent import monkey
 monkey.patch_all()
 
 from flask_socketio import SocketIO
-from flask import Flask, render_template
+from flask import Flask, render_template, Response
 from redis import Redis
 
 from redisfi import db as DB
@@ -20,8 +20,10 @@ socketio = SocketIO(app, message_queue=environ.get('REDIS_URL'), async_mode='gev
 def asset(symbol:str):
     redis = app.config['REDIS']
     asset_data = DB.get_asset(redis, symbol.upper())
-    print(asset_data)
-    return render_template('asset.html', asset=asset_data)
+    if asset_data:
+        return render_template('asset.html', asset=asset_data)
+    else:
+        return Response(status=404)
 
 @socketio.on('message')
 def handle_message(data):
