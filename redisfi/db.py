@@ -9,8 +9,9 @@ from redis.commands.search.indexDefinition import IndexDefinition, IndexType
 from redis.commands.search.field import TextField, NumericField
 
 PAGE_SIZE = 1000000
-_key_asset = lambda symbol: f'asset:{symbol}'
-_key_bars = lambda symbol, timestamp: f'bars:{symbol}:{int(timestamp) if timestamp else ""}'
+_key_asset = lambda symbol: f'asset:{symbol.upper()}'
+_key_bars = lambda symbol, timestamp: f'bars:{symbol.upper()}:{int(timestamp) if timestamp else ""}'
+_key_fund = lambda name: f'fund:{name.replace(" ", "").lower()}'
 
 def get_asset(redis: Redis, symbol: str):
     return redis.json().get(_key_asset(symbol))
@@ -27,6 +28,8 @@ def get_asset_latest(redis: Redis, symbol: str):
     print(_build_search_query(idx, query))
     return _deserialize_results(idx.search(query))
 
+def get_fund(redis: Redis, name: str):
+    return redis.json().get(_key_fund(name))
 
 def index_asset_json(redis: Redis):
     idx = redis.ft(_key_asset('idx'))
@@ -80,6 +83,14 @@ def set_bar_json(redis: Redis, symbol: str, timestamp: int, open: float,
     key = _key_bars(symbol, timestamp)
 
     redis.json().set(key, Path.rootPath(), obj)
+
+def set_fund_json(redis: Redis, name: str, description: str, assets: list):
+    
+    obj = {'name':name,
+           'description':description,
+           'assets':assets}
+    
+    redis.json().set(_key_fund(name), Path.rootPath(), obj)
    
 
 def set_asset_json(redis: Redis, symbol: str, name: str, description: str, website: str=None, 

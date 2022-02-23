@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block header %}
+<style type="text/css">
+    .container-main{
+        margin-top: 20px;
+        margin-left: 10px;
+    }
+</style>
+{% endblock %}
+{% block body%}
+<div class="container-fluid">
+    <h1>{{fund.name}}</h1>
+    <h2 class="display-5">$ <span id="price">123456.78</span></h2>
+</div>
+{% endblock %}

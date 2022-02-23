@@ -17,7 +17,7 @@ resources:
     type: registry-image
     icon: docker
     source:
-      repository: gcr.io/redislabs-university/redisfi
+      repository: us-west4-docker.pkg.dev/redislabs-university/redisfi/redisfi
       username: _json_key
       password: ((auth-gcp-te))
 jobs: 

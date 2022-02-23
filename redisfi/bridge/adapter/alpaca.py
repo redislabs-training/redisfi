@@ -24,7 +24,7 @@ class AlpacaLive(AlpacaBase):
     async def _stock_trade_stream_handler(self, obj: Trade):
         obj_dict = obj.__dict__['_raw']
         obj_dict['conditions'] = ','.join(obj_dict['conditions'])
-        self.live_update(obj_dict)
+        self.live_update(obj_dict['symbol'], obj_dict)
         self.cli.line(str(obj), verbosity=VERBOSE)
   
     def run(self):

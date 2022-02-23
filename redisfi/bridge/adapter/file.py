@@ -15,6 +15,14 @@ class FileLoader(BaseAdapter):
     def process(self, data):
         raise NotImplementedError
 
+class JSONFundMetadataFileLoader(FileLoader):
+    files = ['data/funds.json']
+
+    def process(self, data):
+        obj = loads(data)
+        for fund in obj:
+            DB.set_fund_json(self.redis, **fund)
+
 class JSONMetadataFileLoader(FileLoader):
     files = ['data/crypto_metadata.json']
 

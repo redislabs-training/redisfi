@@ -3,7 +3,7 @@ from cleo import Command
 
 from redisfi.bridge.adapter.alpaca import AlpacaLive, AlpacaHistoric
 from redisfi.bridge.adapter.yahoo import YahooFinanceMetadata, YahooFinanceHistoric
-from redisfi.bridge.adapter.file import JSONMetadataFileLoader
+from redisfi.bridge.adapter.file import JSONMetadataFileLoader, JSONFundMetadataFileLoader
 
 
 class BridgeMixin:
@@ -38,6 +38,7 @@ class BridgeMixin:
 
         adapter_config['assets'] = self.option('assets').split(',')
         adapter_config['crypto'] = self.option('crypto').split(',')
+        
         self.line(f'<info>Assets:</info> <comment>{" ".join(adapter_config["assets"])}</comment>')
         self.line(f'<info>Crypto:</info> <comment>{" ".join(adapter_config["crypto"])}</comment>')
         
@@ -64,7 +65,7 @@ class BridgeMetadata(BridgeMixin, Command):
 
     metadata
     '''
-    adapters = [JSONMetadataFileLoader, YahooFinanceMetadata]
+    adapters = [JSONFundMetadataFileLoader, JSONMetadataFileLoader, YahooFinanceMetadata]
 
 class BridgePriceLive(BridgeMixin, Command):
     '''
