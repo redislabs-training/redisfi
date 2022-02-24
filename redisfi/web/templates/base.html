@@ -19,6 +19,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-color/2.1.2/jquery.color.min.js" integrity="sha512-VjRpiWhUqdNa9bwBV7LnlG8CwsCVPenFyOQTSRTOGHw/tjtME96zthh0Vv9Itf3i8w4CkUrdYaS6+dAt1m1YXQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script type="text/javascript">
+      function barsToTimeseries(data) {
+        let priceData = [];
+        for(i=0; i<data.length; i++){
+          bar = data[i];
+          price = (bar.high + bar.low) / 2;
+          price = parseFloat(price.toFixed(2));
+          priceData.push([bar.timestamp * 1000, price]);
+        };
+        return priceData;
+      }
+    </script>
     {% block js %}{% endblock %}
   </body>
 </html>

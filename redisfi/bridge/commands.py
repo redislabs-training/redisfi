@@ -88,7 +88,7 @@ class BridgePriceLive(MockMixin, Command):
         {--mock : Launch mock price updates instead of live}
         {--mock-asset-random-price-range=.03 : Multiplier to determine range for assets (base_price*multiplier = gaussian std deviation)}
         {--mock-crypto-random-price-range=.0003 : Multiplier to determine range for crypto (base_price*multiplier = gaussian std deviation)}
-        {--mock-update-price-ticks=.5,3 : Update prices randomly min_seconds,max_seconds }
+        {--mock-update-price-ticks=.25,1 : Update prices randomly min_seconds,max_seconds }
     '''
 
     adapters = [AlpacaLive]
@@ -96,6 +96,7 @@ class BridgePriceLive(MockMixin, Command):
 
     def _adapter_config(self: Command) -> dict:
         adapter_config = super()._adapter_config()
+        
         if self.option('mock'):
             adapter_config['asset_multiplier'] = float(self.option('mock-asset-random-price-range'))
             adapter_config['crypto_multiplier'] = float(self.option('mock-crypto-random-price-range'))

@@ -64,31 +64,43 @@
         const socket = io();
 
         const assets = $('.price');
+        let symbols = [];
         for (let i=0; i < assets.length; i++) {
             assets[i].textContent = parseFloat(assets[i].textContent).toFixed(2);
             let [symbol, _] = assets[i].id.split('-');
-            console.log(symbol);
+            symbols.push(symbol);
             socket.on('updates.'+symbol, (data) => {
                 assets[i].textContent = data.price.toFixed(2);
             });
         }
 
-        var options = {
-            chart: {
-                type: 'line',
-                height: '500px'
-            },
-            series: [{
-                name: 'sales',
-                data: [30,40,35,50,49,60,70,91,125]
-            }],
-            xaxis: {
-                categories: [1991,1992,1993,1994,1995,1996,1997, 1998,1999]
-            }
+        var series = [];
+        for (let i=0; i< symbols.length; i++) {
+            const symbol = symbols[i];
+
+            series.push($.getJSON(`/api/asset/${symbol}/history?start={{ninty_days}}`).then((data) => {
+                let timeseries = barsToTimeseries(data);
+                let obj = {name:symbol, data:timeseries};
+                return obj            
+            }));
+        }
+
+        Promise.all(series).then((data) => {
+            console.log(data);
+
+            var options = {
+                chart: {
+                    type: 'line'
+                },
+                series:data,
+                xaxis: {
+                    type: 'datetime'
+                }
             }
 
-        var chart = new ApexCharts(document.querySelector("#chart"), options);
-        chart.render();
+            var chart = new ApexCharts(document.querySelector("#chart"), options);
+            chart.render();
+        });
     });
 </script>
 {% endblock %}

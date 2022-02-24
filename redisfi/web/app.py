@@ -1,16 +1,18 @@
 from os import environ
 from subprocess import Popen
-from pprint import pprint
+from datetime import datetime, timedelta
 
 from gevent import monkey 
 monkey.patch_all()
 
 from flask_socketio import SocketIO
-from flask import Flask, render_template, Response
+from flask import Flask, redirect, render_template, Response
 from redis import Redis
 
 from redisfi import db as DB
 from redisfi.web.api import api 
+
+NINTY_DAYS_AGO = int((datetime.now() - timedelta(days=90)).timestamp())
 
 app = Flask(__name__)
 app.register_blueprint(api, url_prefix='/api')
@@ -18,12 +20,16 @@ app.config['SECRET_KEY'] = 'supersecret!'
 app.config['REDIS'] = Redis.from_url(environ.get('REDIS_URL', 'redis://localhost:6379'))
 socketio = SocketIO(app, message_queue=environ.get('REDIS_URL'), async_mode='gevent')
 
+@app.route('/')
+def portfolio():
+    return redirect('/fund/retire2050')
+
 @app.route('/asset/<string:symbol>')
 def asset(symbol:str):
     redis = app.config['REDIS']
     asset_data = DB.get_asset(redis, symbol)
     if asset_data:
-        return render_template('asset.html', asset=asset_data)
+        return render_template('asset.html', asset=asset_data, ninty_days=NINTY_DAYS_AGO)
     else:
         return Response(status=404)
 
@@ -34,8 +40,7 @@ def fund(name:str):
     if fund_data:
         assets = DB.get_assets_metadata_and_latest(redis, fund_data['assets'])
         fund_data['assets'] = assets
-        pprint(fund_data)
-        return render_template('fund.html', fund=fund_data)
+        return render_template('fund.html', fund=fund_data, ninty_days=NINTY_DAYS_AGO)
     else:
         return Response(status=404)
 
@@ -50,6 +55,7 @@ def run(debug=False, redis_url='redis://'):
     # Take config from CLI (cleo) and plug it into env vars, so the flask
     # app itself is pulling config from env, but that's being driven from 
     # the CLI and handed off here
+
     env = environ.copy()
     env['REDIS_URL'] = redis_url
 

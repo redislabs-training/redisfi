@@ -62,14 +62,8 @@
       price = parseFloat(data.close.toFixed(2));
     });
     
-    $.getJSON('/api/asset/{{asset.symbol}}/history', (data) => {
-      let priceData = [];
-      for(i=0; i<data.length; i++){
-        bar = data[i];
-        price = (bar.high + bar.low) / 2;
-        price = parseFloat(price.toFixed(2));
-        priceData.push([bar.timestamp * 1000, price]);
-      };
+    $.getJSON('/api/asset/{{asset.symbol}}/history?start={{ninty_days}}', (data) => {
+      priceData = barsToTimeseries(data);
       console.log(priceData);
       var options = {
       chart: {
