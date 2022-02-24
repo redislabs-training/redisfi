@@ -112,7 +112,7 @@ class BridgeBase(Command):
     bridge
         {--H|redis-host=localhost : Redis hostname - can also set with REDIS_HOST env var}
         {--P|redis-port=6379 : Redis port - can also set with REDIS_PORT env var}
-        {--s|assets=GOOG,MSFT,TSLA,SPY,QQQ,PIMIX : Comma delimited list of asset symbols to track}
+        {--s|assets=GOOG,MSFT,TSLA,SNAP,JPM,F,VMW,SOFI,SPCE,AMZN,SPY,QQQ,PIMIX,VEMIX,VOO : Comma delimited list of asset symbols to track}
         {--c|crypto=BTCUSD,ETHUSD : Comma delimited list of crypto to track}
     '''
 

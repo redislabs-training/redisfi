@@ -36,7 +36,7 @@
                     <tbody>
                       {% for asset in fund.assets.values() %}
                         <tr>
-                            <th scope="row">&nbsp;&nbsp;{{asset.symbol}}</th>
+                            <th scope="row">&nbsp;&nbsp;<a class="link-dark" href="/asset/{{asset.symbol}}">{{asset.symbol}}</a></th>
                             <td>{{asset.name}}</td>
                             <td>1234</td>
                             <td class="price" id="{{asset.symbol}}-price">{{ (asset.latest.high + asset.latest.low) / 2 }}</td>
@@ -63,13 +63,11 @@
     $(() => {
         const socket = io();
 
-        let assets = $('.price');
-        
+        const assets = $('.price');
         for (let i=0; i < assets.length; i++) {
             assets[i].textContent = parseFloat(assets[i].textContent).toFixed(2);
             let [symbol, _] = assets[i].id.split('-');
             console.log(symbol);
-            
             socket.on('updates.'+symbol, (data) => {
                 assets[i].textContent = data.price.toFixed(2);
             });

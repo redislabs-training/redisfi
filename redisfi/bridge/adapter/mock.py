@@ -8,10 +8,11 @@ from redisfi.bridge.adapter.base import BaseAdapter
 
 class RNGPriceGenerator(BaseAdapter):
     def __init__(self, asset_multiplier, crypto_multiplier, update_ticks, **kwargs) -> None:
+        super().__init__(**kwargs)
         self.asset_multiplier = asset_multiplier
         self.crypto_multiplier = crypto_multiplier
         self.update_ticks = update_ticks
-        super().__init__(**kwargs)
+        
     
     def run(self):
         prices = {}
@@ -20,6 +21,7 @@ class RNGPriceGenerator(BaseAdapter):
             prices[asset] = latest['close']
 
         self.cli.line(f'<info>prices: </info><comment>{prices}</comment>')
+
         while True:
             shuffle(self.assets)
             shuffle(self.crypto)
