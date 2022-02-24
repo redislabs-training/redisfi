@@ -4,6 +4,7 @@ from cleo import Command
 from redisfi.bridge.adapter.alpaca import AlpacaLive, AlpacaHistoric
 from redisfi.bridge.adapter.yahoo import YahooFinanceMetadata, YahooFinanceHistoric
 from redisfi.bridge.adapter.file import JSONMetadataFileLoader, JSONFundMetadataFileLoader
+from redisfi.bridge.adapter.mock import RNGPriceGenerator
 
 
 class BridgeMixin:
@@ -45,6 +46,17 @@ class BridgeMixin:
         return adapter_config
 
 
+class MockMixin(BridgeMixin):
+    mock_adapters = []
+
+    def handle(self):
+        if self.option('mock'):
+            self.line('<error>Enabling mock adapters</error>')
+            self.adapters = self.mock_adapters
+        
+        super().handle()
+
+
 class BridgePriceHistoric(BridgeMixin, Command):
     '''
     Run historic price data collection ingest
@@ -67,15 +79,32 @@ class BridgeMetadata(BridgeMixin, Command):
     '''
     adapters = [JSONFundMetadataFileLoader, JSONMetadataFileLoader, YahooFinanceMetadata]
 
-class BridgePriceLive(BridgeMixin, Command):
+
+class BridgePriceLive(MockMixin, Command):
     '''
     Run live data bridge to stream active transactions
 
     live
+        {--mock : Launch mock price updates instead of live}
+        {--mock-asset-random-price-range=.03 : Multiplier to determine range for assets (base_price*multiplier = gaussian std deviation)}
+        {--mock-crypto-random-price-range=.0003 : Multiplier to determine range for crypto (base_price*multiplier = gaussian std deviation)}
+        {--mock-update-price-ticks=.5,3 : Update prices randomly min_seconds,max_seconds }
     '''
 
     adapters = [AlpacaLive]
+    mock_adapters = [RNGPriceGenerator]
 
+    def _adapter_config(self: Command) -> dict:
+        adapter_config = super()._adapter_config()
+        if self.option('mock'):
+            adapter_config['asset_multiplier'] = float(self.option('mock-asset-random-price-range'))
+            adapter_config['crypto_multiplier'] = float(self.option('mock-crypto-random-price-range'))
+            adapter_config['update_ticks'] = [float(tick) for tick in self.option('mock-update-price-ticks').split(',')]
+        
+        return adapter_config
+
+
+    
 class BridgeBase(Command):
     '''
     Bridge commands

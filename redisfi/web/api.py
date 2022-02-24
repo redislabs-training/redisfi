@@ -21,6 +21,6 @@ def asset_latest(symbol:str):
     latest = DB.get_asset_latest(redis, symbol)
     
     if latest:
-        return dumps(latest[0])
+        return dumps(latest)
     else:
         return Response(status=404)

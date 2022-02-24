@@ -5,11 +5,92 @@
         margin-top: 20px;
         margin-left: 10px;
     }
+    .container-data{
+        margin-top: 30px;
+        width: 95%;
+    }
 </style>
 {% endblock %}
 {% block body%}
-<div class="container-fluid">
+<div class="container-fluid container-main">
     <h1>{{fund.name}}</h1>
-    <h2 class="display-5">$ <span id="price">123456.78</span></h2>
+    <h2 class="display-5">&nbsp;$ <span id="price">123456.78</span></h2>
+    <div class="container-fluid container-data">
+        <div class="row">
+            <div class="col-lg border bg-light">
+                <div id="chart"></div>
+            </div>
+        </div>
+        <div class="row"><div class="col-lg spacer">&nbsp;</div></div>
+        <div class="row">
+            <div class="col-lg">
+                <table class="table table-striped table-hover border bg-light">
+                    <thead>
+                      <tr>
+                        <th scope="col">Symbol</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Amount</th>
+                        <th scope="col">Price</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for asset in fund.assets.values() %}
+                        <tr>
+                            <th scope="row">&nbsp;&nbsp;{{asset.symbol}}</th>
+                            <td>{{asset.name}}</td>
+                            <td>1234</td>
+                            <td class="price" id="{{asset.symbol}}-price">{{ (asset.latest.high + asset.latest.low) / 2 }}</td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row"><div class="col-lg spacer">&nbsp;</div></div>
+        <div class="row">
+            <div class="col-md">
+                <div class="p-4 border bg-light" id="description">
+                    <h5>Description:</h5><hr>
+                    {{ fund.description }}
+                </div>
+            </div> 
+        </div>
+    </div>
 </div>
+{% endblock %}
+{% block js %}
+<script type="text/javascript">
+    $(() => {
+        const socket = io();
+
+        let assets = $('.price');
+        
+        for (let i=0; i < assets.length; i++) {
+            assets[i].textContent = parseFloat(assets[i].textContent).toFixed(2);
+            let [symbol, _] = assets[i].id.split('-');
+            console.log(symbol);
+            
+            socket.on('updates.'+symbol, (data) => {
+                assets[i].textContent = data.price.toFixed(2);
+            });
+        }
+
+        var options = {
+            chart: {
+                type: 'line',
+                height: '500px'
+            },
+            series: [{
+                name: 'sales',
+                data: [30,40,35,50,49,60,70,91,125]
+            }],
+            xaxis: {
+                categories: [1991,1992,1993,1994,1995,1996,1997, 1998,1999]
+            }
+            }
+
+        var chart = new ApexCharts(document.querySelector("#chart"), options);
+        chart.render();
+    });
+</script>
 {% endblock %}

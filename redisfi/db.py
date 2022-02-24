@@ -26,7 +26,15 @@ def get_asset_latest(redis: Redis, symbol: str):
     idx = index_bar_json(redis)
     query = Query(f'@symbol:{symbol}').sort_by('timestamp', asc=False).paging(0, 1)
     print(_build_search_query(idx, query))
-    return _deserialize_results(idx.search(query))
+    return _deserialize_results(idx.search(query))[0]
+
+def get_assets_metadata_and_latest(redis: Redis, symbols: list):
+    assets = {}
+    for symbol in symbols:
+        assets[symbol] = get_asset(redis, symbol)
+        assets[symbol]['latest'] = get_asset_latest(redis, symbol)
+    
+    return assets
 
 def get_fund(redis: Redis, name: str):
     return redis.json().get(_key_fund(name))
@@ -60,7 +68,7 @@ def index_bar_json(redis:Redis):
 
     idx.create_index((
         TextField('$.symbol', as_name='symbol'),
-        NumericField('$.timestamp', as_name='timestamp'),
+        NumericField('$.timestamp', as_name='timestamp', sortable=True),
         NumericField('$.open', as_name='open'),
         NumericField('$.high', as_name='high'),
         NumericField('$.low', as_name='low'),

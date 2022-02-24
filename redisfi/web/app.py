@@ -1,5 +1,6 @@
 from os import environ
 from subprocess import Popen
+from pprint import pprint
 
 from gevent import monkey 
 monkey.patch_all()
@@ -28,9 +29,12 @@ def asset(symbol:str):
 
 @app.route('/fund/<string:name>')
 def fund(name:str):
-    redis = app.config['REDIS']
+    redis : Redis = app.config['REDIS']
     fund_data = DB.get_fund(redis, name)
     if fund_data:
+        assets = DB.get_assets_metadata_and_latest(redis, fund_data['assets'])
+        fund_data['assets'] = assets
+        pprint(fund_data)
         return render_template('fund.html', fund=fund_data)
     else:
         return Response(status=404)
