@@ -16,7 +16,7 @@ class RunCommand(Command):
 
     def handle(self):
 
-        cmd = ['docker', 'compose']
+        cmd = ['docker-compose']
         up_cmd = ['up']
         profiles = []
 

@@ -11,6 +11,10 @@
     <nav class="navbar navbar-dark bg-dark">
       <div class="container-fluid">
         <a class="navbar-brand" href="#">&nbsp;&nbsp;RedisFI</a>
+        <form class="d-flex" action="/search">
+          <input class="form-control me-2" type="search" name="query" placeholder="Search" aria-label="Search">
+          <button class="btn btn-outline-success" type="submit">Search</button>
+        </form>
       </div>
     </nav>
     {% block body %}{% endblock %}

@@ -1,12 +1,13 @@
 from os import environ
 from subprocess import Popen
 from datetime import datetime, timedelta
+from pprint import pprint
 
 from gevent import monkey 
 monkey.patch_all()
 
 from flask_socketio import SocketIO
-from flask import Flask, redirect, render_template, Response
+from flask import Flask, redirect, render_template, Response, request
 from redis import Redis
 
 from redisfi import db as DB
@@ -24,10 +25,23 @@ socketio = SocketIO(app, message_queue=environ.get('REDIS_URL'), async_mode='gev
 def portfolio():
     return redirect('/fund/retire2050')
 
+@app.route('/search')
+def search():
+    redis = app.config['REDIS']
+    query = request.args.get('query')
+
+    if query:
+        results = DB.search_funds(redis, query)
+        pprint(results)
+        return render_template('results.html', results=results)
+    else:
+        return redirect('/')
+
 @app.route('/asset/<string:symbol>')
 def asset(symbol:str):
     redis = app.config['REDIS']
     asset_data = DB.get_asset(redis, symbol)
+
     if asset_data:
         return render_template('asset.html', asset=asset_data, ninty_days=NINTY_DAYS_AGO)
     else:
@@ -37,6 +51,7 @@ def asset(symbol:str):
 def fund(name:str):
     redis : Redis = app.config['REDIS']
     fund_data = DB.get_fund(redis, name)
+    
     if fund_data:
         assets = DB.get_assets_metadata_and_latest(redis, fund_data['assets'])
         fund_data['assets'] = assets

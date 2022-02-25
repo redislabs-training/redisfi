@@ -1,4 +1,6 @@
 from os import environ
+from subprocess import Popen
+
 from cleo import Command
 
 from redisfi.bridge.adapter.alpaca import AlpacaLive, AlpacaHistoric
@@ -104,6 +106,44 @@ class BridgePriceLive(MockMixin, Command):
         
         return adapter_config
 
+class BridgeUp(Command):
+    '''
+    Run the whole bridge suite.  Metadata > History > Live
+
+    up
+        {--hourly=1 : Number of years to extract hourly data}
+        {--mock : Launch mock price updates instead of live}
+        {--mock-asset-random-price-range=.03 : Multiplier to determine range for assets (base_price*multiplier = gaussian std deviation)}
+        {--mock-crypto-random-price-range=.0003 : Multiplier to determine range for crypto (base_price*multiplier = gaussian std deviation)}
+        {--mock-update-price-ticks=.25,1 : Update prices randomly min_seconds,max_seconds }
+    '''
+
+    def handle(self):
+        
+        global_args = ['--redis-host', self.option('redis-host')]
+        global_args.extend(['--redis-port', self.option('redis-port')])
+        global_args.extend(['--assets', self.option('assets')])
+        global_args.extend(['--crypto', self.option('crypto')])
+
+        with Popen(['poetry', 'run', 'redisfi', 'bridge', 'metadata'] + global_args) as p:
+            p.communicate()
+
+        historic_args = ['--hourly', self.option('hourly')]
+        with Popen(['poetry', 'run', 'redisfi', 'bridge', 'historic'] + historic_args + global_args) as p:
+            p.communicate()
+
+        if self.option('mock'):
+            live_args = ['--mock']
+        else:
+            live_args = []
+             
+        live_args.extend(['--mock-asset-random-price-range', self.option('mock-asset-random-price-range')])
+        live_args.extend(['--mock-crypto-random-price-range', self.option('mock-crypto-random-price-range')])
+        live_args.extend(['--mock-update-price-ticks', self.option('mock-update-price-ticks')])
+
+        with Popen(['poetry', 'run', 'redisfi', 'bridge', 'live'] + live_args + global_args) as p:
+            p.communicate()
+
 
     
 class BridgeBase(Command):
@@ -117,7 +157,7 @@ class BridgeBase(Command):
         {--c|crypto=BTCUSD,ETHUSD : Comma delimited list of crypto to track}
     '''
 
-    commands = [BridgePriceLive(), BridgePriceHistoric(), BridgeMetadata()]
+    commands = [BridgePriceLive(), BridgePriceHistoric(), BridgeMetadata(), BridgeUp()]
 
     def handle(self):
         return self.call("help", self._config.name)

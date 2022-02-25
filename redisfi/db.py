@@ -78,6 +78,12 @@ def index_bar_json(redis:Redis):
 
     return idx
 
+def search_funds(redis: Redis, query: str):
+    idx = index_asset_json(redis)
+    query = Query(query)
+    print(_build_search_query(idx, query))
+    return _deserialize_results(idx.search(query))
+
 def set_bar_json(redis: Redis, symbol: str, timestamp: int, open: float,
              high: float, low: float, close: float, volume: int):
     
