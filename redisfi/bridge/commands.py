@@ -111,7 +111,7 @@ class BridgeUp(Command):
     Run the whole bridge suite.  Metadata > History > Live
 
     up
-        {--hourly=1 : Number of years to extract hourly data}
+        {--hourly=7 : Number of days to extract hourly data}
         {--mock : Launch mock price updates instead of live}
         {--mock-asset-random-price-range=.03 : Multiplier to determine range for assets (base_price*multiplier = gaussian std deviation)}
         {--mock-crypto-random-price-range=.0003 : Multiplier to determine range for crypto (base_price*multiplier = gaussian std deviation)}

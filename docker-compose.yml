@@ -24,7 +24,7 @@ services:
       - build
   bridge-build:
     env_file: .env
-    image: timeartist/redisfi
+    build: .
     command: poetry run redisfi bridge up --mock
     profiles:
       - build

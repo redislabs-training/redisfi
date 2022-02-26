@@ -16,5 +16,6 @@ RUN poetry install
 RUN mv poetry.lock poetry.lock.bak
 COPY . .
 RUN mv poetry.lock.bak poetry.lock
+ENV PYTHONUNBUFFERED=1
 
 

@@ -17,7 +17,7 @@ class RNGPriceGenerator(BaseAdapter):
     def run(self):
         prices = {}
         for asset in self.assets + self.crypto:
-            latest = DB.get_asset_latest(self.redis, asset)
+            latest = DB.get_asset_price_historic_bar(self.redis, asset)
             prices[asset] = latest['close']
 
         self.cli.line(f'<info>prices: </info><comment>{prices}</comment>')
@@ -38,6 +38,11 @@ class RNGPriceGenerator(BaseAdapter):
 
                 self.live_update(asset, {'price':asset_price})
                 self.live_update(crypto, {'price':crypto_price})
+                
+                with self.redis.pipeline(transaction=False) as p:
+                    DB.set_asset_mock_price(p, asset, asset_price)
+                    DB.set_asset_mock_price(p, crypto, crypto_price)
+                    p.execute()
                 
                 sleep(triangular(*self.update_ticks))
 

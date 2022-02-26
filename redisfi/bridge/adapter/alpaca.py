@@ -7,8 +7,6 @@ from clikit.api.io.flags import VERBOSE, VERY_VERBOSE
 from redisfi import db as DB
 from redisfi.bridge.adapter.base import BaseAdapter
 
-DAYS_IN_YEAR = 365.2425
-
 class AlpacaBase(BaseAdapter):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -20,12 +18,14 @@ class AlpacaLive(AlpacaBase):
         obj_dict = obj.__dict__['_raw']
         self.live_update(obj_dict['symbol'], obj_dict)
         self.cli.line(str(obj), verbosity=VERY_VERBOSE)
+        DB.set_asset_live_price(self.redis, obj_dict['symbol'], obj_dict['price'])
 
     async def _stock_trade_stream_handler(self, obj: Trade):
         obj_dict = obj.__dict__['_raw']
         obj_dict['conditions'] = ','.join(obj_dict['conditions'])
         self.live_update(obj_dict['symbol'], obj_dict)
         self.cli.line(str(obj), verbosity=VERBOSE)
+        DB.set_asset_live_price(self.redis, obj_dict['symbol'], obj_dict['price'])
   
     def run(self):
         s = Stream(self.api_key,
@@ -60,12 +60,12 @@ class AlpacaHistoric(AlpacaBase):
         self.get_hourly_data()
 
     def get_hourly_data(self):
-        from_when_dt = datetime.now() - timedelta(days=self.hourly*DAYS_IN_YEAR)
+        from_when_dt = datetime.now() - timedelta(days=self.hourly)
         from_when = from_when_dt.isoformat().split('T')[0]
 
         with self.redis.pipeline(transaction=False) as pipe:
             for ticker in self.assets:
-                self.cli.line(f'<info>pulling hourly data for </info><comment>{ticker}</comment> <info>from</info> <comment>{from_when}</comment> <info>til</info> <comment>now</comment>')
+                self.cli.line(f'<info>Pulling hourly data for </info><comment>{ticker}</comment> <info>from</info> <comment>{from_when}</comment> <info>til</info> <comment>now</comment>')
                 bars = self.api.get_bars_iter(ticker, TimeFrame.Hour, from_when)
                 for bar in bars:
                     timestamp = self._bar_timestamp(bar)
@@ -74,7 +74,7 @@ class AlpacaHistoric(AlpacaBase):
                 pipe.execute()
             
             for ticker in self.crypto:
-                self.cli.line(f'<info>pulling hourly data for </info><comment>{ticker}</comment> <info>from</info> <comment>{from_when}</comment> <info>til</info> <comment>now</comment>')
+                self.cli.line(f'<info>Pulling hourly data for </info><comment>{ticker}</comment> <info>from</info> <comment>{from_when}</comment> <info>til</info> <comment>now</comment>')
                 bars = self.api.get_crypto_bars_iter(ticker, TimeFrame.Hour, from_when)
                 for bar in bars:
                     timestamp = self._bar_timestamp(bar)

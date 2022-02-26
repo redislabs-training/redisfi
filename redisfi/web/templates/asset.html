@@ -57,9 +57,16 @@
     const socket = io();
     let price;
     
-    $.getJSON('/api/asset/{{asset.symbol}}/latest', (data) => {
-      $('#price').text(data.close.toFixed(2));
-      price = parseFloat(data.close.toFixed(2));
+    $.getJSON('/api/asset/{{asset.symbol}}/prices', (prices) => {
+      let newPrice;
+      if (prices.mock) {
+        newPrice = prices.mock;
+      } else {
+        newPrice = prices.historic;
+      }
+
+      $('#price').text(newPrice.toFixed(2));
+      price = parseFloat(newPrice.toFixed(2));
     });
     
     $.getJSON('/api/asset/{{asset.symbol}}/history?start={{ninty_days}}', (data) => {

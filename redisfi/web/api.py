@@ -14,11 +14,11 @@ def asset_history(symbol:str):
     results = DB.get_asset_history(redis, symbol, start, end)
     return dumps(results)
 
-@api.route('/asset/<string:symbol>/latest')
+@api.route('/asset/<string:symbol>/prices')
 def asset_latest(symbol:str):
     redis = current_app.config['REDIS']
     symbol = symbol.upper()
-    latest = DB.get_asset_latest(redis, symbol)
+    latest = DB.get_asset_prices(redis, symbol)
     
     if latest:
         return dumps(latest)

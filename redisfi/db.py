@@ -9,12 +9,15 @@ from redis.commands.search.indexDefinition import IndexDefinition, IndexType
 from redis.commands.search.field import TextField, NumericField
 
 PAGE_SIZE = 1000000
+_average_bar = lambda bar: (bar['high'] + bar['low'])/2
 _key_asset = lambda symbol: f'asset:{symbol.upper()}'
 _key_bars = lambda symbol, timestamp: f'bars:{symbol.upper()}:{int(timestamp) if timestamp else ""}'
 _key_fund = lambda name: f'fund:{name.replace(" ", "").lower()}'
 
+
 def get_asset(redis: Redis, symbol: str):
     return redis.json().get(_key_asset(symbol))
+
 
 def get_asset_history(redis: Redis, symbol: str, start=0, end='inf'):
     idx = index_bar_json(redis)
@@ -22,22 +25,53 @@ def get_asset_history(redis: Redis, symbol: str, start=0, end='inf'):
     print(_build_search_query(idx, query))
     return _deserialize_results(idx.search(query))
 
-def get_asset_latest(redis: Redis, symbol: str):
-    idx = index_bar_json(redis)
-    query = Query(f'@symbol:{symbol}').sort_by('timestamp', asc=False).paging(0, 1)
-    print(_build_search_query(idx, query))
-    return _deserialize_results(idx.search(query))[0]
 
 def get_assets_metadata_and_latest(redis: Redis, symbols: list):
     assets = {}
     for symbol in symbols:
         assets[symbol] = get_asset(redis, symbol)
-        assets[symbol]['latest'] = get_asset_latest(redis, symbol)
+        bar = get_asset_price_historic_bar(redis, symbol)
+        assets[symbol]['price']['historic'] = _average_bar(bar)
+        print(assets[symbol])
     
     return assets
 
+
+def get_asset_prices(redis: Redis, symbol: str):
+
+    bar = get_asset_price_historic_bar(redis, symbol)
+    resp = {'historic', _average_bar(bar)}
+    resp = redis.json().get(_key_asset(symbol), '$.price')
+    
+    if resp is not None:
+        data = resp[0]
+
+        if type(data) == str:
+            resp = loads(resp[0])
+        else:
+            resp = data
+    
+    return resp
+
+
+def get_asset_price_historic_bar(redis: Redis, symbol: str):
+    idx = index_bar_json(redis)
+    query = Query(f'@symbol:{symbol}').sort_by('timestamp', asc=False).paging(0, 1)
+    print(_build_search_query(idx, query))
+    return _deserialize_results(idx.search(query))[0]
+
+
+def get_asset_price_live(redis: Redis, symbol: str):
+    return redis.json().get(_key_asset(symbol), '$.price.live')
+
+
+def get_asset_price_mock(redis: Redis, symbol: str):
+    return redis.json().get(_key_asset(symbol), '$.price.mock')
+
+
 def get_fund(redis: Redis, name: str):
     return redis.json().get(_key_fund(name))
+
 
 def index_asset_json(redis: Redis):
     idx = redis.ft(_key_asset('idx'))
@@ -57,6 +91,7 @@ def index_asset_json(redis: Redis):
     ), definition=IndexDefinition(prefix=[_key_asset('')], index_type=IndexType.JSON))
 
     return idx
+
 
 def index_bar_json(redis:Redis):
     idx = redis.ft(_key_bars('idx', '')[0:-1])
@@ -78,11 +113,43 @@ def index_bar_json(redis:Redis):
 
     return idx
 
+
 def search_funds(redis: Redis, query: str):
     idx = index_asset_json(redis)
     query = Query(query)
     print(_build_search_query(idx, query))
     return _deserialize_results(idx.search(query))
+
+
+def set_asset_json(redis: Redis, symbol: str, name: str, description: str, website: str=None, 
+                   sector: str=None, industry: str=None):
+    if not sector:
+        sector = ''
+
+    if not industry:
+        industry = ''
+
+    if not website:
+        website = ''
+
+    obj = {'symbol':symbol,
+           'name':name, 
+           'description':description, 
+           'website':website, 
+           'sector':sector, 
+           'industry':industry,
+           'price':{'live':None, 'mock':None}}
+
+    redis.json().set(_key_asset(symbol), Path.rootPath(), obj)
+
+
+def set_asset_live_price(redis: Redis, symbol: str, price: float):
+    redis.json().set(_key_asset(symbol), '$.price.live', price)
+
+
+def set_asset_mock_price(redis: Redis, symbol: str, price: float):
+    redis.json().set(_key_asset(symbol), '$.price.mock', price)
+
 
 def set_bar_json(redis: Redis, symbol: str, timestamp: int, open: float,
              high: float, low: float, close: float, volume: int):
@@ -98,6 +165,7 @@ def set_bar_json(redis: Redis, symbol: str, timestamp: int, open: float,
 
     redis.json().set(key, Path.rootPath(), obj)
 
+
 def set_fund_json(redis: Redis, name: str, description: str, assets: list):
     
     obj = {'name':name,
@@ -107,29 +175,9 @@ def set_fund_json(redis: Redis, name: str, description: str, assets: list):
     redis.json().set(_key_fund(name), Path.rootPath(), obj)
    
 
-def set_asset_json(redis: Redis, symbol: str, name: str, description: str, website: str=None, 
-                   sector: str=None, industry: str=None):
-    if not sector:
-        sector = ''
-
-    if not industry:
-        industry = ''
-
-    if not website:
-        website = ''
-            
-    obj = {'symbol':symbol,
-           'name':name, 
-           'description':description, 
-           'website':website, 
-           'sector':sector, 
-           'industry':industry}
-
-    redis.json().set(_key_asset(symbol), Path.rootPath(), obj)
-
-
 def _build_search_query(index: SearchCommands, query: Query):
     return ' '.join([SEARCH_CMD] + list(map(str, index._mk_query_args(query, None)[0])))
+
 
 def _deserialize_results(results) -> list:
     '''turn a list of json at results.docs into a list of dicts'''
