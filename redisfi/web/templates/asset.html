@@ -90,7 +90,15 @@
     });
 
     socket.on('updates.{{asset.symbol}}', (event) => {
-      $('#price').text(event.price.toFixed(2));
+      let selector = '#price';
+      $(selector).text(event.price.toFixed(2));
+      if (event.price > price) {
+        flashGreen(selector);
+      } else if (event.price < price) {
+        flashRed(selector);
+      }
+      price = event.price;
+
     });
     
   });

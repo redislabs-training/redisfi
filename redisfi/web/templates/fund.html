@@ -67,11 +67,19 @@
         const assets = $('.price');
         let symbols = [];
         for (let i=0; i < assets.length; i++) {
-            assets[i].textContent = parseFloat(assets[i].textContent).toFixed(2);
+            let price = parseFloat(assets[i].textContent);
+            assets[i].textContent = price.toFixed(2);
             let [symbol, _] = assets[i].id.split('-');
             symbols.push(symbol);
+            prices[symbol] = price;
             socket.on('updates.'+symbol, (data) => {
                 assets[i].textContent = data.price.toFixed(2);
+                let selector = `#${assets[i].id}`;
+                if (data.price > prices[symbol]) {
+                    flashGreen(selector);
+                } else if (data.price < prices[symbol]) {
+                    flashRed(selector);
+                }
             });
         }
 

@@ -7,35 +7,23 @@ resources:
       branch: main
       username: ((auth-github))
       password: x-oauth-basic
-  - name: redis-enterprise
-    icon: docker
-    type: registry-image
-    source:
-      repository: redislabs/redis
-      tag: latest
+  # - name: redis-enterprise
+  #   icon: docker
+  #   type: registry-image
+  #   source:
+  #     repository: redislabs/redis
+  #     tag: latest
   - name: redisfi-container
     type: registry-image
     icon: docker
     source:
-      repository: us-west4-docker.pkg.dev/redislabs-university/redisfi/redisfi
-      username: _json_key
-      password: ((auth-gcp-te))
+      repository: timeartist/redisfi
+      username: timeartist
+      password: ((auth-docker))
 jobs: 
-  - name: run-tests
-    plan:
-    - get: redisfi
-      trigger: true
-    - get: redis-enterprise
-      trigger: true
-      params:
-        format: oci
-    - task: run
-      privileged: true
-      file: redisfi/ci/run_tests.yml
   - name: build-container
     plan:
       - get: redisfi
-        passed: [run-tests]
         trigger: true
         params:
           format: oci

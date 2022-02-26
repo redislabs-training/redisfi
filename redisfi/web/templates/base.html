@@ -34,6 +34,12 @@
         };
         return priceData;
       }
+      function flashGreen(selector) {
+        $(selector).css({'color':'limegreen'}).animate({'color':'black'}, 600);
+      }
+      function flashRed(selector) {
+        $(selector).css({'color':'red'}).animate({'color':'black'}, 600)
+      }
     </script>
     {% block js %}{% endblock %}
   </body>
