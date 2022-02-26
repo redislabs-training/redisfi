@@ -1,7 +1,5 @@
 FROM taylorsilva/dcind
 
-# RUN apk update
-# RUN apk add g++ gcc libxslt-dev libffi-dev python3-dev musl-dev make
 RUN pip3 install --upgrade pip
 RUN pip3 install poetry
 

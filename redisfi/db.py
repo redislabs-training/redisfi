@@ -109,7 +109,15 @@ def set_fund_json(redis: Redis, name: str, description: str, assets: list):
 
 def set_asset_json(redis: Redis, symbol: str, name: str, description: str, website: str=None, 
                    sector: str=None, industry: str=None):
-    
+    if not sector:
+        sector = ''
+
+    if not industry:
+        industry = ''
+
+    if not website:
+        website = ''
+            
     obj = {'symbol':symbol,
            'name':name, 
            'description':description, 
