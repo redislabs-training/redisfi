@@ -98,9 +98,10 @@
 
 
         Promise.all(series).then((data) => {
-            console.log(data[0]);
+
             const formatter = Intl.NumberFormat(navigator.language, {style: 'currency', currency: 'USD'});
             $('#price').text(formatter.format(parseFloat(data[0][0][1])));
+
             var options = {
                 chart: {
                     type: 'line',

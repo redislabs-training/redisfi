@@ -1,7 +1,7 @@
 ---
 params:
   CONTEXT: redisfi
-  DOCKERFILE: compose-Dockerfile
+  DOCKERFILE: redisfi/compose-Dockerfile
 platform: linux
 image_resource:
   type: registry-image
