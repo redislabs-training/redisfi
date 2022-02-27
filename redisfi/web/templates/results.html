@@ -64,17 +64,15 @@
         $(selector).text(fullDescriptions[symbol]);
         
         const toggleSelector = selector + '-toggle';
-        $(toggleSelector).text('Read Less')
-        $(toggleSelector).attr('onclick', `collapseDescription('${id}')`)
-        // $(`#${symbol}-description`).innerText = fullDescriptions[symbol];
-
+        $(toggleSelector).text('Read Less');
+        $(toggleSelector).attr('onclick', `collapseDescription('${id}')`);
     }
 
     function truncateDescription(description) {          
         let splitDescription = description.split(' ');
         let subset = splitDescription.slice(0, TRUNCATED_WORD_LENGTH);
 
-        return subset.join(' ')
+        return subset.join(' ');
     }
 
     $(() => {
@@ -83,11 +81,11 @@
         for (let i=0; i<descriptions.length; i++) {
             const [symbol, _] = descriptions[i].id.split('-');
             fullDescriptions[symbol] = descriptions[i].innerText;
-            descriptions[i].innerText = truncateDescription(descriptions[i].innerText)
+            descriptions[i].innerText = truncateDescription(descriptions[i].innerText);
         }
 
         const assets = $('.price');
-        const prices = {}
+        const prices = {};
         const socket = io();
         for (let i=0; i < assets.length; i++) {
             const price = parseFloat(assets[i].textContent);
@@ -103,8 +101,6 @@
                 }
             });
         }
-
-
-    })
+    });
 </script>
 {% endblock %}

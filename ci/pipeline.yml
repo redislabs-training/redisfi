@@ -20,6 +20,14 @@ resources:
       repository: timeartist/redisfi
       username: timeartist
       password: ((auth-docker))
+  - name: redisfi-compose-container
+    type: registry-image
+    icon: docker
+    source:
+      repository: timeartist/redisfi-compose
+      username: timeartist
+      password: ((auth-docker))
+
 jobs: 
   - name: build-container
     plan:
@@ -31,6 +39,20 @@ jobs:
         privileged: true
         file: redisfi/ci/build.yml
       - put: redisfi-container
+        params:
+          image: image/image.tar
+          version: 99.99.99
+          bump_aliases: true
+  - name: build-compose-container
+    plan:
+      - get: redisfi
+        trigger: true
+        params:
+          format: oci
+      - task: build
+        privileged: true
+        file: redisfi/ci/build.yml
+      - put: redisfi-compose-container
         params:
           image: image/image.tar
           version: 99.99.99
