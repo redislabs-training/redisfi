@@ -51,7 +51,7 @@ jobs:
           format: oci
       - task: build
         privileged: true
-        file: redisfi/ci/build.yml
+        file: redisfi/ci/build-compose.yml
       - put: redisfi-compose-container
         params:
           image: image/image.tar
