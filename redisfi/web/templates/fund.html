@@ -14,7 +14,7 @@
 {% block body%}
 <div class="container-fluid container-main">
     <h1>{{fund.name}}</h1>
-    <h2 class="display-5">&nbsp;$ <span id="price">123456.78</span></h2>
+    <h2 class="display-5">&nbsp;&nbsp;<span id="price"></span></h2>
     <div class="container-fluid container-data">
         <div class="row">
             <div class="col-lg border bg-light">
@@ -84,29 +84,34 @@
         }
 
         var series = [];
-        for (let i=0; i< symbols.length; i++) {
-            const symbol = symbols[i];
+        series.push($.getJSON('/api/account/{{account}}/{{fund.id}}/transactions?start={{ninty_days}}').then((data) => {
+            
+            const transactions = [];
+            for (let i=0; i<data.length; i++) {
+                let timestamp = data[i].timestamp * 1000;
+                let value = parseFloat((data[i].balance * data[i].price).toFixed(2));
+                transactions.push([timestamp, value]);
+            }
+            return transactions
+        }));
 
-            series.push($.getJSON(`/api/asset/${symbol}/history?start={{ninty_days}}`).then((data) => {
-                let timeseries = barsToTimeseries(data);
-                let obj = {name:symbol, data:timeseries};
-                return obj            
-            }));
-        }
+
 
         Promise.all(series).then((data) => {
-            console.log(data);
-
+            console.log(data[0]);
+            const formatter = Intl.NumberFormat(navigator.language, {style: 'currency', currency: 'USD'});
+            $('#price').text(formatter.format(parseFloat(data[0][0][1])));
             var options = {
                 chart: {
                     type: 'line',
                     height: '500px'
                 },
-                series:data,
+                series:[{name: 'Value',
+                    data: data[0]}],
                 xaxis: {
                     type: 'datetime'
                 }
-            }
+            };
 
             var chart = new ApexCharts(document.querySelector("#chart"), options);
             chart.render();
