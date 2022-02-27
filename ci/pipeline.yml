@@ -34,3 +34,4 @@ jobs:
         params:
           image: image/image.tar
           version: 99.99.99
+          bump_aliases: true

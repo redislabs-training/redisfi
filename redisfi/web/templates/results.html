@@ -22,8 +22,8 @@
                       <tr>
                         <th scope="col">Symbol</th>
                         <th scope="col">Name</th>
-                        <th scope="col">Price</th>
                         <th scope="col">Description</th>
+                        <th scope="col">Price</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -31,8 +31,9 @@
                         <tr>
                             <th scope="row">&nbsp;&nbsp;<a class="link-dark" href="/asset/{{asset.symbol}}">{{asset.symbol}}</a></th>
                             <td>{{asset.name}}</td>
-                            <td class="price" id="{{asset.symbol}}-price"></td>
-                            <td>{{asset.description}}</td>
+                            <td><span class="description" id="{{asset.symbol}}-description">{{asset.description}}</span> <a id="{{asset.symbol}}-description-toggle" class="dark-link text-muted" href="#" onclick="expandDescription('{{asset.symbol}}-description')">Read More</a></td>
+                            <td>$<span class="price" id="{{asset.symbol}}-price">{{'%0.2f' | format(asset.price.mock or asset.price.historic)}}</span></td>
+                            
                         </tr>
                       {% endfor %}
                     </tbody>
@@ -41,4 +42,69 @@
         </div>
     </div>
 </div>
+{% endblock %}
+{% block js %}
+<script type="text/javascript">
+    const TRUNCATED_WORD_LENGTH = 20;
+    const fullDescriptions = {};
+
+    function collapseDescription(id) {
+        const selector = `#${id}`;
+
+        $(selector).text(truncateDescription($(selector).text()));
+        const toggleSelector = selector + '-toggle';
+        $(toggleSelector).text('Read More')
+        $(toggleSelector).attr('onclick', `expandDescription('${id}')`)
+
+    }
+    
+    function expandDescription(id) {
+        const [symbol, _] = id.split('-');
+        const selector = `#${id}`;
+        $(selector).text(fullDescriptions[symbol]);
+        
+        const toggleSelector = selector + '-toggle';
+        $(toggleSelector).text('Read Less')
+        $(toggleSelector).attr('onclick', `collapseDescription('${id}')`)
+        // $(`#${symbol}-description`).innerText = fullDescriptions[symbol];
+
+    }
+
+    function truncateDescription(description) {          
+        let splitDescription = description.split(' ');
+        let subset = splitDescription.slice(0, TRUNCATED_WORD_LENGTH);
+
+        return subset.join(' ')
+    }
+
+    $(() => {
+        
+        const descriptions = $('.description');
+        for (let i=0; i<descriptions.length; i++) {
+            const [symbol, _] = descriptions[i].id.split('-');
+            fullDescriptions[symbol] = descriptions[i].innerText;
+            descriptions[i].innerText = truncateDescription(descriptions[i].innerText)
+        }
+
+        const assets = $('.price');
+        const prices = {}
+        const socket = io();
+        for (let i=0; i < assets.length; i++) {
+            const price = parseFloat(assets[i].textContent);
+            const [symbol, _] = assets[i].id.split('-');
+            prices[symbol] = price;
+            socket.on('updates.'+symbol, (data) => {
+                assets[i].textContent = data.price.toFixed(2);
+                let selector = `#${assets[i].id}`;
+                if (data.price > prices[symbol]) {
+                    flashGreen(selector);
+                } else if (data.price < prices[symbol]) {
+                    flashRed(selector);
+                }
+            });
+        }
+
+
+    })
+</script>
 {% endblock %}

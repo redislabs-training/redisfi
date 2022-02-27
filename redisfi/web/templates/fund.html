@@ -39,7 +39,7 @@
                             <th scope="row">&nbsp;&nbsp;<a class="link-dark" href="/asset/{{asset.symbol}}">{{asset.symbol}}</a></th>
                             <td>{{asset.name}}</td>
                             <td>1234</td>
-                            <td class="price" id="{{asset.symbol}}-price">{{ asset.price.mock or asset.price.historic }}</td>
+                            <td>$ <span class="price" id="{{asset.symbol}}-price">{{ asset.price.mock or asset.price.historic }}</span></td>
                         </tr>
                       {% endfor %}
                     </tbody>
