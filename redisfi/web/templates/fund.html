@@ -29,7 +29,7 @@
                       <tr>
                         <th scope="col">Symbol</th>
                         <th scope="col">Name</th>
-                        <th scope="col">Amount</th>
+                        <th scope="col">Percentage</th>
                         <th scope="col">Price</th>
                       </tr>
                     </thead>
@@ -38,7 +38,7 @@
                         <tr>
                             <th scope="row">&nbsp;&nbsp;<a class="link-dark" href="/asset/{{asset.symbol}}">{{asset.symbol}}</a></th>
                             <td>{{asset.name}}</td>
-                            <td>1234</td>
+                            <td>{{100*asset.percentage}}%</td>
                             <td>$ <span class="price" id="{{asset.symbol}}-price">{{ asset.price.mock or asset.price.historic }}</span></td>
                         </tr>
                       {% endfor %}

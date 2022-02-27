@@ -9,6 +9,7 @@ from redis.commands.search.indexDefinition import IndexDefinition, IndexType
 from redis.commands.search.field import TextField, NumericField
 
 PAGE_SIZE = 1000000
+
 _average_bar = lambda bar: (bar['high'] + bar['low'])/2
 _key_asset = lambda symbol: f'asset:{symbol.upper()}'
 _key_bars = lambda symbol, timestamp: f'bars:{symbol.upper()}:{int(timestamp) if timestamp else ""}'
@@ -30,17 +31,14 @@ def get_assets_metadata_and_latest(redis: Redis, symbols: list):
     assets = {}
     for symbol in symbols:
         assets[symbol] = get_asset(redis, symbol)
-        bar = get_asset_price_historic_bar(redis, symbol)
-        assets[symbol]['price']['historic'] = _average_bar(bar)
+        assets[symbol]['price']['historic'] = get_asset_price_historic(redis, symbol)
         print(assets[symbol])
     
     return assets
 
 
 def get_asset_prices(redis: Redis, symbol: str):
-
-    bar = get_asset_price_historic_bar(redis, symbol)
-    resp = {'historic', _average_bar(bar)}
+    resp = {'historic', get_asset_price_historic(redis, symbol)}
     resp = redis.json().get(_key_asset(symbol), '$.price')
     
     if resp is not None:
@@ -54,11 +52,11 @@ def get_asset_prices(redis: Redis, symbol: str):
     return resp
 
 
-def get_asset_price_historic_bar(redis: Redis, symbol: str):
+def get_asset_price_historic(redis: Redis, symbol: str):
     idx = index_bar_json(redis)
     query = Query(f'@symbol:{symbol}').sort_by('timestamp', asc=False).paging(0, 1)
     print(_build_search_query(idx, query))
-    return _deserialize_results(idx.search(query))[0]
+    return _average_bar(_deserialize_results(idx.search(query))[0])
 
 
 def get_asset_price_live(redis: Redis, symbol: str):
@@ -114,7 +112,7 @@ def index_bar_json(redis:Redis):
     return idx
 
 
-def search_funds(redis: Redis, query: str):
+def search_assets(redis: Redis, query: str):
     idx = index_asset_json(redis)
     query = Query(query)
     print(_build_search_query(idx, query))

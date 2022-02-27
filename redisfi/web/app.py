@@ -31,8 +31,13 @@ def search():
     query = request.args.get('query')
 
     if query:
-        results = DB.search_funds(redis, query)
-        pprint(results)
+        results = DB.search_assets(redis, query)
+        for result in results:
+            if result['price']['live'] is None and result['price']['mock'] is None:
+                result['price']['historic'] = DB.get_asset_price_historic(redis, result['symbol'])
+            else:
+                result['price']['historic'] = ''
+        
         return render_template('results.html', results=results)
     else:
         return redirect('/')
@@ -51,10 +56,14 @@ def asset(symbol:str):
 def fund(name:str):
     redis : Redis = app.config['REDIS']
     fund_data = DB.get_fund(redis, name)
-    
+
     if fund_data:
-        assets = DB.get_assets_metadata_and_latest(redis, fund_data['assets'])
+        assets = DB.get_assets_metadata_and_latest(redis,fund_data['assets'].keys())
+        for asset in assets.values():
+            asset['percentage'] = fund_data['assets'][asset['symbol']]
+
         fund_data['assets'] = assets
+
         return render_template('fund.html', fund=fund_data, ninty_days=NINTY_DAYS_AGO)
     else:
         return Response(status=404)
