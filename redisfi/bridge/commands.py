@@ -134,9 +134,9 @@ class BridgeUp(Command):
     up
         {--hourly=7 : Number of days to extract hourly data}
         {--mock : Launch mock price updates instead of live}
-        {--mock-asset-random-price-range=.03 : Multiplier to determine range for assets (base_price*multiplier = gaussian std deviation)}
+        {--mock-asset-random-price-range=.01 : Multiplier to determine range for assets (base_price*multiplier = gaussian std deviation)}
         {--mock-crypto-random-price-range=.0003 : Multiplier to determine range for crypto (base_price*multiplier = gaussian std deviation)}
-        {--mock-update-price-ticks=.25,1 : Update prices randomly min_seconds,max_seconds }
+        {--mock-update-price-ticks=.25,.75 : Update prices randomly min_seconds,max_seconds }
         {--years-to-generate=5 : Number of years to generate transaction data for}
         {--interval=2 : Generate a transaction every n weeks}
         {--amount-to-invest=300 : Amount to invest each interval}
@@ -156,6 +156,14 @@ class BridgeUp(Command):
         with Popen(['poetry', 'run', 'redisfi', 'bridge', 'historic'] + historic_args + global_args) as p:
             p.communicate()
 
+        
+        portfolio_args = ['--years-to-generate', self.option('years-to-generate')]
+        portfolio_args.extend(['--interval', self.option('interval')])
+        portfolio_args.extend(['--amount-to-invest', self.option('amount-to-invest')])
+
+        with Popen(['poetry', 'run', 'redisfi', 'bridge', 'portfolio'] + portfolio_args + global_args) as p:
+            p.communicate()
+
         if self.option('mock'):
             live_args = ['--mock']
         else:
@@ -168,12 +176,6 @@ class BridgeUp(Command):
         with Popen(['poetry', 'run', 'redisfi', 'bridge', 'live'] + live_args + global_args) as p:
             p.communicate()
 
-        portfolio_args = ['--years-to-generate', self.option('years-to-generate')]
-        portfolio_args.extend(['--interval', self.option('interval')])
-        portfolio_args.extend(['--amount-to-invest', self.option('amount-to-invest')])
-
-        with Popen(['poetry', 'run', 'redisfi', 'bridge', 'portfolio'] + portfolio_args + global_args) as p:
-            p.communicate()
 
     
 class BridgeBase(Command):

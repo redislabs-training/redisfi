@@ -38,7 +38,7 @@
                         <tr>
                             <th scope="row">&nbsp;&nbsp;<a class="link-dark" href="/asset/{{asset.symbol}}">{{asset.symbol}}</a></th>
                             <td>{{asset.name}}</td>
-                            <td>{{100*asset.percentage}}%</td>
+                            <td id="{{asset.symbol}}-percentage">{{100*asset.percentage}}%</td>
                             <td>$ <span class="price" id="{{asset.symbol}}-price">{{ asset.price.mock or asset.price.historic }}</span></td>
                         </tr>
                       {% endfor %}
@@ -60,12 +60,36 @@
 {% endblock %}
 {% block js %}
 <script type="text/javascript">
+    const prices = {};
+    const symbols = [];
+    let shares = 0;
+    let lastTimestamp = 0;
+    let lastBalance = 0;
+
+    function sumPricesAndUpdateBalance() {
+        var sum = 0;
+        
+        symbols.forEach((symbol) => {
+            const percentage = parseFloat($(`#${symbol}-percentage`).text().slice(0, -1))/100;
+            sum = percentage * prices[symbol] + sum;
+        });
+
+        const newBalance = parseFloat((sum*shares).toFixed(2));
+        const formatter = Intl.NumberFormat(navigator.language, {style: 'currency', currency: 'USD'});
+        $('#price').text(formatter.format(newBalance));
+
+        if (newBalance > lastBalance) {
+            flashGreen('#price');
+        } else if(lastBalance > newBalance) {
+            flashRed('#price');
+        }
+        lastBalance = newBalance;
+    }
+    
     $(() => {
         const socket = io();
-        const prices = {};
-
         const assets = $('.price');
-        let symbols = [];
+        
         for (let i=0; i < assets.length; i++) {
             let price = parseFloat(assets[i].textContent);
             assets[i].textContent = price.toFixed(2);
@@ -80,6 +104,9 @@
                 } else if (data.price < prices[symbol]) {
                     flashRed(selector);
                 }
+
+                prices[symbol] = data.price;
+                sumPricesAndUpdateBalance();
             });
         }
 
@@ -91,6 +118,11 @@
                 let timestamp = data[i].timestamp * 1000;
                 let value = parseFloat((data[i].balance * data[i].price).toFixed(2));
                 transactions.push([timestamp, value]);
+                
+                if (lastTimestamp < timestamp) {
+                    lastTimestamp = timestamp;
+                    shares = data[i].balance;
+                }
             }
             return transactions
         }));
@@ -98,10 +130,7 @@
 
 
         Promise.all(series).then((data) => {
-
-            const formatter = Intl.NumberFormat(navigator.language, {style: 'currency', currency: 'USD'});
-            $('#price').text(formatter.format(parseFloat(data[0][0][1])));
-
+            
             var options = {
                 chart: {
                     type: 'line',
