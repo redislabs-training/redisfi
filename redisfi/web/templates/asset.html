@@ -12,43 +12,108 @@
 {% endblock %}
 {% block body %}
 <div class="container-fluid container-main">
-    <h1>{{asset.name}} | {{asset.symbol}}</h1>
-    <h2 class="display-5">$ <span id="price"></span></h2>
-    <div class="container-fluid container-data">
-        <div class="row">
-            <div class="col-lg">
-                <div class="border bg-light" id="chart"></div>
+  <h1>{{asset.name}} | {{asset.symbol}}</h1>
+  <h2 class="display-5">$ <span id="price"></span></h2>
+  <div class="container-fluid container-data">
+    <div class="row">
+      <div class="col-lg">
+        <div class="border bg-light" id="chart"></div>
+      </div>
+      <div class="col-lg">
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-md">&nbsp;</div>
+          </div>
+          <div class="row">
+            <h4>About {{asset.name}}</h4>
+            <hr>
+          </div>
+          {% if asset['website'] and asset['sector'] and asset['industry'] %}
+          <div class="row p-2 bg-light">
+            <div class="col-sm">
+              <strong>Website:</strong>&nbsp;&nbsp;<a href="{{asset.website}}" target="_blank">{{asset.website}}</a>
             </div>
-            <div class="col-lg">
-                <div class="container-fluid">
-                    <div class="row"><div class="col-md">&nbsp;</div></div>
-                    <h4>About {{asset.name}}</h4><hr>
-                    {% if asset['website'] and asset['sector'] and asset['industry'] %}
-                      <div class="row p-2 bg-light">
-                          <div class="col-sm">
-                              <strong>Website:</strong>&nbsp;&nbsp;<a href="{{asset.website}}" target="_blank">{{asset.website}}</a>
-                          </div>
-                          <div class="col-sm">
-                              <strong>Sector:</strong>&nbsp;&nbsp;{{asset.sector}}
-                          </div>
-                          <div class="col-sm">
-                              <strong>Industry:</strong>&nbsp;&nbsp;{{asset.industry}}
-                          </div>
+            <div class="col-sm">
+              <strong>Sector:</strong>&nbsp;&nbsp;{{asset.sector}}
+            </div>
+            <div class="col-sm">
+              <strong>Industry:</strong>&nbsp;&nbsp;{{asset.industry}}
+            </div>
+          </div>
+          {% endif %}
+          {% if asset.contact %}
+            <div class="row p-2">
+              <div class="col-sm">
+                <strong>Phone Number:</strong>&nbsp;&nbsp;{{asset.contact.phone}}
+              </div>
+              {% if asset.contact.addr1 %}
+                <div class="col-sm">
+                  <strong>Address:</strong>&nbsp;&nbsp;{{asset.contact.addr1}}{% if asset.contact.addr2 %}<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{asset.contact.addr2}}{% endif %}<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{asset.contact.addr3}}
+                </div>
+              {% endif %}
+            </div>
+          {% endif %}
+          <div class="row">
+            <div class="col-md">&nbsp;</div>
+          </div>
+          <div class="row">
+            <div class="col-md">
+              <div class="p-4 border bg-light" id="description">
+                <h5>Description:</h5>
+                <hr>
+                {{ asset.description }}
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md">&nbsp;</div>
+          </div>
+          {% if asset.financial %}
+            <div class="row">
+              <div class="col-md">
+                <div class="container-fluid border">
+                  <h5 style="padding-top: 4%">Financial Information:</h5><hr>
+                  <div class="row p-4 bg-light">
+                    {% if asset.financial.previous_close %}
+                      <div class="col-sm p-2">
+                        <span><strong>Close:</strong>&nbsp;&nbsp;${{'%0.2f' | format(asset.financial.previous_close)}}</span>
                       </div>
                     {% endif %}
-                    <div class="row"><div class="col-md">&nbsp;</div></div>
-                    <div class="row">
-                        <div class="col-md">
-                            <div class="p-4 border bg-light" id="description">
-                                <h5>Description:</h5><hr>
-                                {{ asset.description }}
-                            </div>
-                        </div> 
-                    </div>                   
+                    {% if asset.financial.open %}
+                      <div class="col-sm p-2">
+                        <span><strong>Open:</strong>&nbsp;&nbsp;${{'%0.2f' | format(asset.financial.open)}}</span>
+                      </div>
+                    {% endif %}
+                    {% if asset.financial.high %}
+                      <div class="col-sm p-2">
+                        <span><strong>High:</strong>&nbsp;&nbsp;${{'%0.2f' | format(asset.financial.high)}}</span>
+                      </div>
+                    {% endif %}
+                    {% if asset.financial.low %}
+                      <div class="col-sm p-2">
+                        <span><strong>Low:</strong>&nbsp;&nbsp;${{'%0.2f' | format(asset.financial.low)}}</span>
+                      </div>
+                    {% endif %}
+                  <!-- </div> -->
+                  <!-- <div class="row p-4 bg-light"> -->
+                    <div class="col-sm p-2">
+                      <span><strong>52 Week High:</strong>&nbsp;&nbsp;${{'%0.2f' | format(asset.financial['52_week_high'])}}</span>
+                    </div>
+                    <div class="col-sm p-2">
+                      <span><strong>52 Week Low:</strong>&nbsp;&nbsp;${{'%0.2f' | format(asset.financial['52_week_low'])}}</span>
+                    </div>
+                    <div class="col-sm p-2">
+                      <span><strong>50 Day Average:</strong>&nbsp;&nbsp;${{'%0.2f' | format(asset.financial['50_day_average'])}}</span>
+                    </div>
+                  </div>
                 </div>
+              </div>
             </div>
+          {% endif %}
         </div>
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}
 {% block js %}

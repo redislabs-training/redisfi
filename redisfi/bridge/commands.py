@@ -72,7 +72,7 @@ class BridgePriceHistoric(BridgeMixin, Command):
     Run historic price data collection ingest
 
     historic
-        {--hourly=1 : Number of years to extract hourly data}
+        {--hourly=7 : Number of days to extract hourly data}
     '''
     adapters = [AlpacaHistoric, YahooFinanceHistoric]
 
@@ -88,9 +88,9 @@ class BridgePriceLive(MockMixin, Command):
 
     live
         {--mock : Launch mock price updates instead of live}
-        {--mock-asset-random-price-range=.03 : Multiplier to determine range for assets (base_price*multiplier = gaussian std deviation)}
+        {--mock-asset-random-price-range=.01 : Multiplier to determine range for assets (base_price*multiplier = gaussian std deviation)}
         {--mock-crypto-random-price-range=.0003 : Multiplier to determine range for crypto (base_price*multiplier = gaussian std deviation)}
-        {--mock-update-price-ticks=.25,1 : Update prices randomly min_seconds,max_seconds }
+        {--mock-update-price-ticks=.25,.75 : Update prices randomly min_seconds,max_seconds }
     '''
 
     adapters = [AlpacaLive]
@@ -185,7 +185,7 @@ class BridgeBase(Command):
     bridge
         {--H|redis-host=localhost : Redis hostname - can also set with REDIS_HOST env var}
         {--P|redis-port=6379 : Redis port - can also set with REDIS_PORT env var}
-        {--s|assets=GOOG,MSFT,TSLA,SNAP,JPM,F,VMW,SOFI,SPCE,AMZN,SPY,QQQ,PIMIX,VEMIX,VOO : Comma delimited list of asset symbols to track}
+        {--s|assets=GOOG,MSFT,TSLA,SNAP,GME,AMC,JPM,F,VMW,SOFI,SPCE,AMZN,SPY,QQQ,PIMIX,VEMIX,VOO : Comma delimited list of asset symbols to track}
         {--c|crypto=BTCUSD,ETHUSD : Comma delimited list of crypto to track}
     '''
 

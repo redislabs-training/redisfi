@@ -1,4 +1,3 @@
-from ast import Num
 from json import loads
 
 from redis import Redis
@@ -142,7 +141,7 @@ def search_assets(redis: Redis, query: str):
 
 
 def set_asset_json(redis: Redis, symbol: str, name: str, description: str, website: str=None, 
-                   sector: str=None, industry: str=None):
+                   sector: str=None, industry: str=None, contact_info={}, financial_info={}):
     if not sector:
         sector = ''
 
@@ -158,7 +157,9 @@ def set_asset_json(redis: Redis, symbol: str, name: str, description: str, websi
            'website':website, 
            'sector':sector, 
            'industry':industry,
-           'price':{'live':None, 'mock':None}}
+           'price':{'live':None, 'mock':None},
+           'contact':contact_info,
+           'financial':financial_info}
 
     redis.json().set(_key_asset(symbol), Path.rootPath(), obj)
 

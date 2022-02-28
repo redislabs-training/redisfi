@@ -21,7 +21,8 @@ app.register_blueprint(api, url_prefix='/api')
 app.config['SECRET_KEY'] = 'supersecret!'
 app.config['REDIS'] = Redis.from_url(environ.get('REDIS_URL', 'redis://localhost:6379'))
 app.config['ACCOUNT'] = ACCOUNT
-socketio = SocketIO(app, message_queue=environ.get('REDIS_URL'), async_mode='gevent')
+
+socketio = SocketIO(app, message_queue=environ.get('REDIS_URL'), async_mode='gevent', cors_allowed_origins="*")
 
 @app.route('/')
 def portfolio():
