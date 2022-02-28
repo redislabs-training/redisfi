@@ -16,14 +16,16 @@ class AlpacaBase(BaseAdapter):
 class AlpacaLive(AlpacaBase):
     async def _crypto_trade_stream_handler(self, obj: Trade):
         obj_dict = obj.__dict__['_raw']
-        self.live_update(obj_dict['symbol'], obj_dict)
+        obj_dict['timestamp'] = int(datetime.now().timestamp())
+        self.live_trade_update(obj_dict['symbol'], obj_dict)
         self.cli.line(str(obj), verbosity=VERY_VERBOSE)
         DB.set_asset_live_price(self.redis, obj_dict['symbol'], obj_dict['price'])
 
     async def _stock_trade_stream_handler(self, obj: Trade):
         obj_dict = obj.__dict__['_raw']
         obj_dict['conditions'] = ','.join(obj_dict['conditions'])
-        self.live_update(obj_dict['symbol'], obj_dict)
+        obj_dict['timestamp'] = int(datetime.now().timestamp())
+        self.live_trade_update(obj_dict['symbol'], obj_dict)
         self.cli.line(str(obj), verbosity=VERBOSE)
         DB.set_asset_live_price(self.redis, obj_dict['symbol'], obj_dict['price'])
   
@@ -69,7 +71,7 @@ class AlpacaHistoric(AlpacaBase):
                 bars = self.api.get_bars_iter(ticker, TimeFrame.Hour, from_when)
                 for bar in bars:
                     timestamp = self._bar_timestamp(bar)
-                    DB.set_bar_json(pipe, ticker, timestamp, **self._bar_kwargs(bar))
+                    DB.set_bar(pipe, ticker, timestamp, **self._bar_kwargs(bar))
 
                 pipe.execute()
             
@@ -78,7 +80,7 @@ class AlpacaHistoric(AlpacaBase):
                 bars = self.api.get_crypto_bars_iter(ticker, TimeFrame.Hour, from_when)
                 for bar in bars:
                     timestamp = self._bar_timestamp(bar)
-                    DB.set_bar_json(pipe, ticker, timestamp, **self._bar_kwargs(bar))
+                    DB.set_bar(pipe, ticker, timestamp, **self._bar_kwargs(bar))
 
                 pipe.execute()
                 

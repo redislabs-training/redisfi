@@ -12,8 +12,7 @@ from redis import Redis
 from redisfi import db as DB
 from redisfi.web.api import api 
 
-ONE_DAY_AGO = int((datetime.now() - timedelta(days=1)).timestamp())
-NINTY_DAYS_AGO = int((datetime.now() - timedelta(days=90)).timestamp())
+
 ACCOUNT = 710
 
 app = Flask(__name__)
@@ -23,6 +22,10 @@ app.config['REDIS'] = Redis.from_url(environ.get('REDIS_URL', 'redis://localhost
 app.config['ACCOUNT'] = ACCOUNT
 
 socketio = SocketIO(app, message_queue=environ.get('REDIS_URL'), async_mode='gevent', cors_allowed_origins="*")
+
+now = lambda: int(datetime.now().timestamp())
+one_day_ago = lambda: int((datetime.now() - timedelta(days=1)).timestamp())
+ninty_days_ago = lambda: int((datetime.now() - timedelta(days=90)).timestamp())
 
 @app.route('/')
 def portfolio():
@@ -54,7 +57,7 @@ def asset(symbol:str):
     asset_data = DB.get_asset(redis, symbol)
 
     if asset_data:
-        return render_template('asset.html', asset=asset_data, ninty_days=NINTY_DAYS_AGO)
+        return render_template('asset.html', asset=asset_data, ninty_days=ninty_days_ago(), one_day=one_day_ago(), now=now())
     else:
         return Response(status=404)
 
@@ -70,7 +73,7 @@ def fund(name:str):
 
         fund_data['assets'] = assets
 
-        return render_template('fund.html', fund=fund_data, ninty_days=NINTY_DAYS_AGO, account=ACCOUNT)
+        return render_template('fund.html', fund=fund_data, ninty_days=ninty_days_ago(), account=ACCOUNT)
 
     else:
         return Response(status=404)

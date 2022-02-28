@@ -9,7 +9,8 @@ class YahooFinanceHistoric(BaseAdapter):
     def run(self):
         self.cli.line(f'<info>Downloading Historic Data for</info> <comment>{len(self.assets)}</comment> <info>Assets</info>')
         items = Y.download(" ".join(self.assets), group_by="ticker")
-        progress_bar = self.cli.progress_bar(len(items))
+        self.cli.line(f'<info>Transforming and Loading into Redis</info>')
+        progress_bar = self.cli.progress_bar(len(self.assets))
         with self.redis.pipeline(transaction=False) as pipe:
             for symbol in self.assets:
                 rows = items[symbol].iterrows()
@@ -21,11 +22,13 @@ class YahooFinanceHistoric(BaseAdapter):
                     ## one isn't a NaN. Why they can't resolve to False or None? ¯\_(ツ)_/¯
                     if all(map(lambda x: str(x) != 'nan', (bar.Open, bar.High, bar.Low, bar.Close, bar.Volume))):
                         self.cli.line(str(bar), verbosity=VERY_VERBOSE)
-                        DB.set_bar_json(pipe, symbol, timestamp, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume)
+                        DB.set_bar(pipe, symbol, timestamp, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume)
                 
                 pipe.execute()
                 progress_bar.advance()
             progress_bar.finish()
+        
+        self.cli.line('') # progress bar doesn't new line when it's done
 
 class YahooFinanceMetadata(BaseAdapter):
     def run(self):
@@ -37,7 +40,7 @@ class YahooFinanceMetadata(BaseAdapter):
                 self.cli.line(pformat(data, sort_dicts=True), verbosity=VERBOSE)
                 contact_info = self._extract_contact_info(data)
                 financial_info = self._extract_financial_info(data)
-                DB.set_asset_json(pipe, symbol, data['longName'], data['longBusinessSummary'],
+                DB.set_asset(pipe, symbol, data['longName'], data['longBusinessSummary'],
                                   data.get('website'), data.get('sector'), data.get('industry'),
                                   contact_info=contact_info, financial_info=financial_info)
 

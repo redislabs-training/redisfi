@@ -32,7 +32,7 @@ class TransactionGenerator(BaseAdapter):
             shares = self.amount_to_invest_per_interval / price
             balance += shares
 
-            DB.set_transaction_json(self.redis, self.account, int(moment.timestamp()), shares, self.kind, price, balance)
+            DB.set_transaction(self.redis, self.account, int(moment.timestamp()), shares, self.kind, price, balance)
             self.cli.line(f'<info>timestamp: </info><comment>{int(moment.timestamp())}</comment> <info>| price: </info><comment>{price}</comment> <info>| shares: </info><comment>{shares}</comment> <info>| balance: </info><comment>{balance}</comment>', verbosity=VERBOSE)
 
             moment = moment + self.interval
@@ -65,9 +65,9 @@ class RNGPriceGenerator(BaseAdapter):
                 self.cli.line(f'<info>asset: </info><comment>{asset} ({asset_price})</comment>', verbosity=VERBOSE)
                 self.cli.line(f'<info>crypto: </info><comment>{crypto} ({crypto_price})</comment>', verbosity=VERBOSE)
 
-                timestamp = datetime.now().timestamp()
-                self.live_update(asset, {'price':asset_price, 'timestamp':timestamp})
-                self.live_update(crypto, {'price':crypto_price, 'timestamp':timestamp})
+                timestamp = int(datetime.now().timestamp())
+                self.mock_trade_update(asset, {'price':asset_price, 'timestamp':timestamp})
+                self.mock_trade_update(crypto, {'price':crypto_price, 'timestamp':timestamp})
                 
                 with self.redis.pipeline(transaction=False) as p:
                     DB.set_asset_mock_price(p, asset, asset_price)

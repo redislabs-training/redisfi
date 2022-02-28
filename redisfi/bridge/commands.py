@@ -129,7 +129,7 @@ class BridgePortfolioGenerator(BridgeMixin, Command):
 
 class BridgeUp(Command):
     '''
-    Run the whole bridge suite.  Metadata > History > Live
+    Run the whole bridge suite.  Metadata > History > Transactions > Live
 
     up
         {--hourly=7 : Number of days to extract hourly data}

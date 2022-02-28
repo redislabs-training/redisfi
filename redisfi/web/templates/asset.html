@@ -134,7 +134,7 @@
       price = parseFloat(newPrice.toFixed(2));
     });
     
-    $.getJSON('/api/asset/{{asset.symbol}}/history?start={{ninty_days}}', (data) => {
+    $.getJSON('/api/asset/{{asset.symbol}}/history?start={{one_day}}', (data) => {
       priceData = barsToTimeseries(data);
       console.log(priceData);
       var options = {

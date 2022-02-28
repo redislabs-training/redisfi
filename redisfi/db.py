@@ -1,3 +1,4 @@
+from enum import Enum
 from json import loads
 
 from redis import Redis
@@ -10,10 +11,12 @@ from redis.commands.search.field import TextField, NumericField
 
 LARGE_PAGE_SIZE = 1000000
 
+
 _average_bar = lambda bar: (bar['high'] + bar['low'])/2
 _key_asset = lambda symbol: f'asset:{symbol.upper()}'
 _key_bars = lambda symbol, timestamp: f'bars:{symbol.upper()}:{int(timestamp) if timestamp else ""}'
 _key_fund = lambda id: f'fund:{id}'
+_key_trade = lambda symbol, timestamp: f'trade:{symbol.upper()}:{int(timestamp) if timestamp else ""}'
 _key_transaction = lambda account, timestamp: f'transaction:{account}:{timestamp}'
 
 
@@ -22,7 +25,7 @@ def get_asset(redis: Redis, symbol: str):
 
 
 def get_asset_history(redis: Redis, symbol: str, start=0, end='inf', page=(0, LARGE_PAGE_SIZE)):
-    idx = index_bar_json(redis)
+    idx = index_bar(redis)
     query = Query(f'@symbol:{symbol} @timestamp:[{start},{end}]').sort_by('timestamp', asc=False).paging(*page)
     print(_build_search_query(idx, query))
     return _deserialize_results(idx.search(query))
@@ -54,7 +57,7 @@ def get_asset_prices(redis: Redis, symbol: str):
 
 
 def get_asset_price_historic(redis: Redis, symbol: str):
-    idx = index_bar_json(redis)
+    idx = index_bar(redis)
     query = Query(f'@symbol:{symbol}').sort_by('timestamp', asc=False).paging(0, 1)
     print(_build_search_query(idx, query))
     return _average_bar(_deserialize_results(idx.search(query))[0])
@@ -71,13 +74,20 @@ def get_asset_price_mock(redis: Redis, symbol: str):
 def get_fund(redis: Redis, id: str):
     return redis.json().get(_key_fund(id))
 
+def get_trades(redis: Redis, symbol: str, start=0, end='inf', page=(0, LARGE_PAGE_SIZE)):
+    idx = index_trade(redis)
+    query = Query(f'@symbol:{symbol} @timestamp:[{start},{end}]').sort_by('timestamp', asc=False).paging(*page)
+    print(_build_search_query(idx, query))
+    return _deserialize_results(idx.search(query))
+
+
 def get_transactions(redis: Redis, account: int, kind: str, start=0, end='inf', page=(0, LARGE_PAGE_SIZE)):
-    idx = index_transaction_json(redis)
+    idx = index_transaction(redis)
     query = Query(f'@account:{account} @kind:{kind} @timestamp:[{start},{end}]').sort_by('timestamp', asc=False).paging(*page)
     print(_build_search_query(idx, query))
     return _deserialize_results(idx.search(query))
 
-def index_asset_json(redis: Redis):
+def index_asset(redis: Redis):
     idx = redis.ft(_key_asset('idx'))
     try:
         idx.info()
@@ -97,7 +107,7 @@ def index_asset_json(redis: Redis):
     return idx
 
 
-def index_bar_json(redis:Redis):
+def index_bar(redis:Redis):
     idx = redis.ft(_key_bars('idx', '')[0:-1])
     try:
         idx.info()
@@ -117,7 +127,24 @@ def index_bar_json(redis:Redis):
 
     return idx
 
-def index_transaction_json(redis:Redis):
+def index_trade(redis:Redis):
+    idx = redis.ft(_key_trade('idx', '')[0:-1])
+    try:
+        idx.info()
+        return idx
+    except ResponseError:
+        pass
+
+    idx.create_index((
+        TextField('$.symbol', as_name='symbol'),
+        NumericField('$.timestamp', as_name='timestamp', sortable=True),
+        TextField('$.kind', as_name='kind')
+    ), definition=IndexDefinition(prefix=[_key_trade('','')[0:-1]], index_type=IndexType.JSON))
+
+    return idx
+
+
+def index_transaction(redis:Redis):
     idx = redis.ft(_key_transaction('idx', '')[0:-1])
     try:
         idx.info()
@@ -134,13 +161,13 @@ def index_transaction_json(redis:Redis):
     return idx
 
 def search_assets(redis: Redis, query: str):
-    idx = index_asset_json(redis)
-    query = Query(query)
+    idx = index_asset(redis)
+    query = Query(query).paging(0, LARGE_PAGE_SIZE)
     print(_build_search_query(idx, query))
     return _deserialize_results(idx.search(query))
 
 
-def set_asset_json(redis: Redis, symbol: str, name: str, description: str, website: str=None, 
+def set_asset(redis: Redis, symbol: str, name: str, description: str, website: str=None, 
                    sector: str=None, industry: str=None, contact_info={}, financial_info={}):
     if not sector:
         sector = ''
@@ -172,7 +199,7 @@ def set_asset_mock_price(redis: Redis, symbol: str, price: float):
     redis.json().set(_key_asset(symbol), '$.price.mock', price)
 
 
-def set_bar_json(redis: Redis, symbol: str, timestamp: int, open: float,
+def set_bar(redis: Redis, symbol: str, timestamp: int, open: float,
              high: float, low: float, close: float, volume: int):
     
     obj = {'symbol':symbol,
@@ -187,7 +214,7 @@ def set_bar_json(redis: Redis, symbol: str, timestamp: int, open: float,
     redis.json().set(key, Path.rootPath(), obj)
 
 
-def set_fund_json(redis: Redis, name: str, description: str, assets: list):
+def set_fund(redis: Redis, name: str, description: str, assets: list):
     id = name.replace(" ", "").lower()
     obj = {'id':id,
            'name':name,
@@ -196,7 +223,19 @@ def set_fund_json(redis: Redis, name: str, description: str, assets: list):
     
     redis.json().set(_key_fund(id), Path.rootPath(), obj)
 
-def set_transaction_json(redis: Redis, account: int, timestamp: int, shares: float, kind: str, price: float, balance: float):
+def set_trade(redis: Redis, symbol: str, price: str, timestamp: str, kind: str):
+    ## TODO: kind should be an enum type thing eventually
+
+    obj = {'symbol':symbol,
+           'price':price,
+           'timestamp':timestamp,
+           'kind':kind}
+
+    redis.json().set(_key_trade(symbol, timestamp), Path.rootPath(), obj)
+
+
+def set_transaction(redis: Redis, account: int, timestamp: int, shares: float, kind: str, price: float, balance: float):
+
     obj = {'account':str(account),
            'timestamp':timestamp,
            'shares':shares,
@@ -205,7 +244,7 @@ def set_transaction_json(redis: Redis, account: int, timestamp: int, shares: flo
            'balance':balance}
 
     redis.json().set(_key_transaction(account, timestamp), Path.rootPath(), obj)
-   
+
 
 def _build_search_query(index: SearchCommands, query: Query):
     return ' '.join([SEARCH_CMD] + list(map(str, index._mk_query_args(query, None)[0])))

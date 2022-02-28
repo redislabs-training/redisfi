@@ -21,7 +21,7 @@ class JSONFundMetadataFileLoader(FileLoader):
     def process(self, data):
         obj = loads(data)
         for fund in obj:
-            DB.set_fund_json(self.redis, **fund)
+            DB.set_fund(self.redis, **fund)
 
 class JSONMetadataFileLoader(FileLoader):
     files = ['data/crypto_metadata.json']
@@ -29,4 +29,4 @@ class JSONMetadataFileLoader(FileLoader):
     def process(self, data):
         obj = loads(data)
         for asset in obj:
-            DB.set_asset_json(self.redis, **asset)
+            DB.set_asset(self.redis, **asset)
