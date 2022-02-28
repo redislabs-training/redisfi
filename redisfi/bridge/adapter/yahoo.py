@@ -9,6 +9,7 @@ class YahooFinanceHistoric(BaseAdapter):
     def run(self):
         self.cli.line(f'<info>Downloading Historic Data for</info> <comment>{len(self.assets)}</comment> <info>Assets</info>')
         items = Y.download(" ".join(self.assets), group_by="ticker")
+        progress_bar = self.cli.progress_bar(len(items))
         with self.redis.pipeline(transaction=False) as pipe:
             for symbol in self.assets:
                 rows = items[symbol].iterrows()
@@ -23,6 +24,8 @@ class YahooFinanceHistoric(BaseAdapter):
                         DB.set_bar_json(pipe, symbol, timestamp, bar.Open, bar.High, bar.Low, bar.Close, bar.Volume)
                 
                 pipe.execute()
+                progress_bar.advance()
+            progress_bar.finish()
 
 class YahooFinanceMetadata(BaseAdapter):
     def run(self):

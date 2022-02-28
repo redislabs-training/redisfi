@@ -96,6 +96,7 @@
             let [symbol, _] = assets[i].id.split('-');
             symbols.push(symbol);
             prices[symbol] = price;
+
             socket.on('updates.'+symbol, (data) => {
                 assets[i].textContent = data.price.toFixed(2);
                 let selector = `#${assets[i].id}`;
@@ -130,7 +131,7 @@
 
 
         Promise.all(series).then((data) => {
-            
+            sumPricesAndUpdateBalance();
             var options = {
                 chart: {
                     type: 'line',

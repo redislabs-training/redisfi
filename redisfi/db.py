@@ -39,9 +39,8 @@ def get_assets_metadata_and_latest(redis: Redis, symbols: list):
 
 
 def get_asset_prices(redis: Redis, symbol: str):
-    resp = {'historic', get_asset_price_historic(redis, symbol)}
     resp = redis.json().get(_key_asset(symbol), '$.price')
-    
+
     if resp is not None:
         data = resp[0]
 
@@ -50,6 +49,7 @@ def get_asset_prices(redis: Redis, symbol: str):
         else:
             resp = data
     
+    resp['historic'] =  get_asset_price_historic(redis, symbol)
     return resp
 
 

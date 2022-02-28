@@ -25,7 +25,7 @@ services:
   bridge-build:
     env_file: .env
     build: .
-    command: poetry run redisfi bridge up --mock
+    command: poetry run redisfi bridge up
     profiles:
       - build
   redis:

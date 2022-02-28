@@ -32,7 +32,7 @@
                             <th scope="row">&nbsp;&nbsp;<a class="link-dark" href="/asset/{{asset.symbol}}">{{asset.symbol}}</a></th>
                             <td>{{asset.name}}</td>
                             <td><span class="description" id="{{asset.symbol}}-description">{{asset.description}}</span> <a id="{{asset.symbol}}-description-toggle" class="dark-link text-muted" href="#" onclick="expandDescription('{{asset.symbol}}-description')">Read More</a></td>
-                            <td>$<span class="price" id="{{asset.symbol}}-price">{{'%0.2f' | format(asset.price.mock or asset.price.historic)}}</span></td>
+                            <td>$<span class="price" id="{{asset.symbol}}-price">{{'%0.2f' | format(asset.price.mock or asset.price.live or asset.price.historic)}}</span></td>
                             
                         </tr>
                       {% endfor %}

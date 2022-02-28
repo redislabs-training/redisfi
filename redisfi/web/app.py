@@ -1,10 +1,9 @@
+from gevent import monkey 
+monkey.patch_all()
+
 from os import environ
 from subprocess import Popen
 from datetime import datetime, timedelta
-from pprint import pprint
-
-from gevent import monkey 
-monkey.patch_all()
 
 from flask_socketio import SocketIO
 from flask import Flask, redirect, render_template, Response, request
@@ -13,6 +12,7 @@ from redis import Redis
 from redisfi import db as DB
 from redisfi.web.api import api 
 
+ONE_DAY_AGO = int((datetime.now() - timedelta(days=1)).timestamp())
 NINTY_DAYS_AGO = int((datetime.now() - timedelta(days=90)).timestamp())
 ACCOUNT = 710
 
@@ -42,6 +42,7 @@ def search():
             else:
                 result['price']['historic'] = ''
         
+        print(result)
         return render_template('results.html', results=results)
 
     else:

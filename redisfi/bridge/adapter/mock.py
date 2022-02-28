@@ -65,8 +65,9 @@ class RNGPriceGenerator(BaseAdapter):
                 self.cli.line(f'<info>asset: </info><comment>{asset} ({asset_price})</comment>', verbosity=VERBOSE)
                 self.cli.line(f'<info>crypto: </info><comment>{crypto} ({crypto_price})</comment>', verbosity=VERBOSE)
 
-                self.live_update(asset, {'price':asset_price})
-                self.live_update(crypto, {'price':crypto_price})
+                timestamp = datetime.now().timestamp()
+                self.live_update(asset, {'price':asset_price, 'timestamp':timestamp})
+                self.live_update(crypto, {'price':crypto_price, 'timestamp':timestamp})
                 
                 with self.redis.pipeline(transaction=False) as p:
                     DB.set_asset_mock_price(p, asset, asset_price)
