@@ -72,7 +72,7 @@ class BridgePriceHistoric(BridgeMixin, Command):
     Run historic price data collection ingest
 
     historic
-        {--hourly=7 : Number of days to extract hourly data}
+        {--hourly=1 : Number of days to extract hourly data}
     '''
     adapters = [AlpacaHistoric, YahooFinanceHistoric]
 
@@ -88,9 +88,9 @@ class BridgePriceLive(MockMixin, Command):
 
     live
         {--mock : Launch mock price updates instead of live}
-        {--mock-asset-random-price-range=.01 : Multiplier to determine range for assets (base_price*multiplier = gaussian std deviation)}
-        {--mock-crypto-random-price-range=.0003 : Multiplier to determine range for crypto (base_price*multiplier = gaussian std deviation)}
-        {--mock-update-price-ticks=.25,.75 : Update prices randomly min_seconds,max_seconds }
+        {--mock-asset-random-price-range=.001 : Multiplier to determine range for assets (base_price*multiplier = gaussian std deviation) - bigger means more erratic random prices}
+        {--mock-crypto-random-price-range=.00001 : Multiplier to determine range for crypto (base_price*multiplier = gaussian std deviation) - bigger means more erratic random prices}
+        {--mock-update-price-ticks=.25,.5 : Update prices randomly min_seconds,max_seconds }
     '''
 
     adapters = [AlpacaLive]
@@ -132,11 +132,11 @@ class BridgeUp(Command):
     Run the whole bridge suite.  Metadata > History > Transactions > Live
 
     up
-        {--hourly=7 : Number of days to extract hourly data}
+        {--hourly=1 : Number of days to extract hourly data}
         {--mock : Launch mock price updates instead of live}
-        {--mock-asset-random-price-range=.01 : Multiplier to determine range for assets (base_price*multiplier = gaussian std deviation)}
-        {--mock-crypto-random-price-range=.0003 : Multiplier to determine range for crypto (base_price*multiplier = gaussian std deviation)}
-        {--mock-update-price-ticks=.25,.75 : Update prices randomly min_seconds,max_seconds }
+        {--mock-asset-random-price-range=.001 : Multiplier to determine range for assets (base_price*multiplier = gaussian std deviation)}
+        {--mock-crypto-random-price-range=.00001 : Multiplier to determine range for crypto (base_price*multiplier = gaussian std deviation)}
+        {--mock-update-price-ticks=.25,.5 : Update prices randomly min_seconds,max_seconds }
         {--years-to-generate=5 : Number of years to generate transaction data for}
         {--interval=2 : Generate a transaction every n weeks}
         {--amount-to-invest=300 : Amount to invest each interval}

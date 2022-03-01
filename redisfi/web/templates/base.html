@@ -26,14 +26,20 @@
     <script type="text/javascript">
       function barsToTimeseries(data) {
         let priceData = [];
+        // let oldestTimestamp = 0;
         for(i=0; i<data.length; i++){
           bar = data[i];
           price = (bar.high + bar.low) / 2;
           price = parseFloat(price.toFixed(2));
           priceData.push([bar.timestamp * 1000, price]);
+          // if (bar.timestamp > oldestTimestamp) {
+          //   oldestTimestamp = bar.timestamp;
+          // }
         };
+        priceData.reverse()
         return priceData;
       }
+      
       function flashGreen(selector) {
         $(selector).css({'color':'limegreen'}).animate({'color':'black'}, 600);
       }

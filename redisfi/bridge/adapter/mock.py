@@ -50,7 +50,7 @@ class RNGPriceGenerator(BaseAdapter):
             prices[asset] = DB.get_asset_price_historic(self.redis, asset)
 
         self.cli.line(f'<info>Prices: </info><comment>{prices}</comment>')
-
+        
         while True:
             shuffle(self.assets)
             shuffle(self.crypto)
@@ -65,7 +65,7 @@ class RNGPriceGenerator(BaseAdapter):
                 self.cli.line(f'<info>asset: </info><comment>{asset} ({asset_price})</comment>', verbosity=VERBOSE)
                 self.cli.line(f'<info>crypto: </info><comment>{crypto} ({crypto_price})</comment>', verbosity=VERBOSE)
 
-                timestamp = int(datetime.now().timestamp())
+                timestamp = int(datetime.utcnow().timestamp())
                 self.mock_trade_update(asset, {'price':asset_price, 'timestamp':timestamp})
                 self.mock_trade_update(crypto, {'price':crypto_price, 'timestamp':timestamp})
                 

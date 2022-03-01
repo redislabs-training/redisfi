@@ -23,9 +23,14 @@ app.config['ACCOUNT'] = ACCOUNT
 
 socketio = SocketIO(app, message_queue=environ.get('REDIS_URL'), async_mode='gevent', cors_allowed_origins="*")
 
-now = lambda: int(datetime.now().timestamp())
-one_day_ago = lambda: int((datetime.now() - timedelta(days=1)).timestamp())
-ninty_days_ago = lambda: int((datetime.now() - timedelta(days=90)).timestamp())
+DAYS_IN_YEAR = 365.26
+_now = lambda: datetime.utcnow()
+now = lambda: int(_now().timestamp())
+one_day_ago = lambda: int((_now() - timedelta(days=1)).timestamp())
+thirty_days_ago = lambda: int((_now() - timedelta(days=30)).timestamp())
+ninty_days_ago = lambda: int((_now() - timedelta(days=90)).timestamp())
+a_year_ago = lambda: int((_now() - timedelta(days=DAYS_IN_YEAR)).timestamp())
+time_kwargs = lambda: {'now':now(), 'day':one_day_ago(), 'thirty':thirty_days_ago(), 'ninty':ninty_days_ago(), 'year':a_year_ago()}
 
 @app.route('/')
 def portfolio():
@@ -57,7 +62,7 @@ def asset(symbol:str):
     asset_data = DB.get_asset(redis, symbol)
 
     if asset_data:
-        return render_template('asset.html', asset=asset_data, ninty_days=ninty_days_ago(), one_day=one_day_ago(), now=now())
+        return render_template('asset.html', asset=asset_data, **time_kwargs())
     else:
         return Response(status=404)
 
@@ -73,7 +78,7 @@ def fund(name:str):
 
         fund_data['assets'] = assets
 
-        return render_template('fund.html', fund=fund_data, ninty_days=ninty_days_ago(), account=ACCOUNT)
+        return render_template('fund.html', fund=fund_data, account=ACCOUNT, **time_kwargs())
 
     else:
         return Response(status=404)
@@ -97,7 +102,7 @@ def run(debug=False, redis_url='redis://'):
         with Popen(['poetry', 'run', 'python3', 'redisfi/web/app.py'], env=env) as _app:
             _app.communicate()
     else:
-        with Popen(['poetry', 'run', 'gunicorn', '-w', '4', '--worker-class', 'geventwebsocket.gunicorn.workers.GeventWebSocketWorker', '-b', '0.0.0.0:8000', 'redisfi.web.app:app'], env=env) as _app:
+        with Popen(['poetry', 'run', 'gunicorn', '--worker-class', 'geventwebsocket.gunicorn.workers.GeventWebSocketWorker', '-b', '0.0.0.0:8000', 'redisfi.web.app:app'], env=env) as _app:
             _app.communicate()
 
 if __name__ == '__main__':

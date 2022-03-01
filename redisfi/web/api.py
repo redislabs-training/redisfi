@@ -10,6 +10,10 @@ api = Blueprint('api', __name__)
 def account_history(account, kind):
     redis = current_app.config['REDIS']
     start, end = request.args.get('start', 0), request.args.get('end', 'inf')
+
+    if not (start or start == 0) or not end: # 0 is valid, but also false, so if false make sure not zero
+        return 'invalid start/end value', 400
+
     results = DB.get_transactions(redis, account, kind, start, end)
     return dumps(results)
 
@@ -18,16 +22,31 @@ def account_history(account, kind):
 def asset_history(symbol:str):
     redis = current_app.config['REDIS']
     start, end = request.args.get('start', 0), request.args.get('end', 'inf')
+
+    if not (start or start == 0) or not end: # 0 is valid, but also false, so if false make sure not zero
+        return 'invalid start/end value', 400
+
     results = DB.get_asset_history(redis, symbol, start, end)
     return dumps(results)
 
 @api.route('/asset/<string:symbol>/prices')
 def asset_latest(symbol:str):
     redis = current_app.config['REDIS']
-    symbol = symbol.upper()
     latest = DB.get_asset_prices(redis, symbol)
     
     if latest:
         return dumps(latest)
     else:
         return Response(status=404)
+
+@api.route('/asset/<string:symbol>/trades')
+def asset_trades(symbol:str):
+    redis = current_app.config['REDIS']
+    start, end = request.args.get('start', 0), request.args.get('end', 'inf')
+    
+    if not (start or start == 0) or not end: # 0 is valid, but also false, so if false make sure not zero
+        return 'invalid start/end value', 400
+
+    results = DB.get_trades(redis, symbol, start, end)
+    return dumps(results)
+    

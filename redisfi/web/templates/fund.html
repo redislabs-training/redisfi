@@ -14,7 +14,7 @@
 {% block body%}
 <div class="container-fluid container-main">
     <h1>{{fund.name}}</h1>
-    <h2 class="display-5">&nbsp;&nbsp;<span id="price"></span></h2>
+    <span class="display-6">Balance:&nbsp;&nbsp;<span id="price"></span></span>
     <div class="container-fluid container-data">
         <div class="row">
             <div class="col-lg border bg-light">
@@ -112,7 +112,7 @@
         }
 
         var series = [];
-        series.push($.getJSON('/api/account/{{account}}/{{fund.id}}/transactions?start={{ninty_days}}').then((data) => {
+        series.push($.getJSON('/api/account/{{account}}/{{fund.id}}/transactions').then((data) => {
             
             const transactions = [];
             for (let i=0; i<data.length; i++) {

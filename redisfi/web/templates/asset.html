@@ -8,6 +8,9 @@
     .container-data{
         margin-top: 20px;
     }
+    .timeframe-selector{
+      float: right;
+    }
 </style>
 {% endblock %}
 {% block body %}
@@ -17,6 +20,17 @@
   <div class="container-fluid container-data">
     <div class="row">
       <div class="col-lg">
+        <div class="timeframe-selector">
+          <select id="timeselector" class="form-select-sm" onchange="chartUpdate()" aria-label="Timeframe">
+            <option value="live">Live</option>
+            <option selected value="{{day}}">1 day</option>
+            <option value="{{thirty}}">30 days</option>
+            <option value="{{ninty}}">90 days</option>
+            <option value="{{year}}">1 year</option>
+            <option value="all">All</option>
+          </select>
+        </div>
+        <p>&nbsp;</p>
         <div class="border bg-light" id="chart"></div>
       </div>
       <div class="col-lg">
@@ -118,9 +132,73 @@
 {% endblock %}
 {% block js %}
 <script type="text/javascript">
+  const LOADING_TEXT = 'Loading...'
+  const chartOptions = {chart: {
+                          type: 'line'
+                        },
+                        series: [],
+                        xaxis: {
+                          type: 'datetime'
+                        },
+                        noData: {
+                          text: LOADING_TEXT
+                        }
+                      }
+
+  let chart = new ApexCharts(document.querySelector("#chart"), chartOptions);
+
+  let trades = [];
+  let live = false;
+
+  function makeChartLive() {
+
+    $.getJSON('/api/asset/{{asset.symbol}}/trades', (data) => {
+        trades = [];
+        for(let i=0; i<data.length; i++){
+          trades.push([data[i].timestamp * 1000, parseFloat(data[i].price.toFixed(2))]);
+        }
+        trades.reverse();
+        series = [{data:trades}];
+        chart.updateSeries(series);
+        live = true;
+    });
+  }
+
+  function setChartTimeframe(timeframe) { 
+    live = false;
+
+    $.getJSON(`/api/asset/{{asset.symbol}}/history?start=${timeframe}`, (data) => {
+      const barsPriceData  = barsToTimeseries(data);
+      const newSeries = [{data:barsPriceData}];
+      chart.updateSeries(newSeries);
+    });
+  }
+
+  function showAllHistory() {
+    live = false;
+
+    $.getJSON('/api/asset/{{asset.symbol}}/history', (data) => {
+      const barsPriceData  = barsToTimeseries(data);
+      const newSeries = [{data:barsPriceData}];
+      chart.updateSeries(newSeries);
+    });
+  }
+
+  function chartUpdate(){
+    const selection = $('#timeselector').val();
+
+    if (selection === 'live') {
+      makeChartLive();
+    } else if(selection === 'all') {
+      showAllHistory();
+    } else {
+      setChartTimeframe(selection);
+    }
+  }
   $(() => {
+    chart.render();
     const socket = io();
-    let price;
+    
     
     $.getJSON('/api/asset/{{asset.symbol}}/prices', (prices) => {
       let newPrice;
@@ -134,35 +212,33 @@
       price = parseFloat(newPrice.toFixed(2));
     });
     
-    $.getJSON('/api/asset/{{asset.symbol}}/history?start={{one_day}}', (data) => {
-      priceData = barsToTimeseries(data);
-      console.log(priceData);
-      var options = {
-      chart: {
-        type: 'line'
-      },
-      series: [{
-        data: priceData
-      }],
-      xaxis: {
-        type: 'datetime'
-      }
-    }
+    $.getJSON('/api/asset/{{asset.symbol}}/history?start={{day}}', (data) => {
+      const barsPriceData  = barsToTimeseries(data);
+      
+      const series =  [{
+                        name: 'Bars',
+                        data: barsPriceData
+                      }]
 
-    var chart = new ApexCharts(document.querySelector("#chart"), options);
-
-    chart.render();
-    });
+      chart.updateSeries(series);
+      })
+      
 
     socket.on('updates.{{asset.symbol}}', (event) => {
-      let selector = '#price';
+      const selector = '#price';
       $(selector).text(event.price.toFixed(2));
       if (event.price > price) {
         flashGreen(selector);
       } else if (event.price < price) {
         flashRed(selector);
       }
+      const timestamp = event.timestamp;
       price = event.price;
+      
+      if (live) {
+        chart.appendData([{data: [[timestamp * 1000, parseFloat(price.toFixed(2))]]}]);
+      }
+
 
     });
     
