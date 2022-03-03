@@ -6,7 +6,7 @@ from cleo import Command
 from redisfi.bridge.adapter.alpaca import AlpacaLive, AlpacaHistoric
 from redisfi.bridge.adapter.yahoo import YahooFinanceMetadata, YahooFinanceHistoric
 from redisfi.bridge.adapter.file import JSONMetadataFileLoader, JSONFundMetadataFileLoader
-from redisfi.bridge.adapter.mock import RNGPriceGenerator, TransactionGenerator
+from redisfi.bridge.adapter.mock import RNGPriceGenerator, TransactionGenerator, TransactionPriceMapper
 
 
 class BridgeMixin:
@@ -116,7 +116,8 @@ class BridgePortfolioGenerator(BridgeMixin, Command):
         {--amount-to-invest=300 : Amount to invest each interval}
     '''
 
-    adapters = [TransactionGenerator]
+    adapters = [TransactionGenerator, TransactionPriceMapper]
+    #adapters = [TransactionPriceMapper]
 
     def _adapter_config(self: Command) -> dict:
         adapter_config = super()._adapter_config()

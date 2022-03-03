@@ -17,6 +17,7 @@ _key_asset       = lambda symbol: f'asset:{symbol.upper()}'
 _key_bars        = lambda symbol, timestamp: f'bars:{symbol.upper()}:{int(timestamp) if timestamp else ""}'
 _key_fund        = lambda id: f'fund:{id}'
 _key_trade       = lambda symbol, timestamp: f'trade:{symbol.upper()}:{int(timestamp) if timestamp else ""}'
+_key_portfolio_v = lambda account, symbol, timestamp: f'portfolio_value:{account}:{symbol.upper()}:{int(timestamp) if timestamp else ""}'
 _key_transaction = lambda account, symbol, timestamp: f'transaction:{account}:{symbol.upper() if symbol else ""}:{int(timestamp) if timestamp else ""}'
 
 
@@ -24,9 +25,9 @@ def get_asset(redis: Redis, symbol: str):
     return redis.json().get(_key_asset(symbol))
 
 
-def get_asset_history(redis: Redis, symbol: str, start=0, end='inf', page=(0, LARGE_PAGE_SIZE)):
+def get_asset_history(redis: Redis, symbol: str, start=0, end='inf', page=(0, LARGE_PAGE_SIZE), asc=False):
     idx = index_bar(redis)
-    query = Query(f'@symbol:{symbol} @timestamp:[{start},{end}]').sort_by('timestamp', asc=False).paging(*page)
+    query = Query(f'@symbol:{symbol} @timestamp:[{start},{end}]').sort_by('timestamp', asc=asc).paging(*page)
     print(_build_search_query(idx, query))
     return _deserialize_results(idx.search(query))
 
@@ -88,11 +89,6 @@ def get_trades(redis: Redis, symbol: str, start=0, end='inf', page=(0, LARGE_PAG
 def get_transactions(redis: Redis, account: int=None, symbol: str=None, start=0, end='inf', page=(0, LARGE_PAGE_SIZE), asc=False):
     idx = index_transaction(redis)
 
-    if start != 0 or end != 'inf':
-        timestamp_query = f'@timestamp:[{start},{end}]'
-    else:
-        timestamp_query = ''
-    
     if symbol is not None:
         symbol_query = f' @symbol:{symbol}'
     else:
@@ -103,7 +99,7 @@ def get_transactions(redis: Redis, account: int=None, symbol: str=None, start=0,
     else:
         account_query = ''
 
-    query = Query(f'{timestamp_query}{symbol_query}{account_query}').sort_by('timestamp', asc=asc).paging(*page)
+    query = Query(f'@timestamp:[{start},{end}]{symbol_query}{account_query}').sort_by('timestamp', asc=asc).paging(*page)
     print(_build_search_query(idx, query))
     return _deserialize_results(idx.search(query))
 
@@ -218,6 +214,16 @@ def set_asset_live_price(redis: Redis, symbol: str, price: float):
 def set_asset_mock_price(redis: Redis, symbol: str, price: float):
     redis.json().set(_key_asset(symbol), '$.price.mock', price)
 
+def set_asset_portfolio_value(redis: Redis, symbol: str, account: int, shares: float, price: float, value: float, timestamp: int):
+    obj = {'account':account,
+           'symbol':symbol,
+           'shares':shares,
+           'price':price,
+           'value':value,
+           'timestamp':timestamp}
+    
+    redis.json().set(_key_portfolio_v(account, symbol, timestamp), Path.rootPath(), obj)
+
 
 def set_bar(redis: Redis, symbol: str, timestamp: int, open: float,
              high: float, low: float, close: float, volume: int):
@@ -242,6 +248,7 @@ def set_fund(redis: Redis, name: str, description: str, assets: list):
            'assets':assets}
     
     redis.json().set(_key_fund(id), Path.rootPath(), obj)
+
 
 def set_trade(redis: Redis, symbol: str, price: str, timestamp: str, kind: str):
     ## TODO: kind should be an enum type thing eventually

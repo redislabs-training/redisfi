@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from time import sleep
 from random import gauss, shuffle, triangular
+from pprint import pp
 
 from clikit.api.io.flags import VERBOSE
 
@@ -39,6 +40,47 @@ class TransactionGenerator(BaseAdapter):
                 
                 pipe.execute()
                 moment = moment + self.interval
+
+class TransactionPriceMapper(BaseAdapter):
+    def __init__(self, account=710, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.account = account
+
+    def run(self):
+        raw_transactions = DB.get_transactions(self.redis)
+        transformed_transactions = {}
+        for transaction in raw_transactions:
+            if not transaction['symbol'] in transformed_transactions:
+                transformed_transactions[transaction['symbol']] = []
+            
+            transformed_transactions[transaction['symbol']].insert(0, (transaction['timestamp'], transaction['balance']))
+
+        
+        for symbol, transactions in transformed_transactions.items():
+            bars = DB.get_asset_history(self.redis, symbol, asc=True)
+            beginning_transaction, end_transaction = transactions[0], transactions[1]
+            _, shares = beginning_transaction
+            end, next_shares = end_transaction
+            counter = 1
+            
+            with self.redis.pipeline(transaction=False) as pipe:
+                for bar in bars:
+                    if bar['timestamp'] > end:
+                        counter += 1
+                        if counter < len(transactions):
+                            new_end = transactions[counter]
+                        else:
+                            new_end = (float('inf'), next_shares) 
+                        
+                        shares = next_shares
+                        end, next_shares = new_end
+                    
+                    price = (bar['high'] + bar['low']) / 2
+                    
+                    DB.set_asset_portfolio_value(pipe, bar['symbol'], self.account, shares, price, price * shares, bar['timestamp'])
+                
+                pipe.execute()
+
 
 class RNGPriceGenerator(BaseAdapter):
     def __init__(self, asset_multiplier, crypto_multiplier, update_ticks, **kwargs) -> None:
