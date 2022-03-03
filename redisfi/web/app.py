@@ -4,6 +4,7 @@ monkey.patch_all()
 from os import environ
 from subprocess import Popen
 from datetime import datetime, timedelta
+from pprint import pp
 
 from flask_socketio import SocketIO
 from flask import Flask, redirect, render_template, Response, request
@@ -11,7 +12,6 @@ from redis import Redis
 
 from redisfi import db as DB
 from redisfi.web.api import api 
-
 
 ACCOUNT = 710
 
@@ -50,8 +50,8 @@ def search():
             else:
                 result['price']['historic'] = ''
         
-        print(result)
-        return render_template('results.html', results=results)
+        
+        return render_template('results.jinja', results=results)
 
     else:
         return redirect('/')
@@ -62,9 +62,11 @@ def asset(symbol:str):
     asset_data = DB.get_asset(redis, symbol)
 
     if asset_data:
-        return render_template('asset.html', asset=asset_data, **time_kwargs())
+        return render_template('asset.jinja', asset=asset_data, **time_kwargs())
     else:
         return Response(status=404)
+
+
 
 @app.route('/fund/<string:name>')
 def fund(name:str):
@@ -72,13 +74,11 @@ def fund(name:str):
     fund_data = DB.get_fund(redis, name)
 
     if fund_data:
-        assets = DB.get_assets_metadata_and_latest(redis,fund_data['assets'].keys())
-        for asset in assets.values():
-            asset['percentage'] = fund_data['assets'][asset['symbol']]
+        fund_data['assets']  = DB.get_assets_metadata_and_latest(redis, ACCOUNT, fund_data['assets'].keys())
 
-        fund_data['assets'] = assets
+        pp(fund_data)
 
-        return render_template('fund.html', fund=fund_data, account=ACCOUNT, **time_kwargs())
+        return render_template('fund.jinja', fund=fund_data, account=ACCOUNT, **time_kwargs())
 
     else:
         return Response(status=404)

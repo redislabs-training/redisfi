@@ -12,12 +12,12 @@ from redis.commands.search.field import TextField, NumericField
 LARGE_PAGE_SIZE = 1000000
 
 
-_average_bar = lambda bar: (bar['high'] + bar['low'])/2
-_key_asset = lambda symbol: f'asset:{symbol.upper()}'
-_key_bars = lambda symbol, timestamp: f'bars:{symbol.upper()}:{int(timestamp) if timestamp else ""}'
-_key_fund = lambda id: f'fund:{id}'
-_key_trade = lambda symbol, timestamp: f'trade:{symbol.upper()}:{int(timestamp) if timestamp else ""}'
-_key_transaction = lambda account, timestamp: f'transaction:{account}:{timestamp}'
+_average_bar     = lambda bar: (bar['high'] + bar['low'])/2
+_key_asset       = lambda symbol: f'asset:{symbol.upper()}'
+_key_bars        = lambda symbol, timestamp: f'bars:{symbol.upper()}:{int(timestamp) if timestamp else ""}'
+_key_fund        = lambda id: f'fund:{id}'
+_key_trade       = lambda symbol, timestamp: f'trade:{symbol.upper()}:{int(timestamp) if timestamp else ""}'
+_key_transaction = lambda account, symbol, timestamp: f'transaction:{account}:{symbol.upper() if symbol else ""}:{int(timestamp) if timestamp else ""}'
 
 
 def get_asset(redis: Redis, symbol: str):
@@ -31,12 +31,16 @@ def get_asset_history(redis: Redis, symbol: str, start=0, end='inf', page=(0, LA
     return _deserialize_results(idx.search(query))
 
 
-def get_assets_metadata_and_latest(redis: Redis, symbols: list):
+def get_assets_metadata_and_latest(redis: Redis, account: int, symbols: list):
     assets = {}
     for symbol in symbols:
         assets[symbol] = get_asset(redis, symbol)
         assets[symbol]['price']['historic'] = get_asset_price_historic(redis, symbol)
-        print(assets[symbol])
+        valid_price = assets[symbol]['price']['live'] or assets[symbol]['price']['mock'] or assets[symbol]['price']['mock']
+        assets[symbol]['last_transaction'] = get_transactions(redis, account=account, symbol=symbol, page=(0,1))[0]
+        assets[symbol]['growth_percent'] = ((assets[symbol]['last_transaction']['balance'] * valid_price) / assets[symbol]['last_transaction']['total_spent']) * 100
+
+        # print(assets[symbol])
     
     return assets
 
@@ -81,14 +85,30 @@ def get_trades(redis: Redis, symbol: str, start=0, end='inf', page=(0, LARGE_PAG
     return _deserialize_results(idx.search(query))
 
 
-def get_transactions(redis: Redis, account: int, kind: str, start=0, end='inf', page=(0, LARGE_PAGE_SIZE)):
+def get_transactions(redis: Redis, account: int=None, symbol: str=None, start=0, end='inf', page=(0, LARGE_PAGE_SIZE), asc=False):
     idx = index_transaction(redis)
-    query = Query(f'@account:{account} @kind:{kind} @timestamp:[{start},{end}]').sort_by('timestamp', asc=False).paging(*page)
+
+    if start != 0 or end != 'inf':
+        timestamp_query = f'@timestamp:[{start},{end}]'
+    else:
+        timestamp_query = ''
+    
+    if symbol is not None:
+        symbol_query = f' @symbol:{symbol}'
+    else:
+        symbol_query = ''
+
+    if account is not None:
+        account_query = f' @account:{account}'
+    else:
+        account_query = ''
+
+    query = Query(f'{timestamp_query}{symbol_query}{account_query}').sort_by('timestamp', asc=asc).paging(*page)
     print(_build_search_query(idx, query))
     return _deserialize_results(idx.search(query))
 
 def index_asset(redis: Redis):
-    idx = redis.ft(_key_asset('idx'))
+    idx = redis.ft(_key_asset('idx').lower())
     try:
         idx.info()
         return idx
@@ -108,7 +128,7 @@ def index_asset(redis: Redis):
 
 
 def index_bar(redis:Redis):
-    idx = redis.ft(_key_bars('idx', '')[0:-1])
+    idx = redis.ft(_key_bars('idx', '')[0:-1].lower())
     try:
         idx.info()
         return idx
@@ -128,7 +148,7 @@ def index_bar(redis:Redis):
     return idx
 
 def index_trade(redis:Redis):
-    idx = redis.ft(_key_trade('idx', '')[0:-1])
+    idx = redis.ft(_key_trade('idx', '')[0:-1].lower())
     try:
         idx.info()
         return idx
@@ -145,7 +165,7 @@ def index_trade(redis:Redis):
 
 
 def index_transaction(redis:Redis):
-    idx = redis.ft(_key_transaction('idx', '')[0:-1])
+    idx = redis.ft(_key_transaction('idx', '', '')[0:-2].lower())
     try:
         idx.info()
         return idx
@@ -155,8 +175,8 @@ def index_transaction(redis:Redis):
     idx.create_index((
         TextField('$.account', as_name='account'),
         NumericField('$.timestamp', as_name='timestamp', sortable=True),
-        TextField('$.kind', as_name='kind')
-    ), definition=IndexDefinition(prefix=[_key_transaction('', '')[0:-1]], index_type=IndexType.JSON))
+        TextField('$.symbol', as_name='symbol')
+    ), definition=IndexDefinition(prefix=[_key_transaction('', '', '')[0:-2]], index_type=IndexType.JSON))
 
     return idx
 
@@ -234,16 +254,18 @@ def set_trade(redis: Redis, symbol: str, price: str, timestamp: str, kind: str):
     redis.json().set(_key_trade(symbol, timestamp), Path.rootPath(), obj)
 
 
-def set_transaction(redis: Redis, account: int, timestamp: int, shares: float, kind: str, price: float, balance: float):
+def set_transaction(redis: Redis, account: int, timestamp: int, shares: float, symbol: str, price: float, balance: float, total_spent: float, fund: str=''):
 
     obj = {'account':str(account),
            'timestamp':timestamp,
            'shares':shares,
            'price':price,
-           'kind':kind, 
+           'symbol':symbol, 
+           'fund':fund,
+           'total_spent':total_spent,
            'balance':balance}
 
-    redis.json().set(_key_transaction(account, timestamp), Path.rootPath(), obj)
+    redis.json().set(_key_transaction(account, symbol, timestamp), Path.rootPath(), obj)
 
 
 def _build_search_query(index: SearchCommands, query: Query):

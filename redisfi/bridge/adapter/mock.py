@@ -10,32 +10,35 @@ from redisfi.bridge.adapter.base import BaseAdapter
 DAYS_IN_YEAR = 365.26
 
 class TransactionGenerator(BaseAdapter):
-    def __init__(self, years_to_generate: float, interval: int, amount_to_invest_per_interval: float, account=710, fund='retire2050', kind='retire2050', **kwargs):
+    def __init__(self, years_to_generate: float, interval: int, amount_to_invest_per_interval: float, account=710, fund='retire2050', **kwargs):
         super().__init__(**kwargs)
         self.years_to_generate = years_to_generate
         self.interval = timedelta(weeks=interval)
         self.amount_to_invest_per_interval = amount_to_invest_per_interval
         self.account = account
         self.fund_data = DB.get_fund(self.redis, fund)
-        self.kind = kind
 
     def run(self):
-        moment = datetime.now() - timedelta(days=DAYS_IN_YEAR*self.years_to_generate) 
-        balance = 0
+        moment = datetime.utcnow() - timedelta(days=DAYS_IN_YEAR*self.years_to_generate) 
+        balances, total_spent = {}, {}
         
-        while moment <= datetime.now():
-            price = 0
-            for symbol, percentage in self.fund_data['assets'].items():
-                bar = DB.get_asset_history(self.redis, symbol, end=int(moment.timestamp()), page=(0, 1))[0]
-                price += bar['close'] * percentage
+        with self.redis.pipeline(transaction=False) as pipe:
+            while moment <= datetime.utcnow():
+                timestamp = int(moment.timestamp())
+                for symbol, percentage in self.fund_data['assets'].items():
+                    bar = DB.get_asset_history(self.redis, symbol, end=timestamp, page=(0, 1))[0]
+                    price = bar['close'] 
+                    amount_to_spend = self.amount_to_invest_per_interval * percentage
+                    shares = amount_to_spend / price
+                    balances[symbol] = shares + balances.get(symbol, 0)
+                    total_spent[symbol] = amount_to_spend + total_spent.get(symbol, 0)
+
+                    DB.set_transaction(pipe, self.account, timestamp, shares, symbol, price, balances[symbol], total_spent[symbol], self.fund_data['id'])
+
+                    self.cli.line(f'<info>timestamp:</info> <comment>{timestamp}</comment><info> | price: </info><comment>{price}</comment><info> | shares: </info><comment>{shares}</comment><info> | balance: </info><comment>{balances[symbol]}</comment>', verbosity=VERBOSE)
                 
-            shares = self.amount_to_invest_per_interval / price
-            balance += shares
-
-            DB.set_transaction(self.redis, self.account, int(moment.timestamp()), shares, self.kind, price, balance)
-            self.cli.line(f'<info>timestamp: </info><comment>{int(moment.timestamp())}</comment> <info>| price: </info><comment>{price}</comment> <info>| shares: </info><comment>{shares}</comment> <info>| balance: </info><comment>{balance}</comment>', verbosity=VERBOSE)
-
-            moment = moment + self.interval
+                pipe.execute()
+                moment = moment + self.interval
 
 class RNGPriceGenerator(BaseAdapter):
     def __init__(self, asset_multiplier, crypto_multiplier, update_ticks, **kwargs) -> None:

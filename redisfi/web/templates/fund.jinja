@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'base.jinja' %}
 {% block header %}
 <style type="text/css">
     .container-main{
@@ -11,14 +11,23 @@
     }
 </style>
 {% endblock %}
-{% block body%}
+{% block body %}
 <div class="container-fluid container-main">
     <h1>{{fund.name}}</h1>
     <span class="display-6">Balance:&nbsp;&nbsp;<span id="price"></span></span>
     <div class="container-fluid container-data">
         <div class="row">
-            <div class="col-lg border bg-light">
-                <div id="chart"></div>
+            <div class="col-lg">
+                <div class="timeframe-selector">
+                    <select id="timeselector" class="form-select-sm" onchange="chartUpdate()" aria-label="Timeframe">
+                        <option value="{{thirty}}">30 days</option>
+                        <option value="{{ninty}}">90 days</option>
+                        <option value="{{year}}">1 year</option>
+                        <option selected value="0">All</option>
+                    </select>
+                </div>
+                <p>&nbsp;</p>
+                <div class="border bg-light" id="chart"></div>
             </div>
         </div>
         <div class="row"><div class="col-lg spacer">&nbsp;</div></div>
@@ -29,8 +38,9 @@
                       <tr>
                         <th scope="col">Symbol</th>
                         <th scope="col">Name</th>
-                        <th scope="col">Percentage</th>
+                        <th scope="col">Shares Owned</th>
                         <th scope="col">Price</th>
+                        <th scope="col">Change</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -38,8 +48,9 @@
                         <tr>
                             <th scope="row">&nbsp;&nbsp;<a class="link-dark" href="/asset/{{asset.symbol}}">{{asset.symbol}}</a></th>
                             <td>{{asset.name}}</td>
-                            <td id="{{asset.symbol}}-percentage">{{100*asset.percentage}}%</td>
-                            <td>$ <span class="price" id="{{asset.symbol}}-price">{{ asset.price.mock or asset.price.historic }}</span></td>
+                            <td id="{{asset.symbol}}-sharesOwned">{{'%0.2f' | format(asset.last_transaction.balance)}}</td>
+                            <td>$ <span class="price" id="{{asset.symbol}}-price">{{ asset.price.live or asset.price.mock or asset.price.historic }}</span></td>
+                            <td style="{% if asset.growth_percent > 100 %}color: ForestGreen;{% elif asset.growth_percent < 100 %} color: red;{% endif %}">{{ '%0.2f' | format(asset.growth_percent) }} % </td>
                         </tr>
                       {% endfor %}
                     </tbody>
@@ -62,58 +73,26 @@
 <script type="text/javascript">
     const prices = {};
     const symbols = [];
+    const chart = new ApexCharts(document.querySelector("#chart"), chartOptions);
+    const trades = {};
+
+    let live = false;
     let shares = 0;
     let lastTimestamp = 0;
     let lastBalance = 0;
 
-    function sumPricesAndUpdateBalance() {
-        var sum = 0;
-        
-        symbols.forEach((symbol) => {
-            const percentage = parseFloat($(`#${symbol}-percentage`).text().slice(0, -1))/100;
-            sum = percentage * prices[symbol] + sum;
+    function unpackPromisesAndUpdateSeries(promises) {
+        Promise.all(promises).then((series) => {
+            console.log(series);
+            chart.updateSeries(series);
         });
-
-        const newBalance = parseFloat((sum*shares).toFixed(2));
-        const formatter = Intl.NumberFormat(navigator.language, {style: 'currency', currency: 'USD'});
-        $('#price').text(formatter.format(newBalance));
-
-        if (newBalance > lastBalance) {
-            flashGreen('#price');
-        } else if(lastBalance > newBalance) {
-            flashRed('#price');
-        }
-        lastBalance = newBalance;
     }
-    
-    $(() => {
-        const socket = io();
-        const assets = $('.price');
+
+  function setChartTimeframe(timeframe) { 
+    const promises = [];
+    symbols.forEach((symbol) => {
+        promises.push($.getJSON(`/api/account/{{account}}/transactions?symbol=${symbol}&start=${timeframe}`).then((data) => {
         
-        for (let i=0; i < assets.length; i++) {
-            let price = parseFloat(assets[i].textContent);
-            assets[i].textContent = price.toFixed(2);
-            let [symbol, _] = assets[i].id.split('-');
-            symbols.push(symbol);
-            prices[symbol] = price;
-
-            socket.on('updates.'+symbol, (data) => {
-                assets[i].textContent = data.price.toFixed(2);
-                let selector = `#${assets[i].id}`;
-                if (data.price > prices[symbol]) {
-                    flashGreen(selector);
-                } else if (data.price < prices[symbol]) {
-                    flashRed(selector);
-                }
-
-                prices[symbol] = data.price;
-                sumPricesAndUpdateBalance();
-            });
-        }
-
-        var series = [];
-        series.push($.getJSON('/api/account/{{account}}/{{fund.id}}/transactions').then((data) => {
-            
             const transactions = [];
             for (let i=0; i<data.length; i++) {
                 let timestamp = data[i].timestamp * 1000;
@@ -125,28 +104,69 @@
                     shares = data[i].balance;
                 }
             }
-            return transactions
+            return {name:symbol, data:transactions};
         }));
+    });
+
+    unpackPromisesAndUpdateSeries(promises);
+  }
 
 
+  function chartUpdate(){
+    const selection = $('#timeselector').val();
+    setChartTimeframe(selection);
 
-        Promise.all(series).then((data) => {
-            sumPricesAndUpdateBalance();
-            var options = {
-                chart: {
-                    type: 'line',
-                    height: '500px'
-                },
-                series:[{name: 'Value',
-                    data: data[0]}],
-                xaxis: {
-                    type: 'datetime'
-                }
-            };
+  }
 
-            var chart = new ApexCharts(document.querySelector("#chart"), options);
-            chart.render();
+    function sumPricesAndUpdateBalance() {
+        var sum = 0;
+        
+        symbols.forEach((symbol) => {
+            const sharesOwned = parseFloat($(`#${symbol}-sharesOwned`).text());
+            sum = sharesOwned * prices[symbol] + sum;
         });
+
+        const newBalance = parseFloat((sum).toFixed(2));
+        const formatter = Intl.NumberFormat(navigator.language, {style: 'currency', currency: 'USD'});
+        $('#price').text(formatter.format(newBalance));
+
+        if (newBalance > lastBalance) {
+            flashGreen('#price');
+        } else if(lastBalance > newBalance) {
+            flashRed('#price');
+        }
+
+        lastBalance = newBalance;
+    }
+    
+    $(() => {
+        chart.render()
+        const socket = io();
+        const assets = $('.price');
+        
+        for (let i=0; i < assets.length; i++) {
+            let price = parseFloat(assets[i].textContent);
+            assets[i].textContent = price.toFixed(2);
+            let [symbol, _] = assets[i].id.split('-');
+            symbols.push(symbol);
+            prices[symbol] = price;
+            sumPricesAndUpdateBalance();
+
+            socket.on('updates.'+symbol, (data) => {
+                assets[i].textContent = data.price.toFixed(2);
+                let selector = `#${assets[i].id}`;
+
+                if (data.price > prices[symbol]) {
+                    flashGreen(selector);
+                } else if (data.price < prices[symbol]) {
+                    flashRed(selector);
+                }
+
+                prices[symbol] = data.price;
+                sumPricesAndUpdateBalance();
+            });
+        }
+        setChartTimeframe(0);
     });
 </script>
 {% endblock %}

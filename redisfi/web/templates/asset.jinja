@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'base.jinja' %}
 {% block header %}
 <style type="text/css">
     .container-main{
@@ -7,9 +7,6 @@
     }
     .container-data{
         margin-top: 20px;
-    }
-    .timeframe-selector{
-      float: right;
     }
 </style>
 {% endblock %}
@@ -132,18 +129,7 @@
 {% endblock %}
 {% block js %}
 <script type="text/javascript">
-  const LOADING_TEXT = 'Loading...'
-  const chartOptions = {chart: {
-                          type: 'line'
-                        },
-                        series: [],
-                        xaxis: {
-                          type: 'datetime'
-                        },
-                        noData: {
-                          text: LOADING_TEXT
-                        }
-                      }
+
 
   let chart = new ApexCharts(document.querySelector("#chart"), chartOptions);
 

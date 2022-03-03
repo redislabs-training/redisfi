@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
     <title>RedisFI</title>
+    <style type="text/css">
+    .timeframe-selector{
+      float: right;
+    }
+    </style>
     {% block header %}{% endblock %}
   </head>
   <body>
@@ -24,6 +29,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script type="text/javascript">
+      const LOADING_TEXT = 'Loading...'
+      const chartOptions = {chart: {
+                              type: 'line'
+                            },
+                            series: [],
+                            xaxis: {
+                              type: 'datetime'
+                            },
+                            noData: {
+                              text: LOADING_TEXT
+                            }
+                          };
+                          
       function barsToTimeseries(data) {
         let priceData = [];
         // let oldestTimestamp = 0;
