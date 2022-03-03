@@ -45,6 +45,11 @@ def get_assets_metadata_and_latest(redis: Redis, account: int, symbols: list):
     
     return assets
 
+def get_asset_portfolio_value(redis: Redis, account: int, symbol: str, start=0, end='inf', asc=False, page=(0, LARGE_PAGE_SIZE)):
+    idx = index_asset_portfolio_value(redis)
+    query = Query(f'@account:{account} @symbol:{symbol.upper()} @timestamp:[{start},{end}]').sort_by('timestamp', asc=asc).paging(*page)
+    print(_build_search_query(idx, query))
+    return _deserialize_results(idx.search(query))
 
 def get_asset_prices(redis: Redis, symbol: str):
     resp = redis.json().get(_key_asset(symbol), '$.price')
@@ -122,6 +127,22 @@ def index_asset(redis: Redis):
 
     return idx
 
+def index_asset_portfolio_value(redis: Redis):
+    idx = redis.ft(_key_portfolio_v('idx', '', '')[0:-2].lower())
+    
+    try:
+        idx.info()
+        return idx
+    except ResponseError:
+        pass
+
+    idx.create_index((
+        TextField('$.account', as_name='account'),
+        TextField('$.symbol', as_name='symbol'),
+        NumericField('$.timestamp', as_name='timestamp', sortable=True)
+    ), definition=IndexDefinition(prefix=[_key_portfolio_v('', '', '')[0:-2]], index_type=IndexType.JSON))
+
+    return idx
 
 def index_bar(redis:Redis):
     idx = redis.ft(_key_bars('idx', '')[0:-1].lower())
@@ -214,9 +235,9 @@ def set_asset_live_price(redis: Redis, symbol: str, price: float):
 def set_asset_mock_price(redis: Redis, symbol: str, price: float):
     redis.json().set(_key_asset(symbol), '$.price.mock', price)
 
-def set_asset_portfolio_value(redis: Redis, symbol: str, account: int, shares: float, price: float, value: float, timestamp: int):
-    obj = {'account':account,
-           'symbol':symbol,
+def set_asset_portfolio_value(redis: Redis, account: int, symbol: str, shares: float, price: float, value: float, timestamp: int):
+    obj = {'account':str(account),
+           'symbol':symbol.upper(),
            'shares':shares,
            'price':price,
            'value':value,

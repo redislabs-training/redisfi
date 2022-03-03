@@ -21,9 +21,9 @@
                 <div class="timeframe-selector">
                     <select id="timeselector" class="form-select-sm" onchange="chartUpdate()" aria-label="Timeframe">
                         <option value="{{thirty}}">30 days</option>
-                        <option value="{{ninty}}">90 days</option>
+                        <option selected value="{{ninty}}">90 days</option>
                         <option value="{{year}}">1 year</option>
-                        <option selected value="0">All</option>
+                        <option value="0">All</option>
                     </select>
                 </div>
                 <p>&nbsp;</p>
@@ -90,13 +90,29 @@
 
   function setChartTimeframe(timeframe) { 
     const promises = [];
+    
+   
     symbols.forEach((symbol) => {
-        promises.push($.getJSON(`/api/account/{{account}}/transactions?symbol=${symbol}&start=${timeframe}`).then((data) => {
+        let url;
+        if (parseInt(timeframe) === 0) {
+            url = `/api/account/{{account}}/transactions?symbol=${symbol}`;
+        } else {
+            url = `/api/account/{{account}}/value/${symbol}?start=${timeframe}`;
+        }
+
+        promises.push($.getJSON(url).then((data) => {
         
             const transactions = [];
             for (let i=0; i<data.length; i++) {
                 let timestamp = data[i].timestamp * 1000;
-                let value = parseFloat((data[i].balance * data[i].price).toFixed(2));
+                let value;
+
+                if (parseInt(timeframe) === 0) {
+                    value = parseFloat((data[i].balance * data[i].price).toFixed(2));
+                } else {
+                    value = parseFloat((data[i].value).toFixed(2));
+                }
+
                 transactions.push([timestamp, value]);
                 
                 if (lastTimestamp < timestamp) {
@@ -166,7 +182,7 @@
                 sumPricesAndUpdateBalance();
             });
         }
-        setChartTimeframe(0);
+        setChartTimeframe(parseInt('{{ninty}}'));
     });
 </script>
 {% endblock %}

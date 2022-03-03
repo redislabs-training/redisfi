@@ -1,9 +1,13 @@
-from pprint import pformat, pp
+from time import sleep
+from random import triangular
+from pprint import pformat
 import yfinance as Y
 from clikit.api.io.flags import VERY_VERBOSE, VERBOSE
 
 from redisfi import db as DB
 from redisfi.bridge.adapter.base import BaseAdapter
+
+jitter = lambda: sleep(triangular(1, 3))
 
 class YahooFinanceHistoric(BaseAdapter):
     def run(self):
@@ -43,6 +47,8 @@ class YahooFinanceMetadata(BaseAdapter):
                 DB.set_asset(pipe, symbol, data['longName'], data['longBusinessSummary'],
                                   data.get('website'), data.get('sector'), data.get('industry'),
                                   contact_info=contact_info, financial_info=financial_info)
+                
+                jitter() # adds a randomish pause to avoid looking like a bot
 
             pipe.execute()
                 

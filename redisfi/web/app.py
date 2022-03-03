@@ -34,6 +34,7 @@ time_kwargs = lambda: {'now':now(), 'day':one_day_ago(), 'thirty':thirty_days_ag
 
 @app.route('/')
 def portfolio():
+    #return render_template('overview.jinja')
     return redirect('/fund/retire2050')
 
 @app.route('/search')

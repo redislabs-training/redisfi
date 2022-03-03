@@ -77,7 +77,7 @@ class TransactionPriceMapper(BaseAdapter):
                     
                     price = (bar['high'] + bar['low']) / 2
                     
-                    DB.set_asset_portfolio_value(pipe, bar['symbol'], self.account, shares, price, price * shares, bar['timestamp'])
+                    DB.set_asset_portfolio_value(pipe, self.account, bar['symbol'], shares, price, price * shares, bar['timestamp'])
                 
                 pipe.execute()
 
