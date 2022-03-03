@@ -18,6 +18,11 @@ def account_history(account):
     results = DB.get_transactions(redis, account=account, start=start, end=end, symbol=symbol)
     return dumps(results)
 
+@api.route('/account/<int:account>/agg')
+def account_agg(account):
+    redis = current_app.config['REDIS']
+    results = DB.get_agg_mock(redis)
+    return dumps(results)
 
 @api.route('/asset/<string:symbol>/history')
 def asset_history(symbol:str):

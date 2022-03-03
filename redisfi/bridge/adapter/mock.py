@@ -76,6 +76,8 @@ class RNGPriceGenerator(BaseAdapter):
                     DB.set_asset_mock_price(p, asset, asset_price)
                     DB.set_asset_mock_price(p, crypto, crypto_price)
                     p.execute()
+
+                DB.set_agg_mock(self.redis, asset, asset_price)
                 
                 sleep(triangular(*self.update_ticks))
 

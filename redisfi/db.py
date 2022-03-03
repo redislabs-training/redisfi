@@ -7,13 +7,17 @@ from redis.commands.json.path import Path
 from redis.commands.search.commands import SEARCH_CMD, SearchCommands
 from redis.commands.search.query import Query
 from redis.commands.search.indexDefinition import IndexDefinition, IndexType
-from redis.commands.search.field import TextField, NumericField
+from redis.commands.search.field import TextField, NumericField, TagField
+from redis.commands.search.aggregation import AggregateRequest
+import redis.commands.search.reducers as reducers
+
 
 LARGE_PAGE_SIZE = 1000000
 
 
 _average_bar     = lambda bar: (bar['high'] + bar['low'])/2
 _key_asset       = lambda symbol: f'asset:{symbol.upper()}'
+_key_agg         = lambda account, symbol: f'agg:{account}:{symbol.upper() if symbol else ""}'
 _key_bars        = lambda symbol, timestamp: f'bars:{symbol.upper()}:{int(timestamp) if timestamp else ""}'
 _key_fund        = lambda id: f'fund:{id}'
 _key_trade       = lambda symbol, timestamp: f'trade:{symbol.upper()}:{int(timestamp) if timestamp else ""}'
@@ -116,13 +120,35 @@ def index_asset(redis: Redis):
         pass
 
     idx.create_index((
-        TextField('$.symbol', as_name='symbol'),
+        TagField('$.symbol', as_name='symbol'),
         TextField('$.name', as_name='name'),
         TextField('$.description', as_name='description'),
         TextField('$.website', as_name='website'),
-        TextField('$.sector', as_name='sector'),
-        TextField('$.industry', as_name='industry')
+        TagField('$.sector', as_name='sector'),
+        TagField('$.industry', as_name='industry'),
+        # TODO: Find out why indexing breaks when adding this^
+        #NumericField('$.price.mock', as_name='price_mock'),
+        #NumericField('$.price.live', as_name='price_live')
     ), definition=IndexDefinition(prefix=[_key_asset('')], index_type=IndexType.JSON))
+
+    return idx
+
+def index_agg(redis: Redis):
+    idx = redis.ft('agg:idx')
+    
+    try:
+        idx.info()
+        return idx
+    except ResponseError:
+        pass
+
+    idx.create_index((
+        TagField('account'),
+        TagField('symbol'),
+        NumericField('price_mock', sortable=True),
+        NumericField('price_live', sortable=True),
+        NumericField('balance', sortable=True)        
+    ), definition=IndexDefinition(prefix=['agg:'], index_type=IndexType.HASH))
 
     return idx
 
@@ -218,6 +244,38 @@ def set_asset_live_price(redis: Redis, symbol: str, price: float):
 def set_asset_mock_price(redis: Redis, symbol: str, price: float):
     redis.json().set(_key_asset(symbol), '$.price.mock', price)
 
+def set_agg_mock(redis: Redis, symbol: str, price: float):
+
+    ACCOUNT = '710' # There is currently only one account
+    req = AggregateRequest('@symbol:' + symbol + ' @account:' + ACCOUNT).load('$.balance').group_by(['@account', '@symbol'], reducers.max('@$.balance').alias('max_balance'))
+    
+    max_balance = -1
+
+    try:
+        max_balance = float(redis.ft('transaction:idx').aggregate(req).rows[0][5])
+        obj = {'account': ACCOUNT,
+               'symbol': symbol,
+               'price_mock': price,
+               'price_live': 0,
+               'balance' : max_balance}
+
+        # DEBUG
+        #print(obj)
+        redis.hmset(_key_agg(ACCOUNT, symbol), obj)
+
+    except IndexError:
+        # Index not yet returning data
+        pass
+    
+
+def get_agg_mock(redis: Redis):
+    
+    ACCOUNT = '710' # There is currently only one account
+    
+    req = AggregateRequest('@account:{' + ACCOUNT + '}').apply(value='@price_mock * @balance').group_by('@account', reducers.sum('@value').alias('sum_total'))
+    sum_total = round(float(redis.ft('agg:idx').aggregate(req).rows[0][3]),2)
+
+    return { 'account' : ACCOUNT, 'sum_total' : sum_total}
 
 def set_bar(redis: Redis, symbol: str, timestamp: int, open: float,
              high: float, low: float, close: float, volume: int):
@@ -252,7 +310,7 @@ def set_trade(redis: Redis, symbol: str, price: str, timestamp: str, kind: str):
            'kind':kind}
 
     redis.json().set(_key_trade(symbol, timestamp), Path.rootPath(), obj)
-
+      
 
 def set_transaction(redis: Redis, account: int, timestamp: int, shares: float, symbol: str, price: float, balance: float, total_spent: float, fund: str=''):
 
