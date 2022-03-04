@@ -1,0 +1,196 @@
+{% extends 'base.jinja' %}
+{% block header %}
+<style type="text/css">
+    .container-main{
+        margin-top: 20px;
+        margin-left: 10px;
+    }
+    .container-data{
+        margin-top: 30px;
+        width: 95%;
+    }
+</style>
+{% endblock %}
+{% block body %}
+<div class="container-fluid container-main">
+    <h1>Portfolio</h1>
+    <span class="display-6">Balance:&nbsp;&nbsp;<span id="price"></span></span>
+    <div class="container-fluid container-data">
+        <div class="row">
+            <div class="col-lg border bg-light">
+                <h4 class="p-3 text-center">Stocks</h4>
+                <div class="chart" id="chart-stock"></div>
+                <table class="table table-striped table-hover border bg-light">
+                    <thead>
+                      <tr>
+                        <th scope="col">Symbol</th>
+                        <th scope="col">Shares Owned</th>
+                        <th scope="col">Price</th>
+                        <th scope="col">1 day change</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for symbol, shares_owned in portfolio.stocks.items() %}
+                        <tr>
+                            <th scope="row">&nbsp;&nbsp;<a class="link-dark stock" href="/asset/{{symbol}}">{{symbol}}</a></th>
+                            <td id="{{symbol}}-sharesOwned">{{shares_owned}}</td>
+                            <td>$ <span class="price text-center" id="{{symbol}}-price">{{'%0.2f' | format(portfolio.price[symbol].live or portfolio.price[symbol].mock or portfolio.price[symbol].historic) }}</span></td>
+                            <td>{{ '%0.2f' | format(portfolio.price[symbol].percent_change) }}</td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                </table> 
+            </div>
+            <div class="col-lg border bg-light">
+                <h4 class="p-3 text-center">Crypto</h4>
+                <div class="chart" id="chart-crypto"></div>
+                <table class="table table-striped table-hover border bg-light">
+                    <thead>
+                      <tr>
+                        <th scope="col">Symbol</th>
+                        <th scope="col">Coins Owned</th>
+                        <th scope="col">Price</th>
+                        <th scope="col">1 day change</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for symbol, shares_owned in portfolio.crypto.items() %}
+                        <tr>
+                            <th scope="row">&nbsp;&nbsp;<a class="link-dark crypto" href="/asset/{{symbol}}">{{symbol}}</a></th>
+                            <td id="{{symbol}}-sharesOwned">{{shares_owned}}</td>
+                            <td>$ <span class="price text-center" id="{{symbol}}-price">{{'%0.2f' | format(portfolio.price[symbol].live or portfolio.price[symbol].mock or portfolio.price[symbol].historic) }}</span></td>
+                            <td>{{ '%0.2f' | format(portfolio.price[symbol].percent_change) }}</td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                </table> 
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg border bg-light">
+                <h4 class="p-3 text-center">401k</h4>
+                <div class="chart" id="chart-401k"></div>
+            </div>
+            <div class="col-lg border bg-light">
+                <h4 class="p-3 text-center">ETFs</h4>
+                <div class="chart" id="chart-etf"></div>
+                <table class="table table-striped table-hover border bg-light">
+                    <thead>
+                      <tr>
+                        <th scope="col">Symbol</th>
+                        <th scope="col">Shares Owned</th>
+                        <th scope="col">Price</th>
+                        <th scope="col">1 day change</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for symbol, shares_owned in portfolio.etfs.items() %}
+                        <tr>
+                            <th scope="row">&nbsp;&nbsp;<a class="link-dark etf" href="/asset/{{symbol}}">{{symbol}}</a></th>
+                            <td id="{{symbol}}-sharesOwned">{{shares_owned}}</td>
+                            <td>$ <span class="price text-center" id="{{symbol}}-price">{{'%0.2f' | format(portfolio.price[symbol].live or portfolio.price[symbol].mock or portfolio.price[symbol].historic) }}</span></td>
+                            <td>{{ '%0.2f' | format(portfolio.price[symbol].percent_change) }}</td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                </table> 
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block js %}
+<script type="text/javascript">
+    const charts = {};
+    const prices = {};
+    const symbols = [];
+    let lastBalance = 0;
+    
+    function sumPricesAndUpdateBalance() {
+        let sum = 0;
+        
+        symbols.forEach((symbol) => {
+            const sharesOwned = parseFloat($(`#${symbol}-sharesOwned`).text());
+            sum = sharesOwned * prices[symbol] + sum;
+        });
+
+        const newBalance = parseFloat((sum).toFixed(2));
+        const formatter = Intl.NumberFormat(navigator.language, {style: 'currency', currency: 'USD'});
+        $('#price').text(formatter.format(newBalance));
+
+        if (newBalance > lastBalance) {
+            flashGreen('#price');
+        } else if(lastBalance > newBalance) {
+            flashRed('#price');
+        }
+
+        lastBalance = newBalance;
+    }
+
+    function unpackPromisesAndUpdateSeries(promises, chart) {
+        Promise.all(promises).then((series) => {
+            console.log(series);
+            chart.updateSeries(series);
+        });
+    }
+
+  function setChart(chart, chartSymbols) { 
+    const promises = [];
+
+    chartSymbols.forEach((symbol) => {
+        promises.push($.getJSON(`/api/asset/${symbol}/history?start={{day}}`).then((data) => {
+            const barsPriceData  = barsToTimeseries(data);
+            return {name:symbol, data:barsPriceData};
+        }));
+    });
+
+    unpackPromisesAndUpdateSeries(promises, chart);
+  }
+
+    $(() => {
+        const socket = io();
+        const rawCharts = $('.chart');
+        
+
+        for(let i=0; i<rawCharts.length; i++) {
+            const chart = new ApexCharts(rawCharts[i], chartOptions);
+            chart.render();
+            const [_, which] = rawCharts[i].id.split('-');
+            charts[which] = chart;
+            const chartSymbolLinks = $(`.${which}`);
+            const chartSymbols = []
+            for (let i=0; i<chartSymbolLinks.length; i++) {
+                chartSymbols.push(chartSymbolLinks[i].text)
+            }
+            
+            setChart(chart, chartSymbols);
+        }
+
+        const assets = $('.price');
+
+        for (let i=0; i < assets.length; i++) {
+            let price = parseFloat(assets[i].textContent);
+            assets[i].textContent = price.toFixed(2);
+            let [symbol, _] = assets[i].id.split('-');
+            symbols.push(symbol);
+            prices[symbol] = price;
+            sumPricesAndUpdateBalance();
+
+            socket.on('updates.'+symbol, (data) => {
+                assets[i].textContent = data.price.toFixed(2);
+                let selector = `#${assets[i].id}`;
+
+                if (data.price > prices[symbol]) {
+                    flashGreen(selector);
+                } else if (data.price < prices[symbol]) {
+                    flashRed(selector);
+                }
+
+                prices[symbol] = data.price;
+                sumPricesAndUpdateBalance();
+            });
+        }
+
+    });
+</script>
+{% endblock %}
