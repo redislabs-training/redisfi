@@ -8,6 +8,9 @@
     .container-data{
         margin-top: 20px;
     }
+    h1, h2, h4, h5, hr { color: #fff; }
+    h1 { margin-bottom: 25px;}
+    #description h5 { color: #000; }
 </style>
 {% endblock %}
 {% block body %}
@@ -53,7 +56,7 @@
           </div>
           {% endif %}
           {% if asset.contact %}
-            <div class="row p-2">
+            <div class="row p-2 bg-light">
               <div class="col-sm">
                 <strong>Phone Number:</strong>&nbsp;&nbsp;{{asset.contact.phone}}
               </div>
@@ -67,24 +70,12 @@
           <div class="row">
             <div class="col-md">&nbsp;</div>
           </div>
-          <div class="row">
-            <div class="col-md">
-              <div class="p-4 border bg-light" id="description">
-                <h5>Description:</h5>
-                <hr>
-                {{ asset.description }}
-              </div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md">&nbsp;</div>
-          </div>
           {% if asset.financial %}
             <div class="row">
               <div class="col-md">
                 <div class="container-fluid border">
                   <h5 style="padding-top: 4%">Financial Information:</h5><hr>
-                  <div class="row p-4 bg-light">
+                  <div class="row p-4 bg-light" style="margin-bottom:3%;">
                     {% if asset.financial.previous_close %}
                       <div class="col-sm p-2">
                         <span><strong>Close:</strong>&nbsp;&nbsp;${{'%0.2f' | format(asset.financial.previous_close)}}</span>
@@ -105,8 +96,6 @@
                         <span><strong>Low:</strong>&nbsp;&nbsp;${{'%0.2f' | format(asset.financial.low)}}</span>
                       </div>
                     {% endif %}
-                  <!-- </div> -->
-                  <!-- <div class="row p-4 bg-light"> -->
                     <div class="col-sm p-2">
                       <span><strong>52 Week High:</strong>&nbsp;&nbsp;${{'%0.2f' | format(asset.financial['52_week_high'])}}</span>
                     </div>
@@ -121,6 +110,18 @@
               </div>
             </div>
           {% endif %}
+          <div class="row">
+            <div class="col-md">&nbsp;</div>
+          </div>
+          <div class="row">
+            <div class="col-md">
+              <div class="p-4 border bg-light" id="description">
+                <h5>Description:</h5>
+                <hr>
+                {{ asset.description }}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -214,9 +215,9 @@
       const selector = '#price';
       $(selector).text(event.price.toFixed(2));
       if (event.price > price) {
-        flashGreen(selector);
+        flashGreen(selector, 'white');
       } else if (event.price < price) {
-        flashRed(selector);
+        flashRed(selector, 'white');
       }
       const timestamp = event.timestamp;
       price = event.price;

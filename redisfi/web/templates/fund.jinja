@@ -9,21 +9,35 @@
         margin-top: 30px;
         width: 95%;
     }
+     h1, .summary { color: #fff; }
+    h1 { margin-bottom: 25px; text-align: center; }
+    .summary { font-size: 2rem; margin-bottom: 25px; }
+    .plan { text-align: right; }
+    .brand-red { color: #DC382C; }
+    .link-dark { color: #5961FF; text-decoration: none; }
+    .table-striped>tbody>tr:nth-of-type(odd)>* { --bs-table-accent-bg: #E9EBFD; }
+    .table-hover>tbody>tr:hover>* { --bs-table-accent-bg: #D2D7FE; }
 </style>
 {% endblock %}
 {% block body %}
 <div class="container-fluid container-main">
-    <h1>{{fund.name}}</h1>
-    <span class="display-6">Balance:&nbsp;&nbsp;<span id="price"></span></span>
     <div class="container-fluid container-data">
+            <div class="row summary">
+            <div class="col-8">
+                Balance:&nbsp;&nbsp;<span id="balance"></span>
+            </div>
+            <div class="col-4 plan">
+                Plan: {{fund.name}}
+            </div>
+        </div>
         <div class="row">
             <div class="col-lg">
                 <div class="timeframe-selector">
                     <select id="timeselector" class="form-select-sm" onchange="chartUpdate()" aria-label="Timeframe">
                         <option value="{{thirty}}">30 days</option>
-                        <option selected value="{{ninty}}">90 days</option>
+                        <option value="{{ninty}}">90 days</option>
                         <option value="{{year}}">1 year</option>
-                        <option value="0">All</option>
+                        <option selected value="0">All</option>
                     </select>
                 </div>
                 <p>&nbsp;</p>
@@ -73,6 +87,7 @@
 <script type="text/javascript">
     const prices = {};
     const symbols = [];
+    chartOptions.chart.height = '400px';
     const chart = new ApexCharts(document.querySelector("#chart"), chartOptions);
     const trades = {};
 
@@ -142,12 +157,12 @@
 
         const newBalance = parseFloat((sum).toFixed(2));
         const formatter = Intl.NumberFormat(navigator.language, {style: 'currency', currency: 'USD'});
-        $('#price').text(formatter.format(newBalance));
+        $('#balance').text(formatter.format(newBalance));
 
         if (newBalance > lastBalance) {
-            flashGreen('#price');
+            flashGreen('#balance', 'white');
         } else if(lastBalance > newBalance) {
-            flashRed('#price');
+            flashRed('#balance', 'white');
         }
 
         lastBalance = newBalance;
@@ -171,16 +186,16 @@
                 let selector = `#${assets[i].id}`;
 
                 if (data.price > prices[symbol]) {
-                    flashGreen(selector);
+                    flashGreen(selector, 'black');
                 } else if (data.price < prices[symbol]) {
-                    flashRed(selector);
+                    flashRed(selector, 'black');
                 }
 
                 prices[symbol] = data.price;
                 sumPricesAndUpdateBalance();
             });
         }
-        setChartTimeframe(parseInt('{{ninty}}'));
+        setChartTimeframe(0);
     });
 </script>
 {% endblock %}

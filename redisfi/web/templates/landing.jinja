@@ -1,0 +1,19 @@
+{% extends 'base.jinja' %}
+{% block header %}
+<style type="text/css">
+    .hero-ctn { background-image: url('/static/demo-stock-bg.jpg'); background-size: cover; height: 92vh; position: relative; }
+    .hero-copy { background-color: rgba(26,26,31,.8); color: #fff; margin: 0 auto 0 50px; max-width: 650px; padding: 25px 15px; position: relative; top: 30%; z-index: 1; }
+    h1 { font-size: 3rem; }
+    .hero-copy p { font-size: 1.25rem; margin-top: 20px; }
+    .rd-color { color: #51cccc; }
+</style>
+{% endblock %}
+{% block body %}
+    <div class="hero-ctn">
+      <div class="hero-copy">
+        <h1><span class="rd-color">Real-Time</span> Investment Portal</h1>
+        <p>The power of Redis...short description here</p>
+        <a href="/overview">Login</a>
+      </div>
+    </div>
+{% endblock %}

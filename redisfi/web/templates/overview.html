@@ -7,17 +7,29 @@
     }
     .container-data{
         margin-top: 30px;
-        width: 95%;
+        width: 99%;
     }
+    h1, h2, .balance, #price, .summary { color: #fff; }
+    .table-striped>tbody>tr:nth-of-type(odd)>* { --bs-table-accent-bg: #E9EBFD; }
+    .table-hover>tbody>tr:hover>* { --bs-table-accent-bg: #D2D7FE; }
+    .brand-red { color: #DC382C; }
+    h1 { margin-bottom: 25px; text-align: center; }
+    .summary { font-size: 2rem; margin-bottom: 25px; }
+
 </style>
 {% endblock %}
 {% block body %}
 <div class="container-fluid container-main">
-    <h1>Portfolio</h1>
-    <span class="display-6">Balance:&nbsp;&nbsp;<span id="price"></span></span>
+    <h1>Welcome back, Lord <span class="brand-red">Redis</span></h1>
     <div class="container-fluid container-data">
+        <div class="row summary">
+            <h2>Portfolio</h2>
+            <div class="col-8">
+                Balance:&nbsp;&nbsp;<span id="balance"></span>
+            </div>
+        </div>
         <div class="row">
-            <div class="col-lg border bg-light">
+            <div class="col-md border bg-light">
                 <h4 class="p-3 text-center">Stocks</h4>
                 <div class="chart" id="chart-stock"></div>
                 <table class="table table-striped table-hover border bg-light">
@@ -41,7 +53,7 @@
                     </tbody>
                 </table> 
             </div>
-            <div class="col-lg border bg-light">
+            <div class="col-md border bg-light">
                 <h4 class="p-3 text-center">Crypto</h4>
                 <div class="chart" id="chart-crypto"></div>
                 <table class="table table-striped table-hover border bg-light">
@@ -67,11 +79,12 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-lg border bg-light">
+            <div class="col-md border bg-light">
                 <h4 class="p-3 text-center">401k</h4>
                 <div class="chart" id="chart-401k"></div>
+                <a href="/fund/retire2050">Click Me!</a>
             </div>
-            <div class="col-lg border bg-light">
+            <div class="col-md border bg-light">
                 <h4 class="p-3 text-center">ETFs</h4>
                 <div class="chart" id="chart-etf"></div>
                 <table class="table table-striped table-hover border bg-light">
@@ -116,12 +129,12 @@
 
         const newBalance = parseFloat((sum).toFixed(2));
         const formatter = Intl.NumberFormat(navigator.language, {style: 'currency', currency: 'USD'});
-        $('#price').text(formatter.format(newBalance));
+        $('#balance').text(formatter.format(newBalance));
 
         if (newBalance > lastBalance) {
-            flashGreen('#price');
+            flashGreen('#balance', 'white');
         } else if(lastBalance > newBalance) {
-            flashRed('#price');
+            flashRed('#balance', 'white');
         }
 
         lastBalance = newBalance;
@@ -150,9 +163,10 @@
     $(() => {
         const socket = io();
         const rawCharts = $('.chart');
-        
-
+        chartOptions.chart.height = '400px';
+        chartOptions.chart.width = '95%';
         for(let i=0; i<rawCharts.length; i++) {
+            
             const chart = new ApexCharts(rawCharts[i], chartOptions);
             chart.render();
             const [_, which] = rawCharts[i].id.split('-');
@@ -181,9 +195,9 @@
                 let selector = `#${assets[i].id}`;
 
                 if (data.price > prices[symbol]) {
-                    flashGreen(selector);
+                    flashGreen(selector, 'black');
                 } else if (data.price < prices[symbol]) {
-                    flashRed(selector);
+                    flashRed(selector, 'black');
                 }
 
                 prices[symbol] = data.price;

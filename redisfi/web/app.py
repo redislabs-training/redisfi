@@ -34,6 +34,10 @@ a_year_ago = lambda: int((_now() - timedelta(days=DAYS_IN_YEAR)).timestamp())
 time_kwargs = lambda: {'now':now(), 'day':one_day_ago(), 'week':one_week_ago(), 'thirty':thirty_days_ago(), 'ninty':ninty_days_ago(), 'year':a_year_ago()}
 
 @app.route('/')
+def landing():
+    return render_template('landing.jinja')
+
+@app.route('/overview')
 def portfolio():
     redis = app.config['REDIS']
     portfolio_data = DB.get_portfolio(redis, ACCOUNT) 
