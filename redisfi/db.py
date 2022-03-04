@@ -1,5 +1,5 @@
-from enum import Enum
 from json import loads
+from datetime import datetime, timedelta
 
 from redis import Redis
 from redis.exceptions import ResponseError
@@ -17,6 +17,7 @@ _key_asset       = lambda symbol: f'asset:{symbol.upper()}'
 _key_bars        = lambda symbol, timestamp: f'bars:{symbol.upper()}:{int(timestamp) if timestamp else ""}'
 _key_fund        = lambda id: f'fund:{id}'
 _key_trade       = lambda symbol, timestamp: f'trade:{symbol.upper()}:{int(timestamp) if timestamp else ""}'
+_key_portfolio   = lambda account: f'portfolio:{account}'
 _key_portfolio_v = lambda account, symbol, timestamp: f'portfolio_value:{account}:{symbol.upper()}:{int(timestamp) if timestamp else ""}'
 _key_transaction = lambda account, symbol, timestamp: f'transaction:{account}:{symbol.upper() if symbol else ""}:{int(timestamp) if timestamp else ""}'
 
@@ -32,7 +33,7 @@ def get_asset_history(redis: Redis, symbol: str, start=0, end='inf', page=(0, LA
     return _deserialize_results(idx.search(query))
 
 
-def get_assets_metadata_and_latest(redis: Redis, account: int, symbols: list):
+def get_fund_assets_metadata_and_latest(redis: Redis, account: int, symbols: list):
     assets = {}
     for symbol in symbols:
         assets[symbol] = get_asset(redis, symbol)
@@ -40,8 +41,6 @@ def get_assets_metadata_and_latest(redis: Redis, account: int, symbols: list):
         valid_price = assets[symbol]['price']['live'] or assets[symbol]['price']['mock'] or assets[symbol]['price']['mock']
         assets[symbol]['last_transaction'] = get_transactions(redis, account=account, symbol=symbol, page=(0,1))[0]
         assets[symbol]['growth_percent'] = ((assets[symbol]['last_transaction']['balance'] * valid_price) / assets[symbol]['last_transaction']['total_spent']) * 100
-
-        # print(assets[symbol])
     
     return assets
 
@@ -62,13 +61,15 @@ def get_asset_prices(redis: Redis, symbol: str):
         else:
             resp = data
     
-    resp['historic'] =  get_asset_price_historic(redis, symbol)
+    if not any(resp.values()):    
+        resp['historic'] =  get_asset_price_historic(redis, symbol)
+    
     return resp
 
 
-def get_asset_price_historic(redis: Redis, symbol: str):
+def get_asset_price_historic(redis: Redis, symbol: str, start=0, end='inf'):
     idx = index_bar(redis)
-    query = Query(f'@symbol:{symbol}').sort_by('timestamp', asc=False).paging(0, 1)
+    query = Query(f'@symbol:{symbol} @timestamp:[{start},{end}]').sort_by('timestamp', asc=False).paging(0, 1)
     print(_build_search_query(idx, query))
     return _average_bar(_deserialize_results(idx.search(query))[0])
 
@@ -83,6 +84,24 @@ def get_asset_price_mock(redis: Redis, symbol: str):
 
 def get_fund(redis: Redis, id: str):
     return redis.json().get(_key_fund(id))
+
+def get_portfolio(redis: Redis, account: int, percent_change_timeframe=timedelta(days=1)):
+    portfolio = redis.json().get(_key_portfolio(account))
+    portfolio['price'] = {}
+    assets = list(portfolio['crypto'].keys()) + list(portfolio['stocks'].keys()) + list(portfolio['etfs'].keys())
+
+    for symbol in assets:
+        prices = get_asset_prices(redis, symbol)
+
+        end = int((datetime.utcnow() - percent_change_timeframe).timestamp())
+        old_price = get_asset_price_historic(redis, symbol, end=end)
+
+        price = prices['live'] or prices['mock'] or prices['historic']
+        prices['percent_change'] = (price / old_price) * 100
+
+        portfolio['price'][symbol] = prices
+
+    return portfolio
 
 def get_trades(redis: Redis, symbol: str, start=0, end='inf', page=(0, LARGE_PAGE_SIZE)):
     idx = index_trade(redis)
@@ -269,6 +288,16 @@ def set_fund(redis: Redis, name: str, description: str, assets: list):
            'assets':assets}
     
     redis.json().set(_key_fund(id), Path.rootPath(), obj)
+
+def set_portfolio(redis: Redis, account: int, stocks: dict=None, crypto: dict=None, etfs: dict=None, retire: str=''):
+
+    obj = {'account':account,
+           'stocks': stocks if stocks is not None else {},
+           'crypto': crypto if crypto is not None else {},
+           'etfs': etfs if etfs is not None else {},
+           'retire':retire}
+           
+    redis.json().set(_key_portfolio(account), Path.rootPath(), obj)
 
 
 def set_trade(redis: Redis, symbol: str, price: str, timestamp: str, kind: str):

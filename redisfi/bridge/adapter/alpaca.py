@@ -40,9 +40,10 @@ class AlpacaLive(AlpacaBase):
         s.run() 
 
 class AlpacaHistoric(AlpacaBase):
-    def __init__(self, hourly: int, **kwargs) -> None:
+    def __init__(self, hourly: int, crypto_days: int, **kwargs) -> None:
         super().__init__(**kwargs)
         self.hourly = hourly
+        self.crypto_days = crypto_days
         self.api = REST(self.api_key, self.api_secret_key, base_url=URL('https://paper-api.alpaca.markets'))
 
     def _bar_kwargs(self, bar: Bar):
@@ -60,9 +61,10 @@ class AlpacaHistoric(AlpacaBase):
     
     def run(self):
         self.get_hourly_data()
+        self.get_crypto_historic_data()
 
     def get_hourly_data(self):
-        from_when_dt = datetime.now() - timedelta(days=self.hourly)
+        from_when_dt = datetime.utcnow() - timedelta(days=self.hourly)
         from_when = from_when_dt.isoformat().split('T')[0]
 
         with self.redis.pipeline(transaction=False) as pipe:
@@ -84,5 +86,18 @@ class AlpacaHistoric(AlpacaBase):
 
                 pipe.execute()
                 
+    def get_crypto_historic_data(self):
+        from_when_dt = datetime.utcnow() - timedelta(days=self.crypto_days)
+        from_when = from_when_dt.isoformat().split('T')[0]
 
+        with self.redis.pipeline(transaction=False) as pipe:
+              for ticker in self.crypto:
+                self.cli.line(f'<info>Pulling daily data for </info><comment>{ticker}</comment> <info>from</info> <comment>{from_when}</comment> <info>til</info> <comment>now</comment>')
+                bars = self.api.get_crypto_bars_iter(ticker, TimeFrame.Day, from_when)
+                for bar in bars:
+                    timestamp = self._bar_timestamp(bar)
+                    DB.set_bar(pipe, ticker, timestamp, **self._bar_kwargs(bar))
+
+                pipe.execute()
+        
 

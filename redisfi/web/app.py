@@ -27,15 +27,19 @@ DAYS_IN_YEAR = 365.26
 _now = lambda: datetime.utcnow()
 now = lambda: int(_now().timestamp())
 one_day_ago = lambda: int((_now() - timedelta(days=1)).timestamp())
+one_week_ago = lambda: int((_now() - timedelta(days=7)).timestamp())
 thirty_days_ago = lambda: int((_now() - timedelta(days=30)).timestamp())
 ninty_days_ago = lambda: int((_now() - timedelta(days=90)).timestamp())
 a_year_ago = lambda: int((_now() - timedelta(days=DAYS_IN_YEAR)).timestamp())
-time_kwargs = lambda: {'now':now(), 'day':one_day_ago(), 'thirty':thirty_days_ago(), 'ninty':ninty_days_ago(), 'year':a_year_ago()}
+time_kwargs = lambda: {'now':now(), 'day':one_day_ago(), 'week':one_week_ago(), 'thirty':thirty_days_ago(), 'ninty':ninty_days_ago(), 'year':a_year_ago()}
 
 @app.route('/')
 def portfolio():
-    #return render_template('overview.jinja')
-    return redirect('/fund/retire2050')
+    redis = app.config['REDIS']
+    portfolio_data = DB.get_portfolio(redis, ACCOUNT) 
+    print(portfolio_data)
+    return render_template('overview.html', portfolio=portfolio_data, **time_kwargs())
+    #return redirect('/fund/retire2050')
 
 @app.route('/search')
 def search():
@@ -75,7 +79,7 @@ def fund(name:str):
     fund_data = DB.get_fund(redis, name)
 
     if fund_data:
-        fund_data['assets']  = DB.get_assets_metadata_and_latest(redis, ACCOUNT, fund_data['assets'].keys())
+        fund_data['assets']  = DB.get_fund_assets_metadata_and_latest(redis, ACCOUNT, fund_data['assets'].keys())
 
         pp(fund_data)
 
@@ -84,9 +88,7 @@ def fund(name:str):
     else:
         return Response(status=404)
 
-@socketio.on('message')
-def handle_message(data):
-    print(f'received message: {data}')
+
 
 def run(debug=False, redis_url='redis://'):
     # This is ultimately a hack around the way the flask debug server works

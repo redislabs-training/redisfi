@@ -90,8 +90,7 @@
 
   function setChartTimeframe(timeframe) { 
     const promises = [];
-    
-   
+
     symbols.forEach((symbol) => {
         let url;
         if (parseInt(timeframe) === 0) {
@@ -131,11 +130,10 @@
   function chartUpdate(){
     const selection = $('#timeselector').val();
     setChartTimeframe(selection);
-
   }
 
     function sumPricesAndUpdateBalance() {
-        var sum = 0;
+        let sum = 0;
         
         symbols.forEach((symbol) => {
             const sharesOwned = parseFloat($(`#${symbol}-sharesOwned`).text());

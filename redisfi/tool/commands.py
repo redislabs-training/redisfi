@@ -3,6 +3,7 @@ from cleo import Command
 from redis import Redis
 
 from redisfi.tool.create_db import create_db
+from redisfi.tool.generate_json_datafiles import GeneratePortfolioJSONTool
 
 class FlushNamespace(Command):
     '''
@@ -79,7 +80,7 @@ class ToolBase(Command):
     tool
     '''
 
-    commands = [CreateDBTool(), FlushNamespace()]
+    commands = [CreateDBTool(), FlushNamespace(), GeneratePortfolioJSONTool()]
 
     def handle(self):
         return self.call("help", self._config.name)

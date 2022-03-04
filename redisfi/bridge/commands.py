@@ -5,7 +5,7 @@ from cleo import Command
 
 from redisfi.bridge.adapter.alpaca import AlpacaLive, AlpacaHistoric
 from redisfi.bridge.adapter.yahoo import YahooFinanceMetadata, YahooFinanceHistoric
-from redisfi.bridge.adapter.file import JSONMetadataFileLoader, JSONFundMetadataFileLoader
+from redisfi.bridge.adapter.file import JSONMetadataFileLoader, JSONFundMetadataFileLoader, JSONPortfolioMetadataFileLoader
 from redisfi.bridge.adapter.mock import RNGPriceGenerator, TransactionGenerator, TransactionPriceMapper
 
 
@@ -64,7 +64,8 @@ class BridgeMetadata(BridgeMixin, Command):
 
     metadata
     '''
-    adapters = [JSONFundMetadataFileLoader, JSONMetadataFileLoader, YahooFinanceMetadata]
+
+    adapters = [JSONFundMetadataFileLoader, JSONMetadataFileLoader, JSONPortfolioMetadataFileLoader, YahooFinanceMetadata]
 
 
 class BridgePriceHistoric(BridgeMixin, Command):
@@ -73,12 +74,15 @@ class BridgePriceHistoric(BridgeMixin, Command):
 
     historic
         {--hourly=1 : Number of days to extract hourly data}
+        {--crypto-days=365 : Number of days to extract crypto daily data}
     '''
+
     adapters = [AlpacaHistoric, YahooFinanceHistoric]
 
     def _adapter_config(self: Command) -> dict:
         adapter_config =  super()._adapter_config()
         adapter_config['hourly'] = int(self.option('hourly'))
+        adapter_config['crypto_days'] = int(self.option('crypto-days'))
         return adapter_config
 
 
