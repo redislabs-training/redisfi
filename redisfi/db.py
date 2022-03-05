@@ -1,13 +1,17 @@
 from json import loads
 from datetime import datetime, timedelta
+from pprint import pp
+
 
 from redis import Redis
 from redis.exceptions import ResponseError
 from redis.commands.json.path import Path
-from redis.commands.search.commands import SEARCH_CMD, SearchCommands
+from redis.commands.search.commands import SEARCH_CMD, AGGREGATE_CMD, SearchCommands
 from redis.commands.search.query import Query
 from redis.commands.search.indexDefinition import IndexDefinition, IndexType
 from redis.commands.search.field import TextField, NumericField
+from redis.commands.search.aggregation import AggregateRequest, Asc, Desc
+import redis.commands.search.reducers as reduce
 
 LARGE_PAGE_SIZE = 1000000
 
@@ -38,12 +42,31 @@ def get_fund_assets_metadata_and_latest(redis: Redis, account: int, symbols: lis
     for symbol in symbols:
         assets[symbol] = get_asset(redis, symbol)
         assets[symbol]['price']['historic'] = get_asset_price_historic(redis, symbol)
-        valid_price = assets[symbol]['price']['live'] or assets[symbol]['price']['mock'] or assets[symbol]['price']['mock']
+        valid_price = assets[symbol]['price']['live'] or assets[symbol]['price']['mock'] or assets[symbol]['price']['historic']
         assets[symbol]['last_transaction'] = get_transactions(redis, account=account, symbol=symbol, page=(0,1))[0]
         assets[symbol]['growth_percent'] = ((assets[symbol]['last_transaction']['balance'] * valid_price) / assets[symbol]['last_transaction']['total_spent']) * 100
     
     return assets
 
+def get_fund_value_aggregate(redis: Redis, account: int, fund: str, start=0, end='inf', asc=False, page=(0, LARGE_PAGE_SIZE)):
+    if asc:
+        wrapper_class = Asc
+    else:
+        wrapper_class = Desc
+
+    idx = index_transaction(redis)
+    agg = AggregateRequest(f'@account:{account} @fund:{fund} @timestamp:[{start},{end}]')\
+          .load('@balance', '@price', '@timestamp')\
+          .apply(value="@balance * @price" )\
+          .group_by(['@timestamp'], reduce.sum('@value').alias('value'))\
+          .sort_by(wrapper_class('@timestamp')).limit(*page)
+
+    results = idx.aggregate(agg)
+    
+    print(_build_agg_query(idx, agg))
+    return [(int(row[1]), float(row[3])) for row in results.rows]
+    
+   
 def get_asset_portfolio_value(redis: Redis, account: int, symbol: str, start=0, end='inf', asc=False, page=(0, LARGE_PAGE_SIZE)):
     idx = index_asset_portfolio_value(redis)
     query = Query(f'@account:{account} @symbol:{symbol.upper()} @timestamp:[{start},{end}]').sort_by('timestamp', asc=asc).paging(*page)
@@ -100,6 +123,13 @@ def get_portfolio(redis: Redis, account: int, percent_change_timeframe=timedelta
         prices['percent_change'] = (price / old_price) * 100
 
         portfolio['price'][symbol] = prices
+
+    portfolio['retire'] = get_fund(redis, portfolio['retire'])
+    last_transaction_agg = get_fund_value_aggregate(redis, account, portfolio['retire']['id'], page=(0, 1))
+    last_timestamp, portfolio['retire']['value'] = last_transaction_agg[0]
+    last_timestamp -= 1
+    old_price = get_fund_value_aggregate(redis, account, portfolio['retire']['id'], end=last_timestamp, page=(0, 1))[0][1]
+    portfolio['retire']['percent_change'] = (portfolio['retire']['value']/old_price) * 100
 
     return portfolio
 
@@ -211,7 +241,10 @@ def index_transaction(redis:Redis):
     idx.create_index((
         TextField('$.account', as_name='account'),
         NumericField('$.timestamp', as_name='timestamp', sortable=True),
-        TextField('$.symbol', as_name='symbol')
+        TextField('$.symbol', as_name='symbol'),
+        NumericField('$.balance', as_name='balance'),
+        NumericField('$.price', as_name='price'),
+        TextField('$.fund', as_name='fund')
     ), definition=IndexDefinition(prefix=[_key_transaction('', '', '')[0:-2]], index_type=IndexType.JSON))
 
     return idx
@@ -328,7 +361,10 @@ def set_transaction(redis: Redis, account: int, timestamp: int, shares: float, s
 def _build_search_query(index: SearchCommands, query: Query):
     return ' '.join([SEARCH_CMD] + list(map(str, index._mk_query_args(query, None)[0])))
 
+def _build_agg_query(client, agg):
+    return ' '.join([AGGREGATE_CMD, client.index_name] + agg.build_args())
 
 def _deserialize_results(results) -> list:
     '''turn a list of json at results.docs into a list of dicts'''
     return [loads(result.json) for result in results.docs]
+

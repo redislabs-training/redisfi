@@ -62,3 +62,13 @@ def asset_trades(symbol:str):
     results = DB.get_trades(redis, symbol, start, end)
     return dumps(results)
     
+@api.route('/fund/<int:account>/<string:fund>/value')
+def fund_value(account, fund):
+    redis = current_app.config['REDIS']
+    start, end, = request.args.get('start', 0), request.args.get('end', 'inf')
+
+    if not (start or start == 0) or not end: # 0 is valid, but also false, so if false make sure not zero
+        return 'invalid start/end value', 400
+
+    results = DB.get_fund_value_aggregate(redis, account, fund, start, end)
+    return dumps(results)

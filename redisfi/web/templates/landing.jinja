@@ -6,6 +6,7 @@
     h1 { font-size: 3rem; }
     .hero-copy p { font-size: 1.25rem; margin-top: 20px; }
     .rd-color { color: #51cccc; }
+    #login {}
 </style>
 {% endblock %}
 {% block body %}
@@ -13,7 +14,9 @@
       <div class="hero-copy">
         <h1><span class="rd-color">Real-Time</span> Investment Portal</h1>
         <p>The power of Redis...short description here</p>
-        <a href="/overview">Login</a>
+        <form id="login" action="/overview">
+          <button class="btn btn-outline-success" type="submit">Login</button>
+        </form>
       </div>
     </div>
 {% endblock %}

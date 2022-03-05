@@ -41,8 +41,8 @@ def landing():
 def portfolio():
     redis = app.config['REDIS']
     portfolio_data = DB.get_portfolio(redis, ACCOUNT) 
-    print(portfolio_data)
-    return render_template('overview.html', portfolio=portfolio_data, **time_kwargs())
+    pp(portfolio_data)
+    return render_template('overview.jinja', account=ACCOUNT, portfolio=portfolio_data, **time_kwargs())
     #return redirect('/fund/retire2050')
 
 @app.route('/search')

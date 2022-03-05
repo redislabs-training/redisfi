@@ -32,7 +32,7 @@
             <div class="col-md border bg-light">
                 <h4 class="p-3 text-center">Stocks</h4>
                 <div class="chart" id="chart-stock"></div>
-                <table class="table table-striped table-hover border bg-light">
+                <table class="table table-striped table-hover bg-light">
                     <thead>
                       <tr>
                         <th scope="col">Symbol</th>
@@ -47,7 +47,7 @@
                             <th scope="row">&nbsp;&nbsp;<a class="link-dark stock" href="/asset/{{symbol}}">{{symbol}}</a></th>
                             <td id="{{symbol}}-sharesOwned">{{shares_owned}}</td>
                             <td>$ <span class="price text-center" id="{{symbol}}-price">{{'%0.2f' | format(portfolio.price[symbol].live or portfolio.price[symbol].mock or portfolio.price[symbol].historic) }}</span></td>
-                            <td>{{ '%0.2f' | format(portfolio.price[symbol].percent_change) }}</td>
+                            <td>{{ '%0.2f' | format(portfolio.price[symbol].percent_change) }}%</td>
                         </tr>
                       {% endfor %}
                     </tbody>
@@ -56,7 +56,7 @@
             <div class="col-md border bg-light">
                 <h4 class="p-3 text-center">Crypto</h4>
                 <div class="chart" id="chart-crypto"></div>
-                <table class="table table-striped table-hover border bg-light">
+                <table class="table table-striped table-hover bg-light">
                     <thead>
                       <tr>
                         <th scope="col">Symbol</th>
@@ -71,7 +71,7 @@
                             <th scope="row">&nbsp;&nbsp;<a class="link-dark crypto" href="/asset/{{symbol}}">{{symbol}}</a></th>
                             <td id="{{symbol}}-sharesOwned">{{shares_owned}}</td>
                             <td>$ <span class="price text-center" id="{{symbol}}-price">{{'%0.2f' | format(portfolio.price[symbol].live or portfolio.price[symbol].mock or portfolio.price[symbol].historic) }}</span></td>
-                            <td>{{ '%0.2f' | format(portfolio.price[symbol].percent_change) }}</td>
+                            <td>{{ '%0.2f' | format(portfolio.price[symbol].percent_change) }}%</td>
                         </tr>
                       {% endfor %}
                     </tbody>
@@ -82,12 +82,28 @@
             <div class="col-md border bg-light">
                 <h4 class="p-3 text-center">401k</h4>
                 <div class="chart" id="chart-401k"></div>
-                <a href="/fund/retire2050">Click Me!</a>
+                <table class="table table-striped table-hover bg-light">
+                    <thead>
+                      <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Value</th>
+                        <th scope="col">14 day change</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row">&nbsp;&nbsp;<a class="link-dark etf" href="/fund/{{portfolio.retire.id}}">{{portfolio.retire.name}}</a></th>
+                            <td>$ <span class="price text-center" id="401k-price">{{'%0.2f' | format(portfolio.retire.value) }}</span></td>
+                            <td>{{ '%0.2f' | format(portfolio.retire.percent_change) }}%</td>
+                        </tr>
+                    </tbody>
+                </table> 
             </div>
+            
             <div class="col-md border bg-light">
                 <h4 class="p-3 text-center">ETFs</h4>
                 <div class="chart" id="chart-etf"></div>
-                <table class="table table-striped table-hover border bg-light">
+                <table class="table table-striped table-hover bg-light">
                     <thead>
                       <tr>
                         <th scope="col">Symbol</th>
@@ -102,7 +118,7 @@
                             <th scope="row">&nbsp;&nbsp;<a class="link-dark etf" href="/asset/{{symbol}}">{{symbol}}</a></th>
                             <td id="{{symbol}}-sharesOwned">{{shares_owned}}</td>
                             <td>$ <span class="price text-center" id="{{symbol}}-price">{{'%0.2f' | format(portfolio.price[symbol].live or portfolio.price[symbol].mock or portfolio.price[symbol].historic) }}</span></td>
-                            <td>{{ '%0.2f' | format(portfolio.price[symbol].percent_change) }}</td>
+                            <td>{{ '%0.2f' | format(portfolio.price[symbol].percent_change) }}%</td>
                         </tr>
                       {% endfor %}
                     </tbody>
@@ -111,6 +127,7 @@
         </div>
     </div>
 </div>
+<div class="hidden" id="401k-sharesOwned">1</div>
 {% endblock %}
 {% block js %}
 <script type="text/javascript">
@@ -142,22 +159,34 @@
 
     function unpackPromisesAndUpdateSeries(promises, chart) {
         Promise.all(promises).then((series) => {
-            console.log(series);
             chart.updateSeries(series);
         });
     }
 
-  function setChart(chart, chartSymbols) { 
-    const promises = [];
+  function setChart(chart, chartSymbols, type) { 
 
-    chartSymbols.forEach((symbol) => {
-        promises.push($.getJSON(`/api/asset/${symbol}/history?start={{day}}`).then((data) => {
-            const barsPriceData  = barsToTimeseries(data);
-            return {name:symbol, data:barsPriceData};
-        }));
-    });
+    if (type === '401k') {
+        $.getJSON('/api/fund/{{account}}/{{portfolio.retire.id}}/value', (data) => {
+            let seriesData = []
+            data.forEach((item) => {
+                seriesData.push([item[0] * 1000, parseFloat(item[1].toFixed(2))]);
+            })
+            let series = [{name: '401k', data:seriesData}];
+            chart.updateSeries(series);
+        })
+    } else {
+        const promises = [];
 
-    unpackPromisesAndUpdateSeries(promises, chart);
+        chartSymbols.forEach((symbol) => {
+            promises.push($.getJSON(`/api/asset/${symbol}/history?start={{day}}`).then((data) => {
+                const barsPriceData  = barsToTimeseries(data);
+                return {name:symbol, data:barsPriceData};
+            }));
+        });
+
+        unpackPromisesAndUpdateSeries(promises, chart);
+    }
+    
   }
 
     $(() => {
@@ -177,7 +206,7 @@
                 chartSymbols.push(chartSymbolLinks[i].text)
             }
             
-            setChart(chart, chartSymbols);
+            setChart(chart, chartSymbols, which);
         }
 
         const assets = $('.price');
@@ -204,7 +233,6 @@
                 sumPricesAndUpdateBalance();
             });
         }
-
     });
 </script>
 {% endblock %}
