@@ -14,6 +14,7 @@ from redisfi import db as DB
 from redisfi.web.api import api 
 
 ACCOUNT = 710
+WORDS_ALLOWED_IN_ASSET_DESCRIPTION = 75
 
 app = Flask(__name__)
 app.register_blueprint(api, url_prefix='/api')
@@ -32,6 +33,15 @@ thirty_days_ago = lambda: int((_now() - timedelta(days=30)).timestamp())
 ninty_days_ago = lambda: int((_now() - timedelta(days=90)).timestamp())
 a_year_ago = lambda: int((_now() - timedelta(days=DAYS_IN_YEAR)).timestamp())
 time_kwargs = lambda: {'now':now(), 'day':one_day_ago(), 'week':one_week_ago(), 'thirty':thirty_days_ago(), 'ninty':ninty_days_ago(), 'year':a_year_ago()}
+
+def _truncate_description(description):
+    desc_list = description.split(' ')
+
+    if len(desc_list) > WORDS_ALLOWED_IN_ASSET_DESCRIPTION:
+        return ' '.join(desc_list[0:WORDS_ALLOWED_IN_ASSET_DESCRIPTION]) + '...'
+    else:
+        return ' '.join(desc_list)
+
 
 @app.route('/')
 def landing():
@@ -69,6 +79,8 @@ def search():
 def asset(symbol:str):
     redis = app.config['REDIS']
     asset_data = DB.get_asset(redis, symbol)
+    
+    asset_data['description'] = _truncate_description(asset_data['description'])
 
     if asset_data:
         return render_template('asset.jinja', asset=asset_data, **time_kwargs())

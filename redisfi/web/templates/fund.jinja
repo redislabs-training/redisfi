@@ -5,14 +5,11 @@
         margin-top: 20px;
         margin-left: 10px;
     }
-    .container-data{
-        margin-top: 30px;
-        width: 95%;
-    }
-     h1, .summary { color: #fff; }
+    #assets-search { width: 50%; margin-bottom: 20px; }
+     h1, h5, p, hr, .summary { color: #fff; }
     h1 { margin-bottom: 25px; text-align: center; }
-    .summary { font-size: 2rem; margin-bottom: 25px; }
-    .plan { text-align: right; }
+    .summary { font-size: 2rem; }
+    .summart-bottom { margin-bottom: 25px; }
     .brand-red { color: #DC382C; }
     .link-dark { color: #5961FF; text-decoration: none; }
     .table-striped>tbody>tr:nth-of-type(odd)>* { --bs-table-accent-bg: #E9EBFD; }
@@ -23,13 +20,15 @@
 <div class="container-fluid container-main">
     <div class="container-fluid container-data">
             <div class="row summary">
-            <div class="col-8">
-                Balance:&nbsp;&nbsp;<span id="balance"></span>
+                <div class="col-4">
+                    Plan: {{fund.name}}
+                </div>
             </div>
-            <div class="col-4 plan">
-                Plan: {{fund.name}}
+            <div class="row summary summary-bottom">
+                 <div class="col-8">
+                    Balance:&nbsp;&nbsp;<span id="balance"></span>
+                </div>
             </div>
-        </div>
         <div class="row">
             <div class="col-lg">
                 <div class="timeframe-selector">
@@ -46,7 +45,17 @@
         </div>
         <div class="row"><div class="col-lg spacer">&nbsp;</div></div>
         <div class="row">
+            <div class="col-md">
+                <div class="p-2 bg-dark" id="description">
+                    <h5>Description:</h5><hr>
+                    <p class="p-2">{{ fund.description }}</p>
+                </div>
+            </div> 
             <div class="col-lg">
+                <form id="assets-search" class="d-flex" action="/search">
+                    <input class="form-control me-2" type="search" name="query" placeholder="Search" aria-label="Search">
+                    <button class="btn btn-outline-success" type="submit">Search</button>
+                </form>
                 <table class="table table-striped table-hover border bg-light">
                     <thead>
                       <tr>
@@ -70,15 +79,7 @@
                     </tbody>
                 </table>
             </div>
-        </div>
-        <div class="row"><div class="col-lg spacer">&nbsp;</div></div>
-        <div class="row">
-            <div class="col-md">
-                <div class="p-4 border bg-light" id="description">
-                    <h5>Description:</h5><hr>
-                    {{ fund.description }}
-                </div>
-            </div> 
+            
         </div>
     </div>
 </div>

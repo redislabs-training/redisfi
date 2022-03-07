@@ -20,38 +20,18 @@
 {% endblock %}
 {% block body %}
 <div class="container-fluid container-main">
-    <h1>Welcome back, Lord <span class="brand-red">Redis</span></h1>
+    <h1>Welcome back, <span class="brand-red">Ash</span></h1>
     <div class="container-fluid container-data">
         <div class="row summary">
-            <h2>Portfolio</h2>
+            <h2>My Portfolio</h2>
             <div class="col-8">
                 Balance:&nbsp;&nbsp;<span id="balance"></span>
             </div>
         </div>
         <div class="row">
             <div class="col-md border bg-light">
-                <h4 class="p-3 text-center">Stocks</h4>
-                <div class="chart" id="chart-stock"></div>
-                <table class="table table-striped table-hover bg-light">
-                    <thead>
-                      <tr>
-                        <th scope="col">Symbol</th>
-                        <th scope="col">Shares Owned</th>
-                        <th scope="col">Price</th>
-                        <th scope="col">1 day change</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for symbol, shares_owned in portfolio.stocks.items() %}
-                        <tr>
-                            <th scope="row">&nbsp;&nbsp;<a class="link-dark stock" href="/asset/{{symbol}}">{{symbol}}</a></th>
-                            <td id="{{symbol}}-sharesOwned">{{shares_owned}}</td>
-                            <td>$ <span class="price text-center" id="{{symbol}}-price">{{'%0.2f' | format(portfolio.price[symbol].live or portfolio.price[symbol].mock or portfolio.price[symbol].historic) }}</span></td>
-                            <td>{{ '%0.2f' | format(portfolio.price[symbol].percent_change) }}%</td>
-                        </tr>
-                      {% endfor %}
-                    </tbody>
-                </table> 
+                    <h4 class="p-3 text-center"><a class="link-dark etf" href="/fund/{{portfolio.retire.id}}">Retirement</a> - $<span class="price" id="401k-price">{{ "{:,.2f}".format(portfolio.retire.value) }}</span></h4>
+                    <div class="chart" id="chart-401k"></div>
             </div>
             <div class="col-md border bg-light">
                 <h4 class="p-3 text-center">Crypto</h4>
@@ -80,49 +60,13 @@
         </div>
         <div class="row">
             <div class="col-md border bg-light">
-                <h4 class="p-3 text-center">401k</h4>
-                <div class="chart" id="chart-401k"></div>
-                <table class="table table-striped table-hover bg-light">
-                    <thead>
-                      <tr>
-                        <th scope="col">Name</th>
-                        <th scope="col">Value</th>
-                        <th scope="col">14 day change</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <th scope="row">&nbsp;&nbsp;<a class="link-dark etf" href="/fund/{{portfolio.retire.id}}">{{portfolio.retire.name}}</a></th>
-                            <td>$ <span class="price text-center" id="401k-price">{{'%0.2f' | format(portfolio.retire.value) }}</span></td>
-                            <td>{{ '%0.2f' | format(portfolio.retire.percent_change) }}%</td>
-                        </tr>
-                    </tbody>
-                </table> 
+                <h4 class="p-3 text-center">Stocks</h4>
+                <div class="chart" id="chart-stock"></div>
             </div>
             
             <div class="col-md border bg-light">
-                <h4 class="p-3 text-center">ETFs</h4>
+                <h4 class="p-3 text-center">Long Term Investments</h4>
                 <div class="chart" id="chart-etf"></div>
-                <table class="table table-striped table-hover bg-light">
-                    <thead>
-                      <tr>
-                        <th scope="col">Symbol</th>
-                        <th scope="col">Shares Owned</th>
-                        <th scope="col">Price</th>
-                        <th scope="col">1 day change</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for symbol, shares_owned in portfolio.etfs.items() %}
-                        <tr>
-                            <th scope="row">&nbsp;&nbsp;<a class="link-dark etf" href="/asset/{{symbol}}">{{symbol}}</a></th>
-                            <td id="{{symbol}}-sharesOwned">{{shares_owned}}</td>
-                            <td>$ <span class="price text-center" id="{{symbol}}-price">{{'%0.2f' | format(portfolio.price[symbol].live or portfolio.price[symbol].mock or portfolio.price[symbol].historic) }}</span></td>
-                            <td>{{ '%0.2f' | format(portfolio.price[symbol].percent_change) }}%</td>
-                        </tr>
-                      {% endfor %}
-                    </tbody>
-                </table> 
             </div>
         </div>
     </div>
@@ -143,7 +87,7 @@
             const sharesOwned = parseFloat($(`#${symbol}-sharesOwned`).text());
             sum = sharesOwned * prices[symbol] + sum;
         });
-
+        
         const newBalance = parseFloat((sum).toFixed(2));
         const formatter = Intl.NumberFormat(navigator.language, {style: 'currency', currency: 'USD'});
         $('#balance').text(formatter.format(newBalance));
@@ -171,7 +115,7 @@
             data.forEach((item) => {
                 seriesData.push([item[0] * 1000, parseFloat(item[1].toFixed(2))]);
             })
-            let series = [{name: '401k', data:seriesData}];
+            let series = [{name: '{{portfolio.retire.name}}', data:seriesData}];
             chart.updateSeries(series);
         })
     } else {
@@ -212,8 +156,8 @@
         const assets = $('.price');
 
         for (let i=0; i < assets.length; i++) {
-            let price = parseFloat(assets[i].textContent);
-            assets[i].textContent = price.toFixed(2);
+            let price = parseFloat(assets[i].textContent.replace(/,/g, ''));
+            //assets[i].textContent = price.toFixed(2);
             let [symbol, _] = assets[i].id.split('-');
             symbols.push(symbol);
             prices[symbol] = price;

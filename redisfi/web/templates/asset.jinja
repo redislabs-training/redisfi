@@ -72,10 +72,13 @@
           </div>
           {% if asset.financial %}
             <div class="row">
+              <h4>Financial Information:</h4><hr>
+            </div>
+            <div class="row">
               <div class="col-md">
-                <div class="container-fluid border">
-                  <h5 style="padding-top: 4%">Financial Information:</h5><hr>
-                  <div class="row p-4 bg-light" style="margin-bottom:3%;">
+                <div class="flexbox">
+                  
+                  <div class="row bg-light">
                     {% if asset.financial.previous_close %}
                       <div class="col-sm p-2">
                         <span><strong>Close:</strong>&nbsp;&nbsp;${{'%0.2f' | format(asset.financial.previous_close)}}</span>
@@ -114,11 +117,12 @@
             <div class="col-md">&nbsp;</div>
           </div>
           <div class="row">
+            <h4>Description:</h4><hr>
+          </div>
+          <div class="row">
             <div class="col-md">
               <div class="p-4 border bg-light" id="description">
-                <h5>Description:</h5>
-                <hr>
-                {{ asset.description }}
+                <p>{{ asset.description }}</p>
               </div>
             </div>
           </div>
