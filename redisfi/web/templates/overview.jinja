@@ -25,12 +25,12 @@
         <div class="row summary">
             <h2>My Portfolio</h2>
             <div class="col-8">
-                Balance:&nbsp;&nbsp;<span id="balance"></span>
+                Balance:&nbsp;&nbsp;<span id="balance">{{ '$' + "{:,.2f}".format(portfolio.balance) }}</span>
             </div>
         </div>
         <div class="row">
             <div class="col-md border bg-light">
-                    <h4 class="p-3 text-center"><a class="link-dark etf" href="/fund/{{portfolio.retire.id}}">Retirement</a> - $<span class="price" id="401k-price">{{ "{:,.2f}".format(portfolio.retire.value) }}</span></h4>
+                    <h4 class="p-3 text-center"><a class="link-dark" href="/fund/{{portfolio.retire.id}}">Retirement</a> - $<span class="price" id="401k-price">{{ "{:,.2f}".format(portfolio.retire.value) }}</span></h4>
                     <div class="chart" id="chart-401k"></div>
             </div>
             <div class="col-md border bg-light">
@@ -50,7 +50,7 @@
                         <tr>
                             <th scope="row">&nbsp;&nbsp;<a class="link-dark crypto" href="/asset/{{symbol}}">{{symbol}}</a></th>
                             <td id="{{symbol}}-sharesOwned">{{shares_owned}}</td>
-                            <td>$ <span class="price text-center" id="{{symbol}}-price">{{'%0.2f' | format(portfolio.price[symbol].live or portfolio.price[symbol].mock or portfolio.price[symbol].historic) }}</span></td>
+                            <td><span class="price text-center" id="{{symbol}}-price">{{ '$'+"{:,.2f}".format(portfolio.price[symbol].live or portfolio.price[symbol].mock or portfolio.price[symbol].historic) }}</span></td>
                             <td>{{ '%0.2f' | format(portfolio.price[symbol].percent_change) }}%</td>
                         </tr>
                       {% endfor %}
@@ -72,6 +72,20 @@
     </div>
 </div>
 <div class="hidden" id="401k-sharesOwned">1</div>
+{% for symbol, shares_owned in portfolio.stocks.items() %}
+    <div class="invisible">    
+        <div class="hidden stock">{{symbol}}</div>
+        <div class="hidden price" id="{{symbol}}-price">{{ portfolio.price[symbol].live or portfolio.price[symbol].mock or portfolio.price[symbol].historic }}</div>
+        <div class="hidden" id="{{symbol}}-sharesOwned">{{shares_owned}}</div>
+    </div>
+{% endfor %}
+{% for symbol, shares_owned in portfolio.etfs.items() %}
+    <div class="invisible">
+        <div class="hidden etf">{{symbol}}</div>
+        <div class="hidden price" id="{{symbol}}-price">{{ portfolio.price[symbol].live or portfolio.price[symbol].mock or portfolio.price[symbol].historic }}</div>
+        <div class="hidden" id="{{symbol}}-sharesOwned">{{shares_owned}}</div>
+    </div>
+{% endfor %}
 {% endblock %}
 {% block js %}
 <script type="text/javascript">
@@ -87,18 +101,14 @@
             const sharesOwned = parseFloat($(`#${symbol}-sharesOwned`).text());
             sum = sharesOwned * prices[symbol] + sum;
         });
-        
-        const newBalance = parseFloat((sum).toFixed(2));
-        const formatter = Intl.NumberFormat(navigator.language, {style: 'currency', currency: 'USD'});
-        $('#balance').text(formatter.format(newBalance));
 
-        if (newBalance > lastBalance) {
-            flashGreen('#balance', 'white');
-        } else if(lastBalance > newBalance) {
-            flashRed('#balance', 'white');
+        if (sum > lastBalance) {
+            flashColorAndUpdateNumber('#balance', GREEN_COLOR, 'white', sum);
+        } else if(lastBalance > sum) {
+            flashColorAndUpdateNumber('#balance', RED_COLOR, 'white', sum);
         }
 
-        lastBalance = newBalance;
+        lastBalance = sum;
     }
 
     function unpackPromisesAndUpdateSeries(promises, chart) {
@@ -147,9 +157,8 @@
             const chartSymbolLinks = $(`.${which}`);
             const chartSymbols = []
             for (let i=0; i<chartSymbolLinks.length; i++) {
-                chartSymbols.push(chartSymbolLinks[i].text)
+                chartSymbols.push(chartSymbolLinks[i].textContent)
             }
-            
             setChart(chart, chartSymbols, which);
         }
 
@@ -161,16 +170,16 @@
             let [symbol, _] = assets[i].id.split('-');
             symbols.push(symbol);
             prices[symbol] = price;
-            sumPricesAndUpdateBalance();
+            {# sumPricesAndUpdateBalance(); #}
 
             socket.on('updates.'+symbol, (data) => {
-                assets[i].textContent = data.price.toFixed(2);
+                //assets[i].textContent = data.price.toFixed(2);
                 let selector = `#${assets[i].id}`;
 
                 if (data.price > prices[symbol]) {
-                    flashGreen(selector, 'black');
+                    flashColorAndUpdateNumber(selector, GREEN_COLOR, 'black', data.price);
                 } else if (data.price < prices[symbol]) {
-                    flashRed(selector, 'black');
+                    flashColorAndUpdateNumber(selector, RED_COLOR, 'black', data.price);
                 }
 
                 prices[symbol] = data.price;

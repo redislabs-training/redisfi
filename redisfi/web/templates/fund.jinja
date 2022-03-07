@@ -72,7 +72,7 @@
                             <th scope="row">&nbsp;&nbsp;<a class="link-dark" href="/asset/{{asset.symbol}}">{{asset.symbol}}</a></th>
                             <td>{{asset.name}}</td>
                             <td id="{{asset.symbol}}-sharesOwned">{{'%0.2f' | format(asset.last_transaction.balance)}}</td>
-                            <td>$ <span class="price" id="{{asset.symbol}}-price">{{ asset.price.live or asset.price.mock or asset.price.historic }}</span></td>
+                            <td><span class="price" id="{{asset.symbol}}-price">{{ asset.price.live or asset.price.mock or asset.price.historic }}</span></td>
                             <td style="{% if asset.growth_percent > 100 %}color: ForestGreen;{% elif asset.growth_percent < 100 %} color: red;{% endif %}">{{ '%0.2f' | format(asset.growth_percent) }} % </td>
                         </tr>
                       {% endfor %}
@@ -156,17 +156,17 @@
             sum = sharesOwned * prices[symbol] + sum;
         });
 
-        const newBalance = parseFloat((sum).toFixed(2));
-        const formatter = Intl.NumberFormat(navigator.language, {style: 'currency', currency: 'USD'});
-        $('#balance').text(formatter.format(newBalance));
+       // const newBalance = parseFloat((sum).toFixed(2));
+       // const formatter = Intl.NumberFormat(navigator.language, {style: 'currency', currency: 'USD'});
+       // $('#balance').text(formatter.format(newBalance));
 
-        if (newBalance > lastBalance) {
-            flashGreen('#balance', 'white');
-        } else if(lastBalance > newBalance) {
-            flashRed('#balance', 'white');
+        if (sum > lastBalance) {
+            flashColorAndUpdateNumber('#balance', GREEN_COLOR, 'white', sum);
+        } else if(lastBalance > sum) {
+            flashColorAndUpdateNumber('#balance', RED_COLOR, 'white', sum);
         }
 
-        lastBalance = newBalance;
+        lastBalance = sum;
     }
     
     $(() => {
@@ -176,20 +176,21 @@
         
         for (let i=0; i < assets.length; i++) {
             let price = parseFloat(assets[i].textContent);
-            assets[i].textContent = price.toFixed(2);
+            const formatter = getFormatter()
+            assets[i].textContent = formatter(price);
             let [symbol, _] = assets[i].id.split('-');
             symbols.push(symbol);
             prices[symbol] = price;
             sumPricesAndUpdateBalance();
 
             socket.on('updates.'+symbol, (data) => {
-                assets[i].textContent = data.price.toFixed(2);
+                //assets[i].textContent = data.price.toFixed(2);
                 let selector = `#${assets[i].id}`;
 
                 if (data.price > prices[symbol]) {
-                    flashGreen(selector, 'black');
+                    flashColorAndUpdateNumber(selector, GREEN_COLOR, 'black', data.price);
                 } else if (data.price < prices[symbol]) {
-                    flashRed(selector, 'black');
+                    flashColorAndUpdateNumber(selector, GREEN_COLOR, 'black', data.price);
                 }
 
                 prices[symbol] = data.price;

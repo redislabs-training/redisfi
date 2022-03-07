@@ -12,6 +12,7 @@ class RunCommand(Command):
         {--d|detach : Run in Detached Mode}
         {--redis-host=redis : Location of Redis Server to Use - Defaults to Pulling Container Locally}
         {--redis-port=6379 : Port of Redis Server to Use}
+        {--mock : Start mock live adapter}
     '''
 
     def handle(self):
@@ -19,29 +20,37 @@ class RunCommand(Command):
         cmd = ['docker-compose']
         up_cmd = ['up']
         profiles = []
+        env = []
 
         if self.option('build'):
             profiles.append('build')
             up_cmd.append('--build')
         else:
             profiles.append('pull')
+        
+        if self.option('mock'):
+            env.append('MOCK=1')
 
         redis_host = self.option('redis-host')
         
         if redis_host == 'redis':
             profiles.append('pull_redis')
         else:
-            with open('.env.custom', 'w') as f:
-                f.write(f'REDIS_HOST={redis_host}\n')
-                f.write(f'REDIS_PORT={self.option("redis-port")}\n')
-                cmd.extend(['--env-file', '.env.custom'])
-
+            env.append(f'REDIS_HOST={redis_host}')
+            env.append(f'REDIS_PORT={self.option("redis-port")}')
         
         for profile in profiles:
             cmd.extend(['--profile', profile])
 
         if self.option('detach'):
             up_cmd.append('-d')
+
+        if env:
+            with open('.env.custom', 'w') as f:
+                f.writelines(env)
+            
+            cmd.extend(['--env-file', '.env.custom'])
+
 
         cmd.extend(up_cmd)
 

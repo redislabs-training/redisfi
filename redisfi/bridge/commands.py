@@ -29,12 +29,8 @@ class BridgeMixin:
         ## specific to the method itself should be extracted as a 
         ## subclass with: `adapter_config = super()._adapter_config(self)` first
 
-        host = environ.get('REDIS_HOST')
-        if host is None:
-            host = self.option('redis-host')
-        port = environ.get('REDIS_PORT')
-        if port is None:
-            port = self.option('redis-port')
+        host = environ.get('REDIS_HOST', self.option('redis-host'))
+        port = environ.get('REDIS_PORT', self.option('redis-port'))
 
         adapter_config = {'cli':self, 'redis_url':f'redis://{host}:{port}'}
         self.line(f'<info>Redis URL:</info> <comment>{adapter_config["redis_url"]}</comment>')
@@ -103,7 +99,7 @@ class BridgePriceLive(MockMixin, Command):
     def _adapter_config(self: Command) -> dict:
         adapter_config = super()._adapter_config()
         
-        if self.option('mock'):
+        if environ.get('MOCK', self.option('mock')):
             adapter_config['asset_multiplier'] = float(self.option('mock-asset-random-price-range'))
             adapter_config['crypto_multiplier'] = float(self.option('mock-crypto-random-price-range'))
             adapter_config['update_ticks'] = [float(tick) for tick in self.option('mock-update-price-ticks').split(',')]
@@ -149,8 +145,8 @@ class BridgeUp(Command):
 
     def handle(self):
         
-        global_args = ['--redis-host', self.option('redis-host')]
-        global_args.extend(['--redis-port', self.option('redis-port')])
+        global_args = ['--redis-host', environ.get('REDIS_HOST', self.option('redis-host'))]
+        global_args.extend(['--redis-port', environ.get('REDIS_PORT', self.option('redis-port'))])
         global_args.extend(['--assets', self.option('assets')])
         global_args.extend(['--crypto', self.option('crypto')])
 
@@ -169,7 +165,7 @@ class BridgeUp(Command):
         with Popen(['poetry', 'run', 'redisfi', 'bridge', 'portfolio'] + portfolio_args + global_args) as p:
             p.communicate()
 
-        if self.option('mock'):
+        if environ.get('MOCK', self.option('mock')):
             live_args = ['--mock']
         else:
             live_args = []

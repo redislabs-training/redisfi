@@ -32,7 +32,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script type="text/javascript">
-      const LOADING_TEXT = 'Loading...'
+      const RED_COLOR = 'red';
+      const GREEN_COLOR = 'limegreen';
+      const ANIMATION_TIME = 300;
+      const animationInProgress = {};
+      const LOADING_TEXT = 'Loading...';
       const chartOptions = {chart: {
                               type: 'line'
                             },
@@ -44,6 +48,10 @@
                               text: LOADING_TEXT
                             }
                           };
+      function getFormatter() {
+        const formatter = Intl.NumberFormat(navigator.language, {style: 'currency', currency: 'USD'});
+        return formatter.format
+      }
                           
       function barsToTimeseries(data) {
         let priceData = [];
@@ -60,12 +68,24 @@
         priceData.reverse()
         return priceData;
       }
-      
-      function flashGreen(selector, returnColor) {
-        $(selector).css({'color':'limegreen'}).animate({'color':returnColor}, 600);
-      }
-      function flashRed(selector, returnColor) {
-        $(selector).css({'color':'red'}).animate({'color':returnColor}, 600)
+      function flashColorAndUpdateNumber(selector, color, returnColor, amount) {
+        if (!selector in animationInProgress) {
+          animationInProgress[selector] = false;
+        }
+        if (!animationInProgress[selector]){
+          animationInProgress[selector] = true;
+        
+          const formatter = getFormatter()
+          const newAmount = parseFloat((amount).toFixed(2));
+          $(selector).removeClass('placeholder');
+          $(selector).removeClass('placeholder-wave');
+          $(selector).text(formatter(newAmount));
+          $(selector).css({'color':color}).animate({'color':returnColor}, ANIMATION_TIME);
+
+           setTimeout(() => {
+             animationInProgress[selector] = false;
+           }, ANIMATION_TIME)
+        }
       }
     </script>
     {% block js %}{% endblock %}

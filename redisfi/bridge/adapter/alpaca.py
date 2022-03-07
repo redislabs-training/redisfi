@@ -10,8 +10,8 @@ from redisfi.bridge.adapter.base import BaseAdapter
 class AlpacaBase(BaseAdapter):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.api_key = 'PKZJJYRH8S9H7CNWJ19K'
-        self.api_secret_key = 'cq0gizc7bjbiAeiXhCV3wWfT7U38xKvwgWM0AIbH'
+        self.api_key = 'PK2DW9J3GHGIQ8XAA66T'
+        self.api_secret_key = 'cJoNibtZFSqQ3BzeIRQmFQv3ZYjTq3eWvjB1uS7z'
 
 class AlpacaLive(AlpacaBase):
     async def _crypto_trade_stream_handler(self, obj: Trade):

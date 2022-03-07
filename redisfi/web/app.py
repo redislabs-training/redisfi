@@ -42,6 +42,22 @@ def _truncate_description(description):
     else:
         return ' '.join(desc_list)
 
+def _sum_portfolio_balance(portfolio: dict):
+    balance = portfolio['retire']['value']
+
+    assets = {}
+    assets.update(portfolio['stocks'])
+    assets.update(portfolio['crypto'])
+    assets.update(portfolio['etfs'])
+
+    for asset, shares_owned in assets.items():
+        prices = portfolio['price'][asset]
+        price = prices['live'] or prices['mock'] or prices['historic']
+        balance += price * shares_owned
+
+    return balance
+
+
 
 @app.route('/')
 def landing():
@@ -52,6 +68,7 @@ def portfolio():
     redis = app.config['REDIS']
     portfolio_data = DB.get_portfolio(redis, ACCOUNT) 
     pp(portfolio_data)
+    portfolio_data['balance'] = _sum_portfolio_balance(portfolio_data)
     return render_template('overview.jinja', account=ACCOUNT, portfolio=portfolio_data, **time_kwargs())
     #return redirect('/fund/retire2050')
 

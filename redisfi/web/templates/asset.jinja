@@ -16,7 +16,7 @@
 {% block body %}
 <div class="container-fluid container-main">
   <h1>{{asset.name}} | {{asset.symbol}}</h1>
-  <h2 class="display-5">$ <span id="price"></span></h2>
+  <h2 class="display-5"><span id="price">{{ '$'+"{:,.2f}".format(asset.price.live or asset.price.mock or asset.price.historic) }}</span></h2>
   <div class="container-fluid container-data">
     <div class="row">
       <div class="col-lg">
@@ -191,7 +191,7 @@
     const socket = io();
     
     
-    $.getJSON('/api/asset/{{asset.symbol}}/prices', (prices) => {
+    {# $.getJSON('/api/asset/{{asset.symbol}}/prices', (prices) => {
       let newPrice;
       if (prices.mock) {
         newPrice = prices.mock;
@@ -201,7 +201,7 @@
 
       $('#price').text(newPrice.toFixed(2));
       price = parseFloat(newPrice.toFixed(2));
-    });
+    }); #}
     
     $.getJSON('/api/asset/{{asset.symbol}}/history?start={{day}}', (data) => {
       const barsPriceData  = barsToTimeseries(data);
@@ -219,9 +219,9 @@
       const selector = '#price';
       $(selector).text(event.price.toFixed(2));
       if (event.price > price) {
-        flashGreen(selector, 'white');
+        flashColorAndUpdateNumber(selector, GREEN_COLOR, 'white', price);
       } else if (event.price < price) {
-        flashRed(selector, 'white');
+        flashColorAndUpdateNumber(selector, RED_COLOR, 'white', price);
       }
       const timestamp = event.timestamp;
       price = event.price;
