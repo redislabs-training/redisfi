@@ -14,8 +14,6 @@ from redis.commands.search.aggregation import AggregateRequest, Asc, Desc
 import redis.commands.search.reducers as reduce
 
 LARGE_PAGE_SIZE = 1000000
-TRADE_DEFAULT_TTL = timedelta(minutes=15)
-
 
 _average_bar     = lambda bar: (bar['high'] + bar['low'])/2
 _key_asset       = lambda symbol: f'asset:{symbol.upper()}'
@@ -334,22 +332,14 @@ def set_portfolio(redis: Redis, account: int, stocks: dict=None, crypto: dict=No
     redis.json().set(_key_portfolio(account), Path.rootPath(), obj)
 
 
-def set_trade(redis: Redis, symbol: str, price: str, timestamp: str, kind: str, ttl=TRADE_DEFAULT_TTL):
+def set_trade(redis: Redis, symbol: str, price: str, timestamp: str, kind: str):
     ## TODO: kind should be an enum type thing eventually
-    key = _key_trade(symbol, timestamp)
     obj = {'symbol':symbol,
            'price':price,
            'timestamp':timestamp,
            'kind':kind}
 
-    
-    with redis.pipeline(transaction=False) as pipe:
-        pipe.json().set(key, Path.rootPath(), obj)
-        if ttl is not None:
-            pipe.expire(key, ttl)
-        
-        pipe.execute()
-
+    redis.json().set(_key_trade(symbol, timestamp), Path.rootPath(), obj)
 
 
 def set_transaction(redis: Redis, account: int, timestamp: int, shares: float, symbol: str, price: float, balance: float, total_spent: float, fund: str=''):
