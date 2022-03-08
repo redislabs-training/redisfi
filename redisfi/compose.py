@@ -29,15 +29,17 @@ class RunCommand(Command):
             profiles.append('pull')
         
         if self.option('mock'):
-            env.append('MOCK=1')
+            env.append('MOCK=1\n')
 
         redis_host = self.option('redis-host')
         
         if redis_host == 'redis':
             profiles.append('pull_redis')
+            env.append('REDIS_HOST=redis\n')
+            env.append('REDIS_PORT=6379\n')
         else:
-            env.append(f'REDIS_HOST={redis_host}')
-            env.append(f'REDIS_PORT={self.option("redis-port")}')
+            env.append(f'REDIS_HOST={redis_host}\n')
+            env.append(f'REDIS_PORT={self.option("redis-port")}\n')
         
         for profile in profiles:
             cmd.extend(['--profile', profile])
@@ -45,12 +47,8 @@ class RunCommand(Command):
         if self.option('detach'):
             up_cmd.append('-d')
 
-        if env:
-            with open('.env.custom', 'w') as f:
-                f.writelines(env)
-            
-            cmd.extend(['--env-file', '.env.custom'])
-
+        with open('.env', 'w') as f:
+            f.writelines(env)
 
         cmd.extend(up_cmd)
 

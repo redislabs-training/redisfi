@@ -70,7 +70,6 @@ def portfolio():
     pp(portfolio_data)
     portfolio_data['balance'] = _sum_portfolio_balance(portfolio_data)
     return render_template('overview.jinja', account=ACCOUNT, portfolio=portfolio_data, **time_kwargs())
-    #return redirect('/fund/retire2050')
 
 @app.route('/search')
 def search():
@@ -105,7 +104,6 @@ def asset(symbol:str):
         return Response(status=404)
 
 
-
 @app.route('/fund/<string:name>')
 def fund(name:str):
     redis : Redis = app.config['REDIS']
@@ -113,6 +111,7 @@ def fund(name:str):
 
     if fund_data:
         fund_data['assets']  = DB.get_fund_assets_metadata_and_latest(redis, ACCOUNT, fund_data['assets'].keys())
+        fund_data['balance'] = DB.get_fund_value_aggregate(redis, ACCOUNT, name, page=(0, 1))[0][1]
 
         pp(fund_data)
 
@@ -120,7 +119,6 @@ def fund(name:str):
 
     else:
         return Response(status=404)
-
 
 
 def run(debug=False, redis_url='redis://'):

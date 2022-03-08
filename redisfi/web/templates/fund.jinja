@@ -26,7 +26,7 @@
             </div>
             <div class="row summary summary-bottom">
                  <div class="col-8">
-                    Balance:&nbsp;&nbsp;<span id="balance"></span>
+                    Balance:&nbsp;&nbsp;<span id="balance">{{ '$' + "{:,.2f}".format(fund.balance) }}</span>
                 </div>
             </div>
         <div class="row">
@@ -181,7 +181,7 @@
             let [symbol, _] = assets[i].id.split('-');
             symbols.push(symbol);
             prices[symbol] = price;
-            sumPricesAndUpdateBalance();
+            //sumPricesAndUpdateBalance();
 
             socket.on('updates.'+symbol, (data) => {
                 //assets[i].textContent = data.price.toFixed(2);

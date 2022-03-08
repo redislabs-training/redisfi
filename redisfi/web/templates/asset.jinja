@@ -55,16 +55,14 @@
             </div>
           </div>
           {% endif %}
-          {% if asset.contact %}
+          {% if asset.contact.phone and asset.contact.addr1 %}
             <div class="row p-2 bg-light">
               <div class="col-sm">
                 <strong>Phone Number:</strong>&nbsp;&nbsp;{{asset.contact.phone}}
               </div>
-              {% if asset.contact.addr1 %}
-                <div class="col-sm">
-                  <strong>Address:</strong>&nbsp;&nbsp;{{asset.contact.addr1}}{% if asset.contact.addr2 %}<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{asset.contact.addr2}}{% endif %}<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{asset.contact.addr3}}
-                </div>
-              {% endif %}
+              <div class="col-sm">
+                <strong>Address:</strong>&nbsp;&nbsp;{{asset.contact.addr1}}{% if asset.contact.addr2 %}<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{asset.contact.addr2}}{% endif %}<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{asset.contact.addr3}}
+              </div>
             </div>
           {% endif %}
           <div class="row">
@@ -99,15 +97,21 @@
                         <span><strong>Low:</strong>&nbsp;&nbsp;${{'%0.2f' | format(asset.financial.low)}}</span>
                       </div>
                     {% endif %}
-                    <div class="col-sm p-2">
-                      <span><strong>52 Week High:</strong>&nbsp;&nbsp;${{'%0.2f' | format(asset.financial['52_week_high'])}}</span>
-                    </div>
-                    <div class="col-sm p-2">
-                      <span><strong>52 Week Low:</strong>&nbsp;&nbsp;${{'%0.2f' | format(asset.financial['52_week_low'])}}</span>
-                    </div>
-                    <div class="col-sm p-2">
-                      <span><strong>50 Day Average:</strong>&nbsp;&nbsp;${{'%0.2f' | format(asset.financial['50_day_average'])}}</span>
-                    </div>
+                    {% if asset.financial['52_week_high']%}
+                      <div class="col-sm p-2">
+                        <span><strong>52 Week High:</strong>&nbsp;&nbsp;${{'%0.2f' | format(asset.financial['52_week_high'])}}</span>
+                      </div>
+                    {% endif %}
+                    {% if asset.financial['52_week_low']%}
+                      <div class="col-sm p-2">
+                        <span><strong>52 Week Low:</strong>&nbsp;&nbsp;${{'%0.2f' | format(asset.financial['52_week_low'])}}</span>
+                      </div>
+                    {% endif %}
+                    {% if asset.financial['52_day_average']%}
+                      <div class="col-sm p-2">
+                        <span><strong>50 Day Average:</strong>&nbsp;&nbsp;${{'%0.2f' | format(asset.financial['50_day_average'])}}</span>
+                      </div>
+                    {% endif %}
                   </div>
                 </div>
               </div>
@@ -116,16 +120,18 @@
           <div class="row">
             <div class="col-md">&nbsp;</div>
           </div>
-          <div class="row">
-            <h4>Description:</h4><hr>
-          </div>
-          <div class="row">
-            <div class="col-md">
-              <div class="p-4 border bg-light" id="description">
-                <p>{{ asset.description }}</p>
+          {% if asset.description %}
+            <div class="row">
+              <h4>Description:</h4><hr>
+            </div>
+            <div class="row">
+              <div class="col-md">
+                <div class="p-4 border bg-light" id="description">
+                  <p>{{ asset.description }}</p>
+                </div>
               </div>
             </div>
-          </div>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -190,18 +196,6 @@
     chart.render();
     const socket = io();
     
-    
-    {# $.getJSON('/api/asset/{{asset.symbol}}/prices', (prices) => {
-      let newPrice;
-      if (prices.mock) {
-        newPrice = prices.mock;
-      } else {
-        newPrice = prices.historic;
-      }
-
-      $('#price').text(newPrice.toFixed(2));
-      price = parseFloat(newPrice.toFixed(2));
-    }); #}
     
     $.getJSON('/api/asset/{{asset.symbol}}/history?start={{day}}', (data) => {
       const barsPriceData  = barsToTimeseries(data);

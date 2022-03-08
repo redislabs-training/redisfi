@@ -48,7 +48,7 @@ class MockMixin(BridgeMixin):
     mock_adapters = []
 
     def handle(self):
-        if self.option('mock'):
+        if environ.get('MOCK', self.option('mock')):
             self.line('<error>Enabling mock adapters</error>')
             self.adapters = self.mock_adapters
         
@@ -98,7 +98,7 @@ class BridgePriceLive(MockMixin, Command):
 
     def _adapter_config(self: Command) -> dict:
         adapter_config = super()._adapter_config()
-        
+
         if environ.get('MOCK', self.option('mock')):
             adapter_config['asset_multiplier'] = float(self.option('mock-asset-random-price-range'))
             adapter_config['crypto_multiplier'] = float(self.option('mock-crypto-random-price-range'))
@@ -164,8 +164,9 @@ class BridgeUp(Command):
 
         with Popen(['poetry', 'run', 'redisfi', 'bridge', 'portfolio'] + portfolio_args + global_args) as p:
             p.communicate()
-
+        
         if environ.get('MOCK', self.option('mock')):
+            self.line('<error>Mock Setting Detected! - Mock adapters will be enabled</error>')
             live_args = ['--mock']
         else:
             live_args = []
@@ -186,7 +187,7 @@ class BridgeBase(Command):
     bridge
         {--H|redis-host=localhost : Redis hostname - can also set with REDIS_HOST env var}
         {--P|redis-port=6379 : Redis port - can also set with REDIS_PORT env var}
-        {--s|assets=GOOG,MSFT,TSLA,SNAP,GME,AMC,JPM,F,VMW,SOFI,SPCE,AMZN,SPY,QQQ,PIMIX,VEMIX,VOO : Comma delimited list of asset symbols to track}
+        {--s|assets=GOOG,MSFT,TSLA,SNAP,GME,AMC,JPM,F,VMW,SOFI,SPCE,AMZN,SPY,QQQ,PIMIX,VEMIX,VOO,EQIX,VTI,ARKK : Comma delimited list of asset symbols to track}
         {--c|crypto=BTCUSD,ETHUSD : Comma delimited list of crypto to track}
     '''
 

@@ -44,7 +44,7 @@ class YahooFinanceMetadata(BaseAdapter):
                 self.cli.line(pformat(data, sort_dicts=True), verbosity=VERBOSE)
                 contact_info = self._extract_contact_info(data)
                 financial_info = self._extract_financial_info(data)
-                DB.set_asset(pipe, symbol, data['longName'], data['longBusinessSummary'],
+                DB.set_asset(pipe, symbol, data['longName'], data.get('longBusinessSummary', ''),
                                   data.get('website'), data.get('sector'), data.get('industry'),
                                   contact_info=contact_info, financial_info=financial_info)
                 
@@ -80,9 +80,9 @@ class YahooFinanceMetadata(BaseAdapter):
         financial_info['market_cap'] = data['marketCap']
         financial_info['recommendation'] = data.get('recommendationKey', '')
         financial_info['revenue'] = data.get('totalRevenue', 0)
-        financial_info['52_week_high'] = data['fiftyTwoWeekHigh']
-        financial_info['52_week_low'] = data['fiftyTwoWeekLow']
-        financial_info['50_day_average'] = data['fiftyDayAverage']
+        financial_info['52_week_high'] = data.get('fiftyTwoWeekHigh', 0)
+        financial_info['52_week_low'] = data.get('fiftyTwoWeekLow', 0)
+        financial_info['50_day_average'] = data.get('fiftyDayAverage', 0)
         
         self.cli.line(pformat(financial_info, sort_dicts=True), verbosity=VERY_VERBOSE)
         
