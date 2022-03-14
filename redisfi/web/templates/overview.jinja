@@ -170,7 +170,6 @@
             let [symbol, _] = assets[i].id.split('-');
             symbols.push(symbol);
             prices[symbol] = price;
-            {# sumPricesAndUpdateBalance(); #}
 
             socket.on('updates.'+symbol, (data) => {
                 //assets[i].textContent = data.price.toFixed(2);

@@ -211,7 +211,6 @@
 
     socket.on('updates.{{asset.symbol}}', (event) => {
       const selector = '#price';
-      $(selector).text(event.price.toFixed(2));
       if (event.price > price) {
         flashColorAndUpdateNumber(selector, GREEN_COLOR, 'white', price);
       } else if (event.price < price) {
