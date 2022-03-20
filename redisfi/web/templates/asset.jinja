@@ -13,6 +13,21 @@
     #description h5 { color: #000; }
 </style>
 {% endblock %}
+{% block nav %}
+<ul class="navbar-nav me-auto mb-2 mb-lg-0">
+    <li class="nav-item">
+        <a class="nav-link active" aria-current="page" href="/overview">Accounts</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/research">Research</a>
+    </li>
+</ul>
+<form class="d-flex" action="/search">
+    <input class="form-control me-2" type="search" name="query" placeholder="Search" aria-label="Search">
+    <button class="btn btn-outline-success" type="submit">Search</button>
+</form>
+<div>&nbsp;</div>
+{% endblock %}
 {% block body %}
 <div class="container-fluid container-main">
   <h1>{{asset.name}} | {{asset.symbol}}</h1>

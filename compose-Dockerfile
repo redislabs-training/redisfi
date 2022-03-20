@@ -1,6 +1,14 @@
-FROM taylorsilva/dcind
+FROM docker:dind
 
-RUN apk add redis
+
+# RUN apt update
+# RUN apt upgrade -y
+# RUN apt install -y python3-pip docker-compose
+
+RUN apk update
+# RUN apk add docker-compose
+RUN apk add redis py3-pip gcc python3-dev musl-dev libffi-dev docker-compose
+# RUN apk upgrade docker docker-compose
 
 RUN pip3 install --upgrade pip
 RUN pip3 install poetry

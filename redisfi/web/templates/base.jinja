@@ -16,13 +16,15 @@
     {% block header %}{% endblock %}
   </head>
   <body>
-    <nav class="navbar navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark">
       <div class="container-fluid">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
         <a class="navbar-brand" href="/overview"><img src="{{ url_for('static', filename='logo-graphic.png') }}" style="margin-left: 7%;"/></a>
-        <form class="d-flex" action="/search">
-          <input class="form-control me-2" type="search" name="query" placeholder="Search" aria-label="Search">
-          <button class="btn btn-outline-success" type="submit">Search</button>
-        </form>
+        <div class="collapse navbar-collapse" id="navbarNav">
+        {% block nav %}{% endblock %}
+        </div>
       </div>
     </nav>
     {% block body %}{% endblock %}

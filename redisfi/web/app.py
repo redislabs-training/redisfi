@@ -71,6 +71,10 @@ def portfolio():
     portfolio_data['balance'] = _sum_portfolio_balance(portfolio_data)
     return render_template('overview.jinja', account=ACCOUNT, portfolio=portfolio_data, **time_kwargs())
 
+@app.route('/vss-search')
+def vss_search():
+    pass
+
 @app.route('/search')
 def search():
     redis = app.config['REDIS']

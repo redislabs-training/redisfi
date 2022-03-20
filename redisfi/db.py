@@ -26,7 +26,10 @@ _key_transaction = lambda account, symbol, timestamp: f'transaction:{account}:{s
 
 
 def get_asset(redis: Redis, symbol: str):
-    return redis.json().get(_key_asset(symbol))
+    data =  redis.json().get(_key_asset(symbol))
+    if not any(data['price'].values()):
+        data['price']['historic'] = get_asset_price_historic(redis, symbol)
+    return data
 
 
 def get_asset_history(redis: Redis, symbol: str, start=0, end='inf', page=(0, LARGE_PAGE_SIZE), asc=False):
