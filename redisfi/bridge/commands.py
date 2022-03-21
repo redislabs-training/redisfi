@@ -29,10 +29,9 @@ class BridgeMixin:
         ## specific to the method itself should be extracted as a 
         ## subclass with: `adapter_config = super()._adapter_config(self)` first
 
-        host = environ.get('REDIS_HOST', self.option('redis-host'))
-        port = environ.get('REDIS_PORT', self.option('redis-port'))
+        redis_url = environ.get('REDIS_URL', self.option('redis-url'))
 
-        adapter_config = {'cli':self, 'redis_url':f'redis://{host}:{port}'}
+        adapter_config = {'cli':self, 'redis_url':redis_url}
         self.line(f'<info>Redis URL:</info> <comment>{adapter_config["redis_url"]}</comment>')
 
         adapter_config['assets'] = self.option('assets').split(',')
@@ -145,8 +144,7 @@ class BridgeUp(Command):
 
     def handle(self):
         
-        global_args = ['--redis-host', environ.get('REDIS_HOST', self.option('redis-host'))]
-        global_args.extend(['--redis-port', environ.get('REDIS_PORT', self.option('redis-port'))])
+        global_args = ['--redis-url', environ.get('REDIS_URL', self.option('redis-url'))]
         global_args.extend(['--assets', self.option('assets')])
         global_args.extend(['--crypto', self.option('crypto')])
 
@@ -185,8 +183,7 @@ class BridgeBase(Command):
     Bridge commands
 
     bridge
-        {--H|redis-host=localhost : Redis hostname - can also set with REDIS_HOST env var}
-        {--P|redis-port=6379 : Redis port - can also set with REDIS_PORT env var}
+        {--r|redis-url=redis://localhost:6379 : Redis url - can also set with REDIS_URL env var}
         {--s|assets=GOOG,MSFT,TSLA,SNAP,GME,AMC,JPM,F,VMW,SOFI,SPCE,AMZN,SPY,QQQ,PIMIX,VEMIX,VOO,EQIX,VTI,ARKK : Comma delimited list of asset symbols to track}
         {--c|crypto=BTCUSD,ETHUSD : Comma delimited list of crypto to track}
     '''

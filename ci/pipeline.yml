@@ -7,6 +7,14 @@ resources:
       branch: main
       username: ((auth-github))
       password: x-oauth-basic
+  - name: redisfi-vss
+    type: git
+    icon: github
+    source:
+      uri: https://github.com/redislabs-training/redisfi-vss
+      branch: main
+      username: ((auth-github))
+      password: x-oauth-basic
   # - name: redis-enterprise
   #   icon: docker
   #   type: registry-image
@@ -20,11 +28,11 @@ resources:
       repository: timeartist/redisfi
       username: timeartist
       password: ((auth-docker))
-  - name: redisfi-compose-container
+  - name: redisfi-vss-container
     type: registry-image
     icon: docker
     source:
-      repository: timeartist/redisfi-compose
+      repository: timeartist/redisfi-vss
       username: timeartist
       password: ((auth-docker))
 
@@ -43,16 +51,16 @@ jobs:
           image: image/image.tar
           version: 99.99.99
           bump_aliases: true
-  - name: build-compose-container
+  - name: build-vss-container
     plan:
-      - get: redisfi
+      - get: redisfi-vss
         trigger: true
         params:
           format: oci
       - task: build
         privileged: true
-        file: redisfi/ci/build-compose.yml
-      - put: redisfi-compose-container
+        file: redisfi-vss/ci/build-vss.yml
+      - put: redisfi-vss-container
         params:
           image: image/image.tar
           version: 99.99.99

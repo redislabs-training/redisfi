@@ -10,21 +10,12 @@ class ServerStart(Command):
 
     server
         {--debug : Runs the Debug Server}
-        {--H|redis-host=localhost : Redis Hostname - can also set with REDIS_HOST env var}
-        {--P|redis-port=6379 : Redis port - can also set with REDIS_PORT env var}}
+        {--r|redis-url=redis://localhost:6379 : Redis URL - can also set with REDIS_URL env var}
     '''
 
     def handle(self):
         debug = self.option('debug')
-
-        host = environ.get('REDIS_HOST')
-        if host is None:
-            host = self.option('redis-host')
-        port = environ.get('REDIS_PORT')
-        if port is None:
-            port = self.option('redis-port')
-
-        redis_url = f'redis://{host}:{port}'
+        redis_url = environ.get('REDIS_URL', self.option('redis-url'))
         self.line(f'<info>Redis URL:</info> <comment>{redis_url}</comment>')
         run(debug=debug, redis_url=redis_url)
 

@@ -5,13 +5,22 @@ services:
     image: timeartist/redisfi
     command:  poetry run redisfi web server
     ports:
-      - 8000:8000
+      - 8000:8080
     profiles:
       - pull
   bridge-pull:
     env_file: .env
     image: timeartist/redisfi
     command: poetry run redisfi bridge up
+    profiles:
+      - pull
+  vss-pull:
+    env_file: .env
+    image: timeartist/redisfi-vss
+    command: poetry run VSS run
+    container_name: vss
+    ports:
+     - 7777:7777
     profiles:
       - pull
   frontend-build:
@@ -26,6 +35,15 @@ services:
     env_file: .env
     build: .
     command: poetry run redisfi bridge up
+    profiles:
+      - build
+  vss-build:
+    env_file: .env
+    build: ../redisfi-vss
+    command: poetry run VSS run
+    container_name: vss
+    ports:
+     - 7777:7777
     profiles:
       - build
   redis:

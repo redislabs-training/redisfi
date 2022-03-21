@@ -10,8 +10,8 @@ class RunCommand(Command):
     up
         {--b|build : Build containers from local source}
         {--d|detach : Run in Detached Mode}
-        {--redis-host=redis : Location of Redis Server to Use - Defaults to Pulling Container Locally}
-        {--redis-port=6379 : Port of Redis Server to Use}
+        {--redis-url=redis://redis:6379 : Location of Redis Server to Use - Defaults to Pulling Container Locally}
+        {--vss-redis-url=redis://redis:6379 : Location of the Redis Server for VSS to use - Defaults to Pulling Container Locally}
         {--mock : Start mock live adapter}
     '''
 
@@ -31,15 +31,13 @@ class RunCommand(Command):
         if self.option('mock'):
             env.append('MOCK=1\n')
 
-        redis_host = self.option('redis-host')
-        
-        if redis_host == 'redis':
+        redis_url = self.option('redis-url')
+        vss_redis_url = self.option('vss-redis-url')
+        env.append(f'REDIS_URL={redis_url}\n')
+        env.append(f'VSS_REDIS_URL={vss_redis_url}\n')
+
+        if 'redis://redis:6379' in (redis_url, vss_redis_url):
             profiles.append('pull_redis')
-            env.append('REDIS_HOST=redis\n')
-            env.append('REDIS_PORT=6379\n')
-        else:
-            env.append(f'REDIS_HOST={redis_host}\n')
-            env.append(f'REDIS_PORT={self.option("redis-port")}\n')
         
         for profile in profiles:
             cmd.extend(['--profile', profile])
