@@ -12,6 +12,7 @@ class RunCommand(Command):
         {--d|detach : Run in Detached Mode}
         {--redis-url=redis://redis:6379 : Location of Redis Server to Use - Defaults to Pulling Container Locally}
         {--vss-redis-url=redis://redis:6379 : Location of the Redis Server for VSS to use - Defaults to Pulling Container Locally}
+        {--vss-url=http://vss:7777 : Location of VSS microservice}
         {--mock : Start mock live adapter}
     '''
 
@@ -31,8 +32,12 @@ class RunCommand(Command):
         if self.option('mock'):
             env.append('MOCK=1\n')
 
+
+        vss_url = self.option('vss-url')
         redis_url = self.option('redis-url')
         vss_redis_url = self.option('vss-redis-url')
+        
+        env.append(f'VSS_URL={vss_url}\n')
         env.append(f'REDIS_URL={redis_url}\n')
         env.append(f'VSS_REDIS_URL={vss_redis_url}\n')
 

@@ -11,18 +11,23 @@ from flask import Flask, redirect, render_template, Response, request
 from redis import Redis
 
 from redisfi import db as DB
-from redisfi.web.api import api 
+from redisfi.web.api import api
+from redisfi.web.research import research 
 
 ACCOUNT = 710
 WORDS_ALLOWED_IN_ASSET_DESCRIPTION = 75
+REDIS_URL = environ.get('REDIS_URL', 'redis://localhost:6379')
 
 app = Flask(__name__)
-app.register_blueprint(api, url_prefix='/api')
-app.config['SECRET_KEY'] = 'supersecret!'
-app.config['REDIS'] = Redis.from_url(environ.get('REDIS_URL', 'redis://localhost:6379'))
-app.config['ACCOUNT'] = ACCOUNT
+socketio = SocketIO(app, message_queue=REDIS_URL, async_mode='gevent', cors_allowed_origins="*")
 
-socketio = SocketIO(app, message_queue=environ.get('REDIS_URL'), async_mode='gevent', cors_allowed_origins="*")
+app.register_blueprint(api, url_prefix='/api')
+app.register_blueprint(research, url_prefix='/research')
+
+app.config['ACCOUNT'] = ACCOUNT
+app.config['SECRET_KEY'] = 'supersecret!'
+app.config['REDIS'] = Redis.from_url(REDIS_URL)
+app.config['VSS_URL'] = environ.get('VSS_URL', 'http://localhost:7777')
 
 DAYS_IN_YEAR = 365.26
 _now = lambda: datetime.utcnow()
@@ -57,8 +62,6 @@ def _sum_portfolio_balance(portfolio: dict):
 
     return balance
 
-
-
 @app.route('/')
 def landing():
     return render_template('landing.jinja')
@@ -70,10 +73,6 @@ def portfolio():
     pp(portfolio_data)
     portfolio_data['balance'] = _sum_portfolio_balance(portfolio_data)
     return render_template('overview.jinja', account=ACCOUNT, portfolio=portfolio_data, **time_kwargs())
-
-@app.route('/vss-search')
-def vss_search():
-    pass
 
 @app.route('/search')
 def search():
