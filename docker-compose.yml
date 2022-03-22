@@ -4,6 +4,7 @@ services:
     env_file: .env
     image: timeartist/redisfi
     command:  poetry run redisfi web server
+    pull_policy: always
     ports:
       - 8000:8080
     profiles:
@@ -12,6 +13,7 @@ services:
     env_file: .env
     image: timeartist/redisfi
     command: poetry run redisfi bridge up
+    pull_policy: always
     profiles:
       - pull
   vss-pull:
@@ -19,6 +21,7 @@ services:
     image: timeartist/redisfi-vss
     command: poetry run VSS run
     container_name: vss
+    pull_policy: always
     ports:
      - 7777:7777
     profiles:
