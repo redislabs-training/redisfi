@@ -12,7 +12,8 @@ from redis import Redis
 
 from redisfi import db as DB
 from redisfi.web.api import api
-from redisfi.web.research import research 
+from redisfi.web.research import research
+from redisfi.web.research.api import research_api 
 
 ACCOUNT = 710
 WORDS_ALLOWED_IN_ASSET_DESCRIPTION = 75
@@ -23,6 +24,7 @@ socketio = SocketIO(app, message_queue=REDIS_URL, async_mode='gevent', cors_allo
 
 app.register_blueprint(api, url_prefix='/api')
 app.register_blueprint(research, url_prefix='/research')
+app.register_blueprint(research_api, url_prefix='/research/api')
 
 app.config['ACCOUNT'] = ACCOUNT
 app.config['SECRET_KEY'] = 'supersecret!'

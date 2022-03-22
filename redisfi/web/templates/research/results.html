@@ -13,7 +13,7 @@
     .table-striped>tbody>tr:nth-of-type(odd)>* { --bs-table-accent-bg: #E9EBFD; }
     .table-hover>tbody>tr:hover>* { --bs-table-accent-bg: #D2D7FE; }
     h1, .metrics {color:#fff;}
-    .metrics {text-align: right;}
+    .metrics {float: right;}
 </style>
 {% endblock %}
 {% block nav %}
@@ -36,7 +36,15 @@
     <h1>Results</h1>
     <div class="container-fluid container-data">
         <div class="row">
-            <span class="metrics">Found {{metrics.total}}/2,200,000 Reports in {{ "{:.2f}".format(metrics.duration)}} ms</span>
+            <div class="col-lg">
+                <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#facetDrawer" aria-controls="facetDrawer">
+                    Enhance
+                </button>
+            </div>
+            <div class="col-lg">
+                <span class="metrics">Found {{metrics.total}}/2,200,000 Reports in {{ "{:.2f}".format(metrics.duration)}} ms</span>
+            </div>
+            
         </div>
         <div class="row">
             &nbsp;
@@ -63,6 +71,21 @@
                 </table>
             </div>
         </div>
+    </div>
+</div>
+<div class="offcanvas offcanvas-start" tabindex="-1" id="facetDrawer" aria-labelledby="offcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="offcanvasLabel">Details</h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        {% if facets %}
+            {% for company_name, count in facets %}
+                <ul>
+                    <li><a href="/research/vss?query={{query}}&filter=@COMPANY_NAME:{{company_name}}">{{company_name}} ({{count}})</a></li>
+                </ul>
+            {% endfor %}
+        {% endif %}
     </div>
 </div>
 {% endblock %}
