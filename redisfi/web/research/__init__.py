@@ -24,7 +24,7 @@ def vss(query=None, _filter=None):
     if _filter is not None:
         params = {'term':query, 'filter':_filter}
     else:
-        params = {'term':query, 'filter':'@FILING_YEAR:[2000 2022]'}
+        params = {'term':query}
 
     url = current_app.config.get('VSS_URL')
     resp = requests.get(url, params=params)
