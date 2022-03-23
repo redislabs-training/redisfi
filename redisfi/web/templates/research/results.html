@@ -38,13 +38,12 @@
         <div class="row">
             <div class="col-lg">
                 <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#facetDrawer" aria-controls="facetDrawer">
-                    Enhance
+                    Filter
                 </button>
             </div>
             <div class="col-lg">
-                <span class="metrics">Found {{metrics.total}}/2,200,000 Reports in {{ "{:.2f}".format(metrics.duration)}} ms</span>
+                <span class="metrics">Sampled {{metrics.total}} Most Relevant Paragraphs out of 2,200,000 in {{ "{:.2f}".format(metrics.duration)}} ms</span>
             </div>
-            
         </div>
         <div class="row">
             &nbsp;
@@ -75,17 +74,61 @@
 </div>
 <div class="offcanvas offcanvas-start" tabindex="-1" id="facetDrawer" aria-labelledby="offcanvasLabel">
     <div class="offcanvas-header">
-      <h5 class="offcanvas-title" id="offcanvasLabel">Details</h5>
+      <h5 class="offcanvas-title brand-red" id="offcanvasLabel">Filter Search</h5>
       <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-        {% if facets %}
-            {% for company_name, count in facets %}
-                <ul>
-                    <li><a href="/research/vss?query={{query}}&filter=@COMPANY_NAME:{{company_name}}">{{company_name}} ({{count}})</a></li>
-                </ul>
-            {% endfor %}
-        {% endif %}
+        <form action="/research/faceted-search" method="post">
+            <div class="container-fluid">
+                <div class="row">
+                    <h6>Companies</h6>
+                </div>
+                <div class="row">
+                    <select class="form-select" name="companies" multiple aria-label="Company Select">
+                        {% for company_name, count in facets %}
+                            <option value="{{company_name}}">{{company_name}} ({{count}})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="row">
+                    &nbsp;
+                </div>
+                <div class="row">
+                    <h6>Filing Year Range</h6>
+                </div>
+                <div class="row">
+                    <div class="col-sm">
+                        <input class="form-control form-control-sm" name="yearStart" type="text" placeholder="2021" aria-label="Filing Year Start">
+                    </div>
+                    <div class="col-sm">
+                        <input class="form-control form-control-sm" name="yearEnd" type="text" placeholder="2022" aria-label="Filing Year End">
+                    </div>
+                </div>
+                <div class="row">
+                    &nbsp;
+                </div>
+                <div class="row">
+                    <h6>Filing Type</h6>
+                </div>
+                <div class="row">
+                    <div class="col-sm">
+                        <input class="form-check-input" type="checkbox" name="10-K" id="filing-10k" checked>
+                        <label class="form-check-label" for="10k">10-K</label>
+                    </div>
+                    <div class="col-sm">
+                        <input class="form-check-input" type="checkbox" name="10-Q" id="filing-10q" checked>
+                        <label class="form-check-label" for="10k">10-Q</label>
+                    </div>
+                </div>
+                <div class="row">
+                    &nbsp;
+                </div>
+                <div class="row">
+                    <button class="btn btn-outline-success" type="submit">Search</button>
+                </div>
+            </div>
+            <input type="hidden" name="query" value="{{query}}">
+        </form>
     </div>
 </div>
 {% endblock %}
