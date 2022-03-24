@@ -34,7 +34,7 @@ def vss(query=None, _filter=None):
     resp = requests.get(url, params=params)
     resp_data = resp.json()
     resp_data['results'] = filter(lambda result: result['COMPANY_NAME'] != 'N/A', resp_data['results'])
-    return render_template('research/results.html', **resp_data, facets=facets(query, serialize=False), query=query)
+    return render_template('research/results.html', **resp_data, facets=facets(query, _filter, serialize=False), query=query)
 
 @research.route('/faceted-search', methods=['POST'])
 def faceted_search():
