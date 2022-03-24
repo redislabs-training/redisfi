@@ -56,6 +56,7 @@
                         <th scope="col">Company Name</th>
                         <th scope="col">Date</th>
                         <th scope="col">Text</th>
+                        <th scope="col">View Report</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -64,6 +65,9 @@
                             <th scope="row">{{result.COMPANY_NAME}}</th>
                             <td>{{result.FILED_DATE}}</td>
                             <td><span>{{result.para_contents}}</span></td>
+                            <td>
+                                <a href="https://sec.gov/Archives/{{result.HTTP_FILE}}" target="_new"><i class="bi bi-stickies"></i></a>
+                            </td>
                         </tr>
                       {% endfor %}
                     </tbody>
