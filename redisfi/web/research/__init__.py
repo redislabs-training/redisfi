@@ -5,6 +5,10 @@ from redisfi.web.research.api import facets
 
 research = Blueprint('research', __name__)
 
+DEFAULT_YEAR_START = 2020
+DEFAULT_YEAR_END = 2022
+SPECIAL_CHARS = ",.<>{}[]\"':;!@#$%^&*()-+=~"
+
 @research.route('/')
 def overview():
     return render_template('research/overview.html')
@@ -24,7 +28,7 @@ def vss(query=None, _filter=None):
     if _filter is not None:
         params = {'term':query, 'filter':_filter}
     else:
-        params = {'term':query}
+        params = {'term':query, 'filter':f'@FILED_DATE_YEAR:[{DEFAULT_YEAR_START},{DEFAULT_YEAR_END}]'}
 
     url = current_app.config.get('VSS_URL')
     resp = requests.get(url, params=params)
@@ -35,13 +39,23 @@ def vss(query=None, _filter=None):
 @research.route('/faceted-search', methods=['POST'])
 def faceted_search():
     data = request.form.to_dict(flat=False)
-    print(data)
+
     _filter = ''
     if 'companies' in data:
-        _filter += f'@COMPANY_NAME:({"|".join(data["companies"])})'
+        _filter += f'@COMPANY_NAME:({"|".join([_escape_special_characters(company) for company in data["companies"]])}) '
+    
+    year_start, year_end = data.get('yearStart')[0], data.get('yearEnd')[0]
+    
+    _filter += f'@FILED_DATE_YEAR:[{year_start or DEFAULT_YEAR_START},{year_end or DEFAULT_YEAR_END}] '
+    
+    return vss(data['query'], _filter.strip())
 
-    return vss(data['query'], _filter)
 
+def _escape_special_characters(input: str) -> str:
+    ret = ''
+    for char in input:
+        if char in SPECIAL_CHARS:
+            ret += '\\'
+        ret += char
 
-
-
+    return ret 
