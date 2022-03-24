@@ -13,6 +13,7 @@ def facets(query=None, _filter=None, serialize=True):
         params = {'term':query, 'filter':_filter}
     else:
         params = {'term':query}
+        
     url = current_app.config.get('VSS_URL')
     resp = requests.get(f'{url}/facets', params=params)
     facets: dict = resp.json()

@@ -2,12 +2,12 @@ import requests
 from flask import Blueprint, current_app, request, render_template
 
 from redisfi.web.research.api import facets
+from redisfi.web.research.utils import escape_special_characters
 
 research = Blueprint('research', __name__)
 
 DEFAULT_YEAR_START = 2020
 DEFAULT_YEAR_END = 2022
-SPECIAL_CHARS = ",.<>{}[]\"':;!@#$%^&*()-+=~"
 
 @research.route('/')
 def overview():
@@ -19,7 +19,7 @@ def full_text():
     url = current_app.config.get('VSS_URL')
     resp = requests.get(url, params={'filter':query})
     resp_data = resp.json()
-    return render_template('research/results.html', **resp_data)
+    return render_template('research/results-ft.html', **resp_data)
 
 @research.route('/vss')
 def vss(query=None, _filter=None):
@@ -34,7 +34,7 @@ def vss(query=None, _filter=None):
     resp = requests.get(url, params=params)
     resp_data = resp.json()
     resp_data['results'] = filter(lambda result: result['COMPANY_NAME'] != 'N/A', resp_data['results'])
-    return render_template('research/results.html', **resp_data, facets=facets(query, _filter, serialize=False), query=query)
+    return render_template('research/results-vss.html', **resp_data, facets=facets(query, _filter, serialize=False), query=query, filter=_filter)
 
 @research.route('/faceted-search', methods=['POST'])
 def faceted_search():
@@ -42,7 +42,7 @@ def faceted_search():
 
     _filter = ''
     if 'companies' in data:
-        _filter += f'@COMPANY_NAME:({"|".join([_escape_special_characters(company) for company in data["companies"]])}) '
+        _filter += f'@COMPANY_NAME:({"|".join([escape_special_characters(company) for company in data["companies"]])}) '
     
     year_start, year_end = data.get('yearStart')[0], data.get('yearEnd')[0]
     
@@ -51,11 +51,3 @@ def faceted_search():
     return vss(data['query'], _filter.strip())
 
 
-def _escape_special_characters(input: str) -> str:
-    ret = ''
-    for char in input:
-        if char in SPECIAL_CHARS:
-            ret += '\\'
-        ret += char
-
-    return ret 

@@ -1,0 +1,194 @@
+{% extends 'base.jinja' %}
+{% block header %}
+<style type="text/css">
+    .container-main{
+        margin-top: 20px;
+        margin-left: 10px;
+    }
+    .container-data{
+        margin-top: 30px;
+        width: 95%;
+    }
+    .link-dark { color: #5961FF; text-decoration: none; }
+    .table-striped>tbody>tr:nth-of-type(odd)>* { --bs-table-accent-bg: #E9EBFD; }
+    .table-hover>tbody>tr:hover>* { --bs-table-accent-bg: #D2D7FE; }
+    h1, .metrics {color:#fff;}
+    .metrics {float: right;}
+    .date-column{width:120px;}
+</style>
+{% endblock %}
+{% block nav %}
+<ul class="navbar-nav me-auto mb-2 mb-lg-0">
+    <li class="nav-item">
+        <a class="nav-link" aria-current="page" href="/overview">Accounts</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" href="/research">Research</a>
+    </li>
+</ul>
+<form class="d-flex" action="/research/ft">
+    <input class="form-control me-2" type="search" name="query" placeholder="Text Search" aria-label="Search">
+    <button class="btn btn-outline-success" type="submit">Search</button>
+</form>
+<div>&nbsp;</div>
+{% endblock %}
+{% block body %}
+<div class="container-fluid container-main">
+    <h1>Results</h1>
+    <div class="container-fluid container-data">
+        <div class="row">
+            <div class="col-lg">
+                <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#facetDrawer" aria-controls="facetDrawer">
+                    Filter
+                </button>
+            </div>
+            <div class="col-lg">
+                <span class="metrics">Sampled {{metrics.total}} Most Relevant Paragraphs out of 2,200,000 in {{ "{:.2f}".format(metrics.duration)}} ms</span>
+            </div>
+        </div>
+        <div class="row">
+            &nbsp;
+        </div>
+        <div class="row">
+            <div class="col-lg">
+                <table class="table table-striped table-hover border bg-light">
+                    <thead>
+                      <tr>
+                        <th scope="col">Company Name</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Text</th>
+                        <th scope="col">View Report</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for result in results %}
+                        <tr>
+                            <th scope="row">{{result.COMPANY_NAME}}</th>
+                            <td scope="row" class="date-column">{{result.FILED_DATE.split(' ')[0]}}</td>
+                            <td><span>{{result.para_contents}}</span></td>
+                            <td>
+                                <a href="https://sec.gov/Archives/{{result.HTTP_FILE}}" target="_new"><i class="bi bi-stickies"></i></a>
+                            </td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="offcanvas offcanvas-start" tabindex="-1" id="facetDrawer" aria-labelledby="offcanvasLabel">
+    <div class="offcanvas-header">
+      <h4 class="offcanvas-title brand-red" id="offcanvasLabel">Search Details</h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div class="container-fluid">
+            <div class="row">
+                <h5>Top Companies Distribution</h5>
+            </div>
+            <div class="row">
+                <div id="chart" style="text-align:center;">Loading...</div>
+            </div>
+            <div class="row">
+                &nbsp;
+            </div>
+            <div class="row">
+                <hr/>
+            </div>
+            <div class="row">
+                <h5>Filter Search</h5>
+            </div>
+            <div class="row">
+                <form action="/research/faceted-search" method="post">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <h6>Companies</h6>
+                        </div>
+                        <div class="row">
+                            <select class="form-select" name="companies" multiple aria-label="Company Select">
+                                {% for company_name, count in facets %}
+                                    <option value="{{company_name}}">{{company_name}} ({{count}})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="row">
+                            &nbsp;
+                        </div>
+                        <div class="row">
+                            <h6>Filing Year Range</h6>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm">
+                                <input class="form-control form-control-sm" name="yearStart" type="text" placeholder="2021" aria-label="Filing Year Start">
+                            </div>
+                            <div class="col-sm">
+                                <input class="form-control form-control-sm" name="yearEnd" type="text" placeholder="2022" aria-label="Filing Year End">
+                            </div>
+                        </div>
+                        <div class="row">
+                            &nbsp;
+                        </div>
+                        <div class="row">
+                            <h6>Filing Type</h6>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm">
+                                <input class="form-check-input" type="checkbox" name="10-K" id="filing-10k" checked>
+                                <label class="form-check-label" for="10k">10-K</label>
+                            </div>
+                            <div class="col-sm">
+                                <input class="form-check-input" type="checkbox" name="10-Q" id="filing-10q" checked>
+                                <label class="form-check-label" for="10k">10-Q</label>
+                            </div>
+                        </div>
+                        <div class="row">
+                            &nbsp;
+                        </div>
+                        <div class="row">
+                            <button class="btn btn-outline-success" type="submit">Search</button>
+                        </div>
+                    </div>
+                    <input type="hidden" name="query" value="{{query}}">
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block js %}
+<script type="text/javascript">
+    const NUM_COMPANIES_IN_CHART = 4;
+
+    $(() => {
+   
+    $.getJSON('/research/api/facets?query={{query}}&filter={{filter if filter else ""}}', (result) => {
+        console.log(result[0]);
+        const counts = [];
+        const companies = []
+        for(let i=0; i < NUM_COMPANIES_IN_CHART; i++) {
+            companies.push(result[i][0]);
+            counts.push(result[i][1]);
+        }
+        console.log(counts);
+        console.log(companies);
+
+        var options = {
+          series: counts,
+          chart: {
+          type: 'donut',
+        },
+        labels: companies,
+        legend: {position:'bottom',
+                horizontalAlign:'justified'},
+        noData: {text: LOADING_TEXT}
+    };
+        $('#chart').text('');
+        var chart = new ApexCharts(document.querySelector("#chart"), options);
+        chart.render();
+    })
+    });
+
+
+</script>
+{% endblock %}
