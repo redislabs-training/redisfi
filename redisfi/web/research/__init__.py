@@ -8,10 +8,22 @@ research = Blueprint('research', __name__)
 
 DEFAULT_YEAR_START = 2020
 DEFAULT_YEAR_END = 2022
+TRENDING_SEARCHES = ["exposure to Russian operations",
+                     "hackers attempting to steal customer data",
+                     "industry wide plant closures",
+                     "High wafer lead times and shortages",
+                     "Criminal charges brought",
+                     "armed conflict",
+                     "Wage pressures",
+                     "Britain leaves European Union",
+                     "India manufacturing exposure",
+                     "concerns over protests",
+                     "unintended reputational damage",
+                     "weakening demand and consumer confidence"]
 
 @research.route('/')
 def overview():
-    return render_template('research/overview.html')
+    return render_template('research/overview.html', trending_searches=TRENDING_SEARCHES)
 
 @research.route('/ft')
 def full_text():
@@ -43,10 +55,15 @@ def vss(query=None, _filter=None):
 @research.route('/faceted-search', methods=['POST'])
 def faceted_search():
     data = request.form.to_dict(flat=False)
-
+    print(data)
     _filter = ''
     if 'companies' in data:
         _filter += f'@COMPANY_NAME:({"|".join([escape_special_characters(company) for company in data["companies"]])}) '
+    if not data.get('10-K') or not data.get('10-Q'):
+        if data.get('10-K'): # this is somehow backwards in redisearch - don't ask me why
+            _filter += '@FILING_TYPE:10-Q '
+        else:
+            _filter += '@FILING_TYPE:10-K '
     
     year_start, year_end = data.get('yearStart')[0], data.get('yearEnd')[0]
     

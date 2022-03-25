@@ -9,14 +9,9 @@
         margin-top: 30px;
         width: 95%;
     }
-    .link-dark { color: #5961FF; text-decoration: none; }
-    .table-striped>tbody>tr:nth-of-type(odd)>* { --bs-table-accent-bg: #E9EBFD; }
-    .table-hover>tbody>tr:hover>* { --bs-table-accent-bg: #D2D7FE; }
     h1, .metrics {color:#fff;}
-    .metrics {float: right; padding-top:10px;}
     .date-column{width:120px;}
     .btn-danger{ background-color: #DC382C;}
-    .report-icon{text-align: center;}
 </style>
 {% endblock %}
 {% block nav %}
@@ -58,7 +53,7 @@
                 </button>
             </div>
             <div class="col-lg">
-                <span class="metrics">Sampled {{metrics.total}} Most Relevant Paragraphs out of 2,200,000 in {{ "{:.2f}".format(metrics.duration)}} ms</span>
+                <span class="metrics">{{metrics.total}} Most Relevant Paragraphs out of 2,200,000 in {{ "{:.2f}".format(metrics.duration)}} ms</span>
             </div>
         </div>
         <div class="row">

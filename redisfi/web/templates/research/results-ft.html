@@ -9,11 +9,8 @@
         margin-top: 30px;
         width: 95%;
     }
-    .link-dark { color: #5961FF; text-decoration: none; }
-    .table-striped>tbody>tr:nth-of-type(odd)>* { --bs-table-accent-bg: #E9EBFD; }
-    .table-hover>tbody>tr:hover>* { --bs-table-accent-bg: #D2D7FE; }
     h1, .metrics {color:#fff;}
-    .metrics {text-align: right;}
+    .metrics {float: right; padding-top:10px;}
     .date-column{width:120px;}
 </style>
 {% endblock %}
@@ -50,7 +47,14 @@
             &nbsp;
         </div>
         <div class="row">
-            <span class="metrics">Found {{metrics.total}} matches in 2,200,000 Paragraphs ({{ "{:.2f}".format(metrics.duration)}} ms)</span>
+            <div class="col-lg">
+                <button class="btn btn-danger" type="button" data-bs-toggle="offcanvas" data-bs-target="#facetDrawer" aria-controls="facetDrawer">
+                    Details
+                </button>
+            </div>
+            <div class="col-lg">
+                <span class="metrics">Found {{metrics.total}} matches in 2,200,000 Paragraphs ({{ "{:.2f}".format(metrics.duration)}} ms)</span>
+            </div>
         </div>
         <div class="row">
             &nbsp;
@@ -75,7 +79,7 @@
                             <td><span>{{result.para_contents}}</span></td>
                             <td><span>{{result.FILING_TYPE}}</span></td>
                             <td>
-                                <a href="https://sec.gov/Archives/{{result.HTTP_FILE}}" target="_blank"><i class="bi bi-stickies"></i></a>
+                                <div class="report-icon"><a href="https://sec.gov/Archives/{{result.HTTP_FILE}}" target="_blank"><i class="bi bi-stickies"></i></a></div>
                             </td>
                         </tr>
                       {% endfor %}
@@ -85,19 +89,5 @@
         </div>
     </div>
 </div>
-<div class="offcanvas offcanvas-start" tabindex="-1" id="facetDrawer" aria-labelledby="offcanvasLabel">
-    <div class="offcanvas-header">
-      <h5 class="offcanvas-title" id="offcanvasLabel">Details</h5>
-      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body">
-        {% if facets %}
-            {% for company_name, count in facets %}
-                <ul>
-                    <li><a href="/research/vss?query={{query}}&filter=@COMPANY_NAME:'{{company_name}}'">{{company_name}} ({{count}})</a></li>
-                </ul>
-            {% endfor %}
-        {% endif %}
-    </div>
-</div>
+
 {% endblock %}
