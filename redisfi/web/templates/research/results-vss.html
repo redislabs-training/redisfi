@@ -13,8 +13,10 @@
     .table-striped>tbody>tr:nth-of-type(odd)>* { --bs-table-accent-bg: #E9EBFD; }
     .table-hover>tbody>tr:hover>* { --bs-table-accent-bg: #D2D7FE; }
     h1, .metrics {color:#fff;}
-    .metrics {float: right;}
+    .metrics {float: right; padding-top:10px;}
     .date-column{width:120px;}
+    .btn-danger{ background-color: #DC382C;}
+    .report-icon{text-align: center;}
 </style>
 {% endblock %}
 {% block nav %}
@@ -26,10 +28,6 @@
         <a class="nav-link active" href="/research">Research</a>
     </li>
 </ul>
-<form class="d-flex" action="/research/ft">
-    <input class="form-control me-2" type="search" name="query" placeholder="Text Search" aria-label="Search">
-    <button class="btn btn-outline-success" type="submit">Search</button>
-</form>
 <div>&nbsp;</div>
 {% endblock %}
 {% block body %}
@@ -37,9 +35,26 @@
     <h1>Results</h1>
     <div class="container-fluid container-data">
         <div class="row">
+            <form class="d-flex vss-form" id="searchForm" action="/research/vss">
+                <input class="form-control me-2" type="search" name="query" placeholder="Discover Insights" aria-label="Search" value="{{query}}">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                      Search
+                    </button>
+                    <ul class="dropdown-menu">
+                      <li><a class="dropdown-item" onClick="doSearch('ft')">Full-Text Search</a></li>
+                      <li><a class="dropdown-item" onClick="doSearch('vss')">Semantic Search</a></li>
+                    </ul>
+                  </div>
+            </form>
+        </div>
+        <div class="row">
+            &nbsp;
+        </div>
+        <div class="row">
             <div class="col-lg">
-                <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#facetDrawer" aria-controls="facetDrawer">
-                    Filter
+                <button class="btn btn-danger" type="button" data-bs-toggle="offcanvas" data-bs-target="#facetDrawer" aria-controls="facetDrawer">
+                    Details
                 </button>
             </div>
             <div class="col-lg">
@@ -69,7 +84,7 @@
                             <td><span>{{result.para_contents}}</span></td>
                             <td><span>{{result.FILING_TYPE}}</span></td>
                             <td>
-                                <a href="https://sec.gov/Archives/{{result.HTTP_FILE}}" target="_new"><i class="bi bi-stickies"></i></a>
+                                <div class="report-icon"><a href="https://sec.gov/Archives/{{result.HTTP_FILE}}" target="_new"><i class="bi bi-stickies"></i></a></div>
                             </td>
                         </tr>
                       {% endfor %}

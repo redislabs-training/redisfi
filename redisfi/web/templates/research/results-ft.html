@@ -26,16 +26,29 @@
         <a class="nav-link active" href="/research">Research</a>
     </li>
 </ul>
-<form class="d-flex" action="/research/ft">
-    <input class="form-control me-2" type="search" name="query" placeholder="Text Search" aria-label="Search">
-    <button class="btn btn-outline-success" type="submit">Search</button>
-</form>
 <div>&nbsp;</div>
 {% endblock %}
 {% block body %}
 <div class="container-fluid container-main">
     <h1>Results</h1>
     <div class="container-fluid container-data">
+        <div class="row">
+            <form class="d-flex vss-form" id="searchForm" action="/research/ft">
+                <input class="form-control me-2" type="search" name="query" placeholder="Discover Insights" aria-label="Search" value="{{query}}">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                      Search
+                    </button>
+                    <ul class="dropdown-menu">
+                      <li><a class="dropdown-item" onClick="doSearch('ft')">Full-Text Search</a></li>
+                      <li><a class="dropdown-item" onClick="doSearch('vss')">Semantic Search</a></li>
+                    </ul>
+                  </div>
+            </form>
+        </div>
+        <div class="row">
+            &nbsp;
+        </div>
         <div class="row">
             <span class="metrics">Found {{metrics.total}} matches in 2,200,000 Paragraphs ({{ "{:.2f}".format(metrics.duration)}} ms)</span>
         </div>

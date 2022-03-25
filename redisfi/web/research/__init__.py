@@ -19,7 +19,7 @@ def full_text():
     url = current_app.config.get('VSS_URL')
     resp = requests.get(url, params={'filter':query})
     resp_data = resp.json()
-    return render_template('research/results-ft.html', **resp_data)
+    return render_template('research/results-ft.html', **resp_data, query=query)
 
 @research.route('/vss')
 def vss(query=None, _filter=None):

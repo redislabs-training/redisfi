@@ -9,7 +9,7 @@
         margin-top: 30px;
         width: 99%;
     }
-    h1 { margin-bottom: 25px; text-align: center; color:#fff;}
+    h2 { margin-bottom: 25px; text-align: center; color:#fff;}
     .vss-form{padding-left: 3%; padding-right: 3%; padding-top:1%;}
 </style>
 {% endblock %}
@@ -22,22 +22,29 @@
         <a class="nav-link active" href="/research">Research</a>
     </li>
 </ul>
-<form class="d-flex" action="/research/ft">
-    <input class="form-control me-2" type="search" name="query" placeholder="Text Search" aria-label="Search">
-    <button class="btn btn-outline-success" type="submit">Search</button>
-</form>
 <div>&nbsp;</div>
 {% endblock %}
 {% block body %}
 <div class="container-fluid container-main">
-    <h1>SEC 10-K & 10-Q Reports</h1>
+    <h2>SEC 10-K & 10-Q Filing Search</h2>
     <div class="container-fluid container-data">
         <div class="row">
-            <form class="d-flex vss-form" action="/research/vss">
-                <input class="form-control me-2" type="search" name="query" placeholder="Similarity Search" aria-label="Search">
-                <button class="btn btn-outline-success" type="submit">Search</button>
+            <form class="d-flex vss-form" id="searchForm" action="/research/ft">
+                <input class="form-control me-2" type="search" name="query" placeholder="Discover Insights" aria-label="Search">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                      Search
+                    </button>
+                    <ul class="dropdown-menu">
+                      <li><a class="dropdown-item" onClick="doSearch('ft')">Full-Text Search</a></li>
+                      <li><a class="dropdown-item" onClick="doSearch('vss')">Semantic Search</a></li>
+                    </ul>
+                  </div>
             </form>
         </div>
     </div>
 </div>
+{% endblock %}
+{% block js %}
+
 {% endblock %}

@@ -10,7 +10,7 @@
     .timeframe-selector{ float: right; }
     body { background-color: #161F31; }
     .btn-outline-success, .btn-outline-success:active { color: #fff; background-color: #5961FF; border: 0; }
-    .btn-outline-success:hover, .btn-outline-success:focus { background-color: #454CD5; border: 0; box-shadow: none; }
+    .btn-outline-success:hover, .btn-outline-success:focus, .btn-outline-success.dropdown-toggle.show { background-color: #454CD5; border: 0; box-shadow: none; }
     .bg-dark { background-color: #161F31 !important; }
     .link-dark { color: #5961FF; text-decoration: none; }
     .brand-red { color: #DC382C; }
@@ -91,6 +91,16 @@
            }, ANIMATION_TIME)
         }
       }
+      function doSearch(how) {
+        console.log(how);
+        if(how === 'vss') {
+            $('#searchForm').attr('action', '/research/vss');
+        } else {
+            $('#searchForm').attr('action', '/research/ft');
+        }
+        
+        $('#searchForm').submit();
+    }
     </script>
     {% block js %}{% endblock %}
   </body>
