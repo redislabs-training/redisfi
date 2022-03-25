@@ -14,6 +14,7 @@
     .table-hover>tbody>tr:hover>* { --bs-table-accent-bg: #D2D7FE; }
     h1, .metrics {color:#fff;}
     .metrics {text-align: right;}
+    .date-column{width:120px;}
 </style>
 {% endblock %}
 {% block nav %}
@@ -49,6 +50,7 @@
                         <th scope="col">Company Name</th>
                         <th scope="col">Date</th>
                         <th scope="col">Text</th>
+                        <th scope="col">Filing Type</th>
                         <th scope="col">View Report</th>
                       </tr>
                     </thead>
@@ -56,8 +58,9 @@
                       {% for result in results %}
                         <tr>
                             <th scope="row">{{result.COMPANY_NAME}}</th>
-                            <td>{{result.FILED_DATE}}</td>
+                            <td scope="row" class="date-column">{{result.FILED_DATE.split(' ')[0]}}</td>
                             <td><span>{{result.para_contents}}</span></td>
+                            <td><span>{{result.FILING_TYPE}}</span></td>
                             <td>
                                 <a href="https://sec.gov/Archives/{{result.HTTP_FILE}}" target="_blank"><i class="bi bi-stickies"></i></a>
                             </td>

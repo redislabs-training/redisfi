@@ -57,6 +57,7 @@
                         <th scope="col">Company Name</th>
                         <th scope="col">Date</th>
                         <th scope="col">Text</th>
+                        <th scope="col">Filing Type</th>
                         <th scope="col">View Report</th>
                       </tr>
                     </thead>
@@ -66,6 +67,7 @@
                             <th scope="row">{{result.COMPANY_NAME}}</th>
                             <td scope="row" class="date-column">{{result.FILED_DATE.split(' ')[0]}}</td>
                             <td><span>{{result.para_contents}}</span></td>
+                            <td><span>{{result.FILING_TYPE}}</span></td>
                             <td>
                                 <a href="https://sec.gov/Archives/{{result.HTTP_FILE}}" target="_new"><i class="bi bi-stickies"></i></a>
                             </td>
@@ -162,13 +164,20 @@
 
     $(() => {
    
-    $.getJSON('/research/api/facets?query={{query}}&filter={{filter if filter else ""}}', (result) => {
-        console.log(result[0]);
+    $.getJSON('/research/api/facets?query={{query}}&filter={{filter if filter else ""}}', (results) => {
+        console.log(results[0]);
         const counts = [];
         const companies = []
-        for(let i=0; i < NUM_COMPANIES_IN_CHART; i++) {
-            companies.push(result[i][0]);
-            counts.push(result[i][1]);
+        let companyCountForChart;
+        if(results.length < NUM_COMPANIES_IN_CHART){
+            companyCountForChart = results.length;
+        } else {
+            companyCountForChart = NUM_COMPANIES_IN_CHART;
+        }
+
+        for(let i=0; i < companyCountForChart; i++) {
+            companies.push(results[i][0]);
+            counts.push(results[i][1]);
         }
         console.log(counts);
         console.log(companies);

@@ -24,12 +24,16 @@ def full_text():
 @research.route('/vss')
 def vss(query=None, _filter=None):
     query = query or request.args.get('query')
+    if type(query) == list:
+        query = query[0]
+    
     _filter = _filter or request.args.get('filter')
-    if _filter is not None:
-        params = {'term':query, 'filter':_filter}
-    else:
-        params = {'term':query, 'filter':f'@FILED_DATE_YEAR:[{DEFAULT_YEAR_START},{DEFAULT_YEAR_END}]'}
-
+    if _filter is None:
+        _filter = f'@FILED_DATE_YEAR:[{DEFAULT_YEAR_START},{DEFAULT_YEAR_END}]'
+    elif type(_filter) == list:
+        _filter = _filter[0]
+     
+    params = {'term':query, 'filter':_filter}
     url = current_app.config.get('VSS_URL')
     resp = requests.get(url, params=params)
     resp_data = resp.json()
@@ -48,6 +52,6 @@ def faceted_search():
     
     _filter += f'@FILED_DATE_YEAR:[{year_start or DEFAULT_YEAR_START},{year_end or DEFAULT_YEAR_END}] '
     
-    return vss(data['query'], _filter.strip())
+    return vss(data['query'][0], _filter.strip())
 
 
