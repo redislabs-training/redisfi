@@ -1,5 +1,6 @@
 from os import environ
 from subprocess import Popen
+from sys import stdout
 
 from cleo import Command
 
@@ -147,13 +148,17 @@ class BridgeUp(Command):
         global_args = ['--redis-url', environ.get('REDIS_URL', self.option('redis-url'))]
         global_args.extend(['--assets', self.option('assets')])
         global_args.extend(['--crypto', self.option('crypto')])
-
-        with Popen(['poetry', 'run', 'redisfi', 'bridge', 'metadata'] + global_args) as p:
+        
+        with Popen(['poetry', 'run', 'redisfi', 'bridge', 'metadata', '--ansi'] + global_args) as p:
             p.communicate()
+            if p.returncode != 0:
+                return p.returncode
 
         historic_args = ['--hourly', self.option('hourly')]
         with Popen(['poetry', 'run', 'redisfi', 'bridge', 'historic'] + historic_args + global_args) as p:
             p.communicate()
+            if p.returncode != 0:
+                return p.returncode
 
         
         portfolio_args = ['--years-to-generate', self.option('years-to-generate')]
@@ -162,6 +167,8 @@ class BridgeUp(Command):
 
         with Popen(['poetry', 'run', 'redisfi', 'bridge', 'portfolio'] + portfolio_args + global_args) as p:
             p.communicate()
+            if p.returncode != 0:
+                return p.returncode
         
         if environ.get('MOCK', self.option('mock')):
             self.line('<error>Mock Setting Detected! - Mock adapters will be enabled</error>')
@@ -175,6 +182,8 @@ class BridgeUp(Command):
 
         with Popen(['poetry', 'run', 'redisfi', 'bridge', 'live'] + live_args + global_args) as p:
             p.communicate()
+            if p.returncode != 0:
+                return p.returncode
 
 
     

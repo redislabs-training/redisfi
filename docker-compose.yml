@@ -50,7 +50,7 @@ services:
     profiles:
       - build
   redis:
-    image: redislabs/redisearch:2.4.2
+    image: redislabs/redisearch:2.4.3
     ports: 
      - 6379:6379
     profiles:
