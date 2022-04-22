@@ -34,6 +34,8 @@ services:
     command: poetry run VSS load -n
     container_name: vss-loader
     pull_policy: always
+    volumes:
+      - ./data:/opt/redisfi/data:rw
     profiles:
       - pull
   frontend-build:
@@ -67,6 +69,8 @@ services:
     command: poetry run VSS load -n
     container_name: vss-loader
     pull_policy: always
+    volumes:
+      - ./data:/opt/redisfi/data:rw
     profiles:
       - build
   redis:
