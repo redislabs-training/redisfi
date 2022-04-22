@@ -35,7 +35,7 @@ services:
     container_name: vss-loader
     pull_policy: always
     volumes:
-      - ./data:/opt/redisfi/data:rw
+      - /tmp/redisfi_work_dir:/tmp:rw
     profiles:
       - pull
   frontend-build:
@@ -70,7 +70,7 @@ services:
     container_name: vss-loader
     pull_policy: always
     volumes:
-      - ./data:/opt/redisfi/data:rw
+      - /tmp/redisfi_work_dir:/tmp:rw
     profiles:
       - build
   redis:
