@@ -58,7 +58,7 @@ def faceted_search():
     print(data)
     _filter = ''
     if 'companies' in data:
-        _filter += f'@COMPANY_NAME:({"|".join([escape_special_characters(company) for company in data["companies"]])}) '
+        _filter += f'@COMPANY_NAME:{{{"|".join(data["companies"])}}} '
     if not data.get('10-K') or not data.get('10-Q'):
         if data.get('10-K'): # this is somehow backwards in redisearch - don't ask me why
             _filter += '@FILING_TYPE:10-Q '
