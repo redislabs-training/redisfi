@@ -1,0 +1,25 @@
+---
+platform: linux
+image_resource:
+  type: registry-image
+  source:
+    repository: taylorsilva/dcind
+params: 
+  PROJECT: ((gcp-sa))
+  AUTH_JSON: ((auth-gcp-sa))
+  GOOGLE_APPLICATION_CREDENTIALS: /tmp/auth.json
+  WORKSPACE: redisfi-test
+run:
+  path: bash
+  args:
+    - -cex
+    - |
+      source /docker-lib.sh
+      start_docker
+      echo $AUTH_JSON > /tmp/auth.json
+      cat /tmp/auth.json
+      chmod 400 /tmp/auth.json
+      docker run -dt --name GC gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
+      docker cp /tmp/auth.json GC:/tmp/auth.json 
+      docker exec GC gcloud auth activate-service-account --key-file=/tmp/auth.json
+      docker exec GC gcloud --quiet compute instances delete $WORKSPACE-app --project=$PROJECT --zone=us-west4-a 

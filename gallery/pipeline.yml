@@ -1,0 +1,41 @@
+resources:
+  # - name: redisfi
+  #   type: git
+  #   icon: github
+  #   source:
+  #     uri: https://github.com/redislabs-training/redisfi
+  #     branch: main
+  #     username: ((auth-github))
+  #     password: x-oauth-basic
+  - name: docent
+    type: git
+    icon: github
+    source:
+      uri: https://github.com/redislabs-training/docent
+      branch: main
+      username: ((auth-github))
+      password: x-oauth-basic
+jobs:
+  - name: create-cluster
+    plan:
+      - get: docent
+      - task: deploy
+        file: docent/gallery/cluster/create.yml
+        params:
+          WORKSPACE: redisfi-((guid))
+          NAME_SLUG: ((hostname)).fi
+    on_failure:
+      task: teardown
+      file: docent/gallery/cluster/destroy.yml
+      params:
+          NAME_SLUG: ((hostname)).fi
+          WORKSPACE: redisfi-((guid))
+  - name: destroy-cluster
+    plan:
+      - get: docent
+        passed: [create-cluster]
+      - task: teardown
+        file: docent/gallery/cluster/destroy.yml
+        params:
+          WORKSPACE: redisfi-((guid))
+          NAME_SLUG: ((hostname)).fi

@@ -1,6 +1,5 @@
 from os import environ
 from subprocess import Popen
-from sys import stdout
 
 from cleo import Command
 
