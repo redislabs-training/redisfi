@@ -22,5 +22,5 @@ run:
       docker run -dt --name GC gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
       docker cp /tmp/auth.json GC:/tmp/auth.json 
       docker exec GC gcloud auth activate-service-account --key-file=/tmp/auth.json
-      # docker exec GC gcloud --quiet compute instances delete $WORKSPACE-app --project=$PROJECT --zone=us-west4-a
+      docker exec GC gcloud --quiet compute instances delete $WORKSPACE-app --project=$PROJECT --zone=us-west4-a
       docker exec GC gcloud --quiet compute --project=redislabs-sales-pivotal firewall-rules delete $WORKSPACE-allow-8000 

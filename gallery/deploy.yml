@@ -40,5 +40,5 @@ run:
       docker run -dt --name GC gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
       docker cp /tmp/auth.json GC:/tmp/auth.json 
       docker exec GC gcloud auth activate-service-account --key-file=/tmp/auth.json
-      # docker exec GC gcloud compute --project=redislabs-sales-pivotal firewall-rules create $WORKSPACE-allow-8000 --direction=INGRESS --priority=1000 --network=$WORKSPACE-vpc --action=ALLOW --rules=tcp:8000 --source-ranges=0.0.0.0/0 --target-tags=allow-8000
-      docker exec GC gcloud compute instances create $WORKSPACE-app --project=$PROJECT --zone=us-west4-a --image-family=redisfi --machine-type=e2-standard-8 --network=$WORKSPACE-vpc --subnet=$WORKSPACE-subnet --tags=allow-8000 --metadata=startup-script='cd /opt/redisfi && sudo poetry run redisfi-compose up -d --vss-redis-url=redis://redis-6379.db.$NAME_SLUG.exhibit.redis.gallery:6379'
+      docker exec GC gcloud compute --project=redislabs-sales-pivotal firewall-rules create $WORKSPACE-allow-8000 --direction=INGRESS --priority=1000 --network=$WORKSPACE-vpc --action=ALLOW --rules=tcp:8000 --source-ranges=0.0.0.0/0 --target-tags=allow-8000
+      docker exec GC gcloud compute instances create $WORKSPACE-app --project=$PROJECT --zone=us-west4-a --image-family=redisfi --machine-type=e2-standard-8 --network=$WORKSPACE-vpc --subnet=$WORKSPACE-subnet --tags=allow-8000 --metadata=startup-script="cd /opt/redisfi && sudo poetry run redisfi-compose up -d --vss-redis-url=redis://redis-6379.db.$NAME_SLUG.exhibit.redis.gallery:6379"
