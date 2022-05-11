@@ -2,6 +2,7 @@ from subprocess import Popen
 
 from clikit.api.io.flags import  DEBUG
 from cleo import Command, Application
+from redisfi.tool.commands import ToolBase
 
 class RunCommand(Command):
     '''
@@ -63,4 +64,5 @@ class RunCommand(Command):
 def run():
     app = Application(name='redisfi-compose')
     app.add(RunCommand())
+    app.add(ToolBase())
     app.run()

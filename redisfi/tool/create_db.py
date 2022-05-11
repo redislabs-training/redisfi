@@ -4,7 +4,7 @@ requests.packages.urllib3.disable_warnings()
 
 api_url = lambda host, path: f'https://{host}:9443/{path}'
 
-def create_db(host, username, password, db_name, db_size, db_port, db_modules=None):
+def create_db(host, username, password, db_name, db_size, db_port, shard_count, db_modules=None):
     '''
     Creates a Redis database using the Redis Enterprise REST API
 
@@ -21,7 +21,7 @@ def create_db(host, username, password, db_name, db_size, db_port, db_modules=No
     tuple - (http response code, http response text)
     '''
     path = 'v1/bdbs'
-    headers, data = _create_db_payload(db_name, db_size, db_port, db_modules)
+    headers, data = _create_db_payload(db_name, db_size, db_port, db_modules, shard_count)
 
     db_create_resp = requests.post(
         api_url(host, path),
@@ -32,7 +32,7 @@ def create_db(host, username, password, db_name, db_size, db_port, db_modules=No
 
     return db_create_resp.status_code, db_create_resp.text
 
-def _create_db_payload(db_name, db_size, db_port, db_modules):
+def _create_db_payload(db_name, db_size, db_port, db_modules, shard_count):
     '''
     creates the JSON string for the create_db http request
 
@@ -53,7 +53,9 @@ def _create_db_payload(db_name, db_size, db_port, db_modules):
     payload = { "name": db_name,
                 "memory_size": db_size,
                 "type": "redis",
-                "port": db_port
+                "port": db_port,
+                "sharding":True,
+                "shards_count":shard_count,
               }
 
     if db_modules is not None:

@@ -42,6 +42,7 @@ jobs:
         file: redisfi/gallery/deploy.yml
         params:
           WORKSPACE: redisfi-((guid))
+          NAME_SLUG: ((hostname)).fi
   - name: teardown-app
     plan:
       - get: docent
