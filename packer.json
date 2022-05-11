@@ -5,7 +5,7 @@
         "image_name": "redisfi-packer-{{timestamp}}",
         "image_family_name": "redisfi",
         "machine_type": "n1-standard-4",
-        "disk_size": "20",
+        "disk_size": "100",
         "ssh_user": "packer"
     },
     "builders": [{
