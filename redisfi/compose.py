@@ -13,7 +13,7 @@ class RunCommand(Command):
         {--d|detach : Run in Detached Mode}
         {--redis-url=redis://redis:6379 : Location of Redis Server to Use - Defaults to Pulling Container Locally}
         {--vss-redis-url=redis://redis:6379 : Location of the Redis Server for VSS to use - Defaults to Pulling Container Locally}
-        {--vss-url=http://vss:7777 : Location of VSS microservice}
+        {--vss-url=http://vss-wsapi:7777 : Location of VSS microservice}
         {--mock : Start mock live adapter}
     '''
 
