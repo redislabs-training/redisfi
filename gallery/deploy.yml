@@ -32,7 +32,7 @@ run:
       apk add py3-pip
       pip3 install poetry 
       poetry install --no-dev
-      poetry run redisfi-compose tool create_db -H db.$NAME_SLUG.exhibit.redis.gallery -u admin@redis.com -p redis123 -s 42949672960
+      poetry run redisfi-compose tool create_db -H db.$NAME_SLUG.exhibit.redis.gallery -u admin@redis.com -p redis123 -s 42949672960 -S 12
 
       ## deploy app
       echo $AUTH_JSON > /tmp/auth.json
