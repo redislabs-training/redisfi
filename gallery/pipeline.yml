@@ -54,6 +54,7 @@ jobs:
         file: redisfi/gallery/teardown.yml
         params:
           WORKSPACE: redisfi-((guid))
+          NAME_SLUG: ((hostname)).fi
   - name: destroy-cluster
     plan:
       - get: docent

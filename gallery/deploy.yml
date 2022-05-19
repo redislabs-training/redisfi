@@ -22,17 +22,17 @@ run:
       start_docker
       
       ## install modules into cluster
-      # curl http://redismodules.s3.amazonaws.com/redisearch/redisearch.Linux-ubuntu18.04-x86_64.2.4.3.zip --output search.zip
-      # curl http://redismodules.s3.amazonaws.com/rejson/rejson.Linux-ubuntu18.04-x86_64.2.0.0.zip --output json.zip
-      # curl -k -u "admin@redis.com:redis123" -F "module=@search.zip" https://db.$NAME_SLUG.exhibit.redis.gallery:9443/v1/modules
-      # curl -k -u "admin@redis.com:redis123" -F "module=@json.zip" https://db.$NAME_SLUG.exhibit.redis.gallery:9443/v1/modules
+      curl http://redismodules.s3.amazonaws.com/redisearch/redisearch.Linux-ubuntu18.04-x86_64.2.4.3.zip --output search.zip
+      curl http://redismodules.s3.amazonaws.com/rejson/rejson.Linux-ubuntu18.04-x86_64.2.0.0.zip --output json.zip
+      curl -k -u "admin@redis.com:redis123" -F "module=@search.zip" https://db.$NAME_SLUG.exhibit.redis.gallery:9443/v1/modules
+      curl -k -u "admin@redis.com:redis123" -F "module=@json.zip" https://db.$NAME_SLUG.exhibit.redis.gallery:9443/v1/modules
       
-      # ## create db
-      # cd redisfi
-      # apk add py3-pip
-      # pip3 install poetry 
-      # poetry install --no-dev
-      # poetry run redisfi-compose tool create_db -H db.$NAME_SLUG.exhibit.redis.gallery -u admin@redis.com -p redis123 -s 42949672960 -S 12
+      ## create db
+      cd redisfi
+      apk add py3-pip
+      pip3 install poetry 
+      poetry install --no-dev
+      poetry run redisfi-compose tool create_db -H db.$NAME_SLUG.exhibit.redis.gallery -u admin@redis.com -p redis123 -s 42949672960 -S 12
 
       ## deploy app
       echo $AUTH_JSON > /tmp/auth.json
