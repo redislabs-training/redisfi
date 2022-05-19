@@ -9,6 +9,7 @@ params:
   AUTH_JSON: ((auth-gcp-sa))
   GOOGLE_APPLICATION_CREDENTIALS: /tmp/auth.json
   WORKSPACE: redisfi-test
+  NAME_SLUG: redisfi.test
 run:
   path: bash
   args:
@@ -19,8 +20,13 @@ run:
       echo $AUTH_JSON > /tmp/auth.json
       cat /tmp/auth.json
       chmod 400 /tmp/auth.json
+      apk add jq
       docker run -dt --name GC gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
       docker cp /tmp/auth.json GC:/tmp/auth.json 
       docker exec GC gcloud auth activate-service-account --key-file=/tmp/auth.json
+      appIP=$(docker exec GC gcloud compute instances describe $WORKSPACE-app --project=redislabs-sales-pivotal --zone=us-west4-a --format="json" | jq -r .networkInterfaces[0].accessConfigs[0].natIP)
+      docker exec GC gcloud beta dns --project=redislabs-sales-pivotal record-sets transaction start --zone="exhibit"
+      docker exec GC gcloud beta dns --project=redislabs-sales-pivotal record-sets transaction remove $appIP --zone="exhibit" --type="A" --name="$NAME_SLUG.exhibit.redis.gallery." --ttl="30"
+      docker exec GC gcloud beta dns --project=redislabs-sales-pivotal record-sets transaction execute --zone="exhibit" 
       docker exec GC gcloud --quiet compute instances delete $WORKSPACE-app --project=$PROJECT --zone=us-west4-a
       docker exec GC gcloud --quiet compute --project=redislabs-sales-pivotal firewall-rules delete $WORKSPACE-allow-8000 
