@@ -62,6 +62,7 @@ jobs:
       - get: redisfi
         passed: [deploy-app]
       - get: docent
+        passed: [deploy-app]
       - task: teardown
         privileged: true
         file: redisfi/gallery/teardown.yml
