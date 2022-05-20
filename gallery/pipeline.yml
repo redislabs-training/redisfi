@@ -53,12 +53,13 @@ jobs:
         privileged: true
         file: redisfi/gallery/db-readycheck.yml
         params:
-          WORKSPACE: redisfi-((guid))
+          # WORKSPACE: redisfi-((guid))
           NAME_SLUG: ((hostname)).fi
   - name: teardown-app
     plan:
-      - get: docent
+      - get: redisfi
         passed: [deploy-app]
+      - get: docent
       - task: teardown
         privileged: true
         file: redisfi/gallery/teardown.yml
