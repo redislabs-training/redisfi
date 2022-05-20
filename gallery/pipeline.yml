@@ -34,6 +34,7 @@ jobs:
           WORKSPACE: redisfi-((guid))
   - name: deploy-app
     plan:
+      - get: docent
       - get: redisfi
         passed: [create-cluster]
         trigger: true
@@ -43,11 +44,20 @@ jobs:
         params:
           WORKSPACE: redisfi-((guid))
           NAME_SLUG: ((hostname)).fi
+  - name: build-dbs
+    plan:
+      - get: redisfi
+        passed: [deploy-app]
+        trigger: true
+      - task: deploy
+        privileged: true
+        file: redisfi/gallery/db-readycheck.yml
+        params:
+          WORKSPACE: redisfi-((guid))
+          NAME_SLUG: ((hostname)).fi
   - name: teardown-app
     plan:
       - get: docent
-        passed: [create-cluster]
-      - get: redisfi
         passed: [deploy-app]
       - task: teardown
         privileged: true

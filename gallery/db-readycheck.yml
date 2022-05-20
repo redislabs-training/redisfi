@@ -1,0 +1,21 @@
+---
+platform: linux
+image_resource:
+  type: registry-image
+  source:
+    repository: taylorsilva/dcind
+params: 
+  PROJECT: ((gcp-sa))
+  AUTH_JSON: ((auth-gcp-sa))
+  GOOGLE_APPLICATION_CREDENTIALS: /tmp/auth.json
+  WORKSPACE: redisfi-test
+  NAME_SLUG: redisfi.test
+run:
+  path: bash
+  args:
+    - -cex
+    - |
+      source /docker-lib.sh
+      start_docker
+
+      timeout 2100 bash -c 'until $(curl --output /dev/null --silent --head --fail -k http://$NAME_SLUG.exhibit.redis.gallery:8000/research/healthcheck); do printf "." && sleep 30; done'
