@@ -1,5 +1,5 @@
 import requests
-from flask import Blueprint, current_app, request, render_template
+from flask import Blueprint, current_app, request, render_template, Response
 
 from redisfi.web.research.api import facets
 from redisfi.web.research.utils import escape_special_characters
@@ -24,6 +24,18 @@ TRENDING_SEARCHES = ["exposure to Russian operations",
 @research.route('/')
 def overview():
     return render_template('research/overview.html', trending_searches=TRENDING_SEARCHES)
+
+@research.route('/healthcheck')
+def healthcheck():
+    url = current_app.config.get('VSS_URL') + '/healthcheck'
+    status = int(requests.get(url).text)
+
+    if status == 0:
+        return Response(status=503)
+    elif status == 1:
+        return Response(status=200)
+    else:
+        return Response(status=418) # i'm a little teapot short and stout...
 
 @research.route('/ft')
 def full_text():
