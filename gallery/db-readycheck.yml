@@ -1,5 +1,7 @@
 ---
 platform: linux
+inputs:
+  - name: docent
 image_resource:
   type: registry-image
   source:
@@ -8,8 +10,9 @@ params:
   PROJECT: ((gcp-sa))
   AUTH_JSON: ((auth-gcp-sa))
   GOOGLE_APPLICATION_CREDENTIALS: /tmp/auth.json
-  # WORKSPACE: redisfi-test
   NAME_SLUG: redisfi.test
+  GUID: guid
+  SECRET: secret
 run:
   path: bash
   args:
@@ -19,3 +22,8 @@ run:
       start_docker
 
       timeout 2100 bash -c 'until $(curl --output /dev/null --silent --head --fail -k http://'"$NAME_SLUG"'.exhibit.redis.gallery:8000/research/healthcheck); do printf "." && sleep 30; done'
+      
+      cd docent
+      pip3 install poetry
+      poetry install
+      poetry run docent set_outputs $GUID $SECRET app_url=http://$NAME_SLUG.exhibit.redis.gallery:8000
