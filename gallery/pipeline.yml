@@ -19,7 +19,6 @@ jobs:
   - name: create-cluster
     plan:
       - get: docent
-      - get: redisfi
       - task: deploy
         file: docent/gallery/cluster/create.yml
         params:
@@ -35,8 +34,8 @@ jobs:
   - name: deploy-app
     plan:
       - get: docent
-      - get: redisfi
         passed: [create-cluster]
+      - get: redisfi
         trigger: true
       - task: deploy
         privileged: true
