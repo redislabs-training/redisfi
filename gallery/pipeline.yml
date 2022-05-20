@@ -47,6 +47,7 @@ jobs:
     plan:
       - get: redisfi
         passed: [deploy-app]
+        trigger: true
       - get: docent
         passed: [deploy-app]
         trigger: true
