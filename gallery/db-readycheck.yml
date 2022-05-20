@@ -18,9 +18,6 @@ run:
   args:
     - -cex
     - |
-      source /docker-lib.sh
-      start_docker
-
       timeout 2100 bash -c 'until $(curl --output /dev/null --silent --head --fail -k http://'"$NAME_SLUG"'.exhibit.redis.gallery:8000/research/healthcheck); do printf "." && sleep 30; done'
       
       cd docent
