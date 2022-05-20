@@ -13,7 +13,7 @@ services:
   bridge-pull:
     env_file: .env
     image: timeartist/redisfi
-    command: poetry run redisfi bridge up
+    command: poetry run redisfi bridge up ${ALPACA_KEY} ${ALPACA_SECRET}
     container_name: bridge
     pull_policy: always
     profiles:
@@ -50,7 +50,7 @@ services:
   bridge-build:
     env_file: .env
     build: .
-    command: poetry run redisfi bridge up
+    command: poetry run redisfi bridge up ${ALPACA_KEY} ${ALPACA_SECRET}
     container_name: bridge
     profiles:
       - build

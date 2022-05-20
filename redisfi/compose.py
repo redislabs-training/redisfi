@@ -9,6 +9,8 @@ class RunCommand(Command):
     Use docker compose to run RedisFI
 
     up
+        {alpaca-api-key : API key for Alpaca}
+        {alpaca-api-secret-key : API secret key for Alpaca}
         {--b|build : Build containers from local source}
         {--d|detach : Run in Detached Mode}
         {--redis-url=redis://redis:6379 : Location of Redis Server to Use - Defaults to Pulling Container Locally}
@@ -34,10 +36,14 @@ class RunCommand(Command):
             env.append('MOCK=1\n')
 
 
+        alpaca_key = self.argument('alpaca-api-key')
+        alpaca_secret = self.argument('alpaca-api-secret-key')
         vss_url = self.option('vss-url')
         redis_url = self.option('redis-url')
         vss_redis_url = self.option('vss-redis-url')
         
+        env.append(f'ALPACA_KEY={alpaca_key}\n')
+        env.append(f'ALPACA_SECRET={alpaca_secret}\n')
         env.append(f'VSS_URL={vss_url}\n')
         env.append(f'REDIS_URL={redis_url}\n')
         env.append(f'VSS_REDIS_URL={vss_redis_url}\n')

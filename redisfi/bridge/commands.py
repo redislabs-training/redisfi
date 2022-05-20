@@ -9,7 +9,7 @@ from redisfi.bridge.adapter.file import JSONMetadataFileLoader, JSONFundMetadata
 from redisfi.bridge.adapter.mock import RNGPriceGenerator, TransactionGenerator, TransactionPriceMapper
 
 
-class BridgeMixin:
+class BridgeTask(Command):
     ## there is circular logic in importing subcommands into the base and subclassing 
     ## the same base.  this allows for shared methods without subclassing the base command
 
@@ -20,9 +20,10 @@ class BridgeMixin:
         _adapters = [adapter(**adapter_config) for adapter in self.adapters]
 
         self.line(f'<info>Configured</info> <comment>{len(_adapters)}</comment> <info>adapter{"s" if len(_adapters) > 1 else ""}</info>')
-        ## TODO: multithread/process this - early attempts were distracting
-        _ = [adapter.run() for adapter in _adapters]
-        
+
+        for adapter in _adapters:
+            adapter.run()
+
 
     def _adapter_config(self: Command) -> dict:
         ## options from the BridgeBase can be extracted here, anything 
@@ -43,7 +44,7 @@ class BridgeMixin:
         return adapter_config
 
 
-class MockMixin(BridgeMixin):
+class MockBridgeTask(BridgeTask):
     mock_adapters = []
 
     def handle(self):
@@ -53,7 +54,7 @@ class MockMixin(BridgeMixin):
         
         super().handle()
 
-class BridgeMetadata(BridgeMixin, Command):
+class BridgeMetadata(BridgeTask):
     '''
     Run company metadata data ingest 
 
@@ -63,11 +64,13 @@ class BridgeMetadata(BridgeMixin, Command):
     adapters = [JSONFundMetadataFileLoader, JSONMetadataFileLoader, JSONPortfolioMetadataFileLoader, YahooFinanceMetadata]
 
 
-class BridgePriceHistoric(BridgeMixin, Command):
+class BridgePriceHistoric(BridgeTask):
     '''
     Run historic price data collection ingest
 
     historic
+        {alpaca-api-key : API key for Alpaca}
+        {alpaca-api-secret-key : API Secret key for Alpaca}
         {--hourly=1 : Number of days to extract hourly data}
         {--crypto-days=365 : Number of days to extract crypto daily data}
     '''
@@ -76,16 +79,20 @@ class BridgePriceHistoric(BridgeMixin, Command):
 
     def _adapter_config(self: Command) -> dict:
         adapter_config =  super()._adapter_config()
+        adapter_config['alpaca_api_key'] = self.argument('alpaca-api-key')
+        adapter_config['alpaca_api_secret'] = self.argument('alpaca-api-secret-key')
         adapter_config['hourly'] = int(self.option('hourly'))
         adapter_config['crypto_days'] = int(self.option('crypto-days'))
         return adapter_config
 
 
-class BridgePriceLive(MockMixin, Command):
+class BridgePriceLive(MockBridgeTask):
     '''
     Run live data bridge to stream active transactions
 
     live
+        {alpaca-api-key? : API key for Alpaca}
+        {alpaca-api-secret-key? : API Secret key for Alpaca}
         {--mock : Launch mock price updates instead of live}
         {--mock-asset-random-price-range=.001 : Multiplier to determine range for assets (base_price*multiplier = gaussian std deviation) - bigger means more erratic random prices}
         {--mock-crypto-random-price-range=.00001 : Multiplier to determine range for crypto (base_price*multiplier = gaussian std deviation) - bigger means more erratic random prices}
@@ -102,10 +109,13 @@ class BridgePriceLive(MockMixin, Command):
             adapter_config['asset_multiplier'] = float(self.option('mock-asset-random-price-range'))
             adapter_config['crypto_multiplier'] = float(self.option('mock-crypto-random-price-range'))
             adapter_config['update_ticks'] = [float(tick) for tick in self.option('mock-update-price-ticks').split(',')]
+        else:
+            adapter_config['alpaca_api_key'] = self.argument('alpaca-api-key')
+            adapter_config['alpaca_api_secret'] = self.argument('alpaca-api-secret-key')
         
         return adapter_config
 
-class BridgePortfolioGenerator(BridgeMixin, Command):
+class BridgePortfolioGenerator(BridgeTask):
     '''
     Generate the Portfolio and Transaction Data
 
@@ -132,6 +142,8 @@ class BridgeUp(Command):
     Run the whole bridge suite.  Metadata > History > Transactions > Live
 
     up
+        {alpaca-api-key : Alpaca API key}
+        {alpaca-api-secret-key : Alpaca API Secret}
         {--hourly=1 : Number of days to extract hourly data}
         {--mock : Launch mock price updates instead of live}
         {--mock-asset-random-price-range=.001 : Multiplier to determine range for assets (base_price*multiplier = gaussian std deviation)}
@@ -143,22 +155,21 @@ class BridgeUp(Command):
     '''
 
     def handle(self):
-        
         global_args = ['--redis-url', environ.get('REDIS_URL', self.option('redis-url'))]
         global_args.extend(['--assets', self.option('assets')])
         global_args.extend(['--crypto', self.option('crypto')])
+        alpaca_key, alpaca_secret = self.argument('alpaca-api-key'), self.argument('alpaca-api-secret-key')
         
         with Popen(['poetry', 'run', 'redisfi', 'bridge', 'metadata', '--ansi'] + global_args) as p:
             p.communicate()
             if p.returncode != 0:
                 return p.returncode
 
-        historic_args = ['--hourly', self.option('hourly')]
+        historic_args = [alpaca_key, alpaca_secret, '--hourly', self.option('hourly')]
         with Popen(['poetry', 'run', 'redisfi', 'bridge', 'historic'] + historic_args + global_args) as p:
             p.communicate()
             if p.returncode != 0:
                 return p.returncode
-
         
         portfolio_args = ['--years-to-generate', self.option('years-to-generate')]
         portfolio_args.extend(['--interval', self.option('interval')])
@@ -173,7 +184,7 @@ class BridgeUp(Command):
             self.line('<error>Mock Setting Detected! - Mock adapters will be enabled</error>')
             live_args = ['--mock']
         else:
-            live_args = []
+            live_args = [alpaca_key, alpaca_secret]
              
         live_args.extend(['--mock-asset-random-price-range', self.option('mock-asset-random-price-range')])
         live_args.extend(['--mock-crypto-random-price-range', self.option('mock-crypto-random-price-range')])
@@ -183,7 +194,6 @@ class BridgeUp(Command):
             p.communicate()
             if p.returncode != 0:
                 return p.returncode
-
 
     
 class BridgeBase(Command):

@@ -43,6 +43,8 @@ jobs:
         params:
           WORKSPACE: redisfi-((guid))
           NAME_SLUG: ((hostname)).fi
+          ALPACA_KEY: ((alpaca-key))
+          ALPACA_SECRET: ((alpaca-secret))
   - name: build-dbs
     plan:
       - get: redisfi
