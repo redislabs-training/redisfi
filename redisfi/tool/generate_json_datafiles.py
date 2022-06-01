@@ -9,10 +9,10 @@ class GeneratePortfolioJSONTool(Command):
     Create the data/portfoio.json file.  This is required to render the Portfolio Overview Page
 
     generate_portfolio_json
-        {--s|stocks=SPCE,210.AMC,400.SOFI,250 : stocks for the portfolio - pipe delimited, symbol,shares_owned.symbol,shares_owned etc}
-        {--e|etfs=QQQ,75.SPY,250 : ETFss for the portfolio - pipe delimited, symbol,shares_owned.symbol,shares_owned etc}
+        {--s|stocks=SPCE,210.AMC,400.SOFI,250 : stocks for the portfolio in the following format: symbol,shares_owned.symbol,shares_owned etc}
+        {--e|etfs=QQQ,75.SPY,250 : ETFss for the portfolio in the following format: symbol,shares_owned.symbol,shares_owned etc}
         {--r|retire=retire2050 : retirement fund for the portfolio - only 1 - must be in data/funds.json}
-        {--c|crypto=ETHUSD,20 : crypto for the portfolio - pipe delimited, symbol,amount_owned.symbol,amount_owned etc }
+        {--c|crypto=ETHUSD,20 : crypto for the portfolio - in the following format: symbol,amount_owned.symbol,amount_owned etc }
     '''
 
     def handle(self):

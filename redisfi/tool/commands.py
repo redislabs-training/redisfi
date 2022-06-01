@@ -73,8 +73,10 @@ class CreateDBTool(Command):
         status, text = create_db(host, user, password, name, size, port, shards, module_list)
         if status == 200:
             self.info('DB created!')
+            return 0
         else:
             self.line_error(f'Error creating DB: {text}', style='error')
+            return 1
 
 class ToolBase(Command):
     '''
