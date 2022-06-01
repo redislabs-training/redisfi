@@ -9,7 +9,7 @@ params:
   AUTH_JSON: ((auth-gcp-sa))
   GOOGLE_APPLICATION_CREDENTIALS: /tmp/auth.json
   WORKSPACE: redisfi-test
-  NAME_SLUG: redisfi.test
+  NAME_SLUG: test.fi
 run:
   path: bash
   args:

@@ -25,6 +25,7 @@ jobs:
           WORKSPACE: redisfi-((guid))
           NAME_SLUG: ((hostname)).fi
           MACHINE_TYPE: e2-standard-8
+          TF_VAR_re_license: ((cluster-license))
     on_failure:
       task: teardown
       file: docent/gallery/cluster/destroy.yml
