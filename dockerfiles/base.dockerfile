@@ -1,7 +1,7 @@
 FROM python:3.9
 
 RUN apt update
-RUN apt install -y nginx gcc musl-dev libffi-dev curl git rustc openssl gettext-base
+RUN apt install -y nginx gcc musl-dev libffi-dev curl git rustc openssl
 RUN pip3 install --upgrade pip
 RUN pip3 install poetry certbot-nginx certbot-dns-google
 
@@ -21,3 +21,11 @@ ENV INSTALL_DIR=/opt/redisfi
 WORKDIR ${INSTALL_DIR}
 COPY . .
 RUN poetry install
+RUN cp nginx.conf /etc/nginx/sites-available/.
+
+WORKDIR /etc/nginx/sites-enabled
+RUN ln -s ../sites-available/redisfi.conf .
+RUN rm default
+
+RUN certbot install --nginx -d ${DOMAIN} --cert-name=${DOMAIN} --redirect
+
