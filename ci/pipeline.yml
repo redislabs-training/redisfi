@@ -46,10 +46,11 @@ jobs:
       - task: build
         privileged: true
         file: redisfi/ci/build.yml
-      - put: redisfi-container
         params:
           CONTEXT: redisfi
-          DOCKERFILE: Dockerfile
+          DOCKERFILE: redisfi/dockerfiles/full.dockerfile
+      - put: redisfi-container
+        params:
           image: image/image.tar
           version: 99.99.99
           bump_aliases: true
