@@ -37,12 +37,32 @@ resources:
       password: ((auth-docker))
 
 jobs: 
+  - name: build-container-base
+    plan:
+      - get: redisfi
+        # params:
+        #   format: oci
+      - task: build
+        privileged: true
+        file: redisfi/ci/build.yml
+        params:
+          CONTEXT: redisfi
+          DOCKERFILE: redisfi/dockerfiles/base.dockerfile
+          BUILD_ARG_GCP_AUTH: ((auth-gcp-sa))
+          BUILD_ARG_NOTIFICATION_EMAIL: ((letsencrypt-email))
+          BUILD_ARG_STAGING: ((letsencrypt-staging))
+          BUILD_ARG_DOMAIN: ((letsencrypt-domain))
+      - put: redisfi-container
+        params:
+          image: image/image.tar
+          version: 99.99.99
+          bump_aliases: true
   - name: build-container
     plan:
       - get: redisfi
-        trigger: true
-        params:
-          format: oci
+        # trigger: true
+        # params:
+        #   format: oci
       - task: build
         privileged: true
         file: redisfi/ci/build.yml
