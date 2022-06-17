@@ -28,6 +28,13 @@ resources:
       repository: timeartist/redisfi
       username: timeartist
       password: ((auth-docker))
+  - name: redisfi-base-container
+    type: registry-image
+    icon: docker
+    source:
+      repository: timeartist/redisfi-base
+      username: timeartist
+      password: ((auth-docker))
   - name: redisfi-vss-container
     type: registry-image
     icon: docker
@@ -52,7 +59,7 @@ jobs:
           BUILD_ARG_NOTIFICATION_EMAIL: ((letsencrypt-email))
           BUILD_ARG_STAGING: ((letsencrypt-staging))
           BUILD_ARG_DOMAIN: ((letsencrypt-domain))
-      - put: redisfi-container
+      - put: redisfi-base-container
         params:
           image: image/image.tar
           version: 99.99.99
