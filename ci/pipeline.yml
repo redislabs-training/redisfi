@@ -58,7 +58,8 @@ jobs:
           BUILD_ARG_GCP_AUTH: ((auth-gcp-sa))
           BUILD_ARG_NOTIFICATION_EMAIL: ((letsencrypt-email))
           BUILD_ARG_STAGING: ((letsencrypt-staging))
-          BUILD_ARG_DOMAIN: ((letsencrypt-domain))
+          BUILD_ARG_LE_DOMAIN: ((letsencrypt-domain))
+          BUILD_ARG_NX_DOMAIN: ((nginx-domain))
       - put: redisfi-base-container
         params:
           image: image/image.tar
