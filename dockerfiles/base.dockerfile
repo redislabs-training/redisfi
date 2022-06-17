@@ -1,7 +1,7 @@
 FROM python:3.9
 
 RUN apt update
-RUN apt install -y nginx gcc musl-dev libffi-dev curl git rustc openssl
+RUN apt install -y nginx gcc musl-dev libffi-dev curl git rustc openssl gettext-base
 RUN pip3 install --upgrade pip
 RUN pip3 install poetry certbot-nginx certbot-dns-google
 
