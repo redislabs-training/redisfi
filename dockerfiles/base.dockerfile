@@ -30,5 +30,5 @@ WORKDIR /etc/nginx/sites-enabled
 RUN ln -s ../sites-available/redisfi.conf .
 RUN rm default
 
-RUN certbot install --nginx -d ${LE_DOMAIN} --cert-name=${LE_DOMAIN} --redirect
+RUN certbot install --nginx -d ${NX_DOMAIN} --cert-name=${LE_DOMAIN} --redirect
 
