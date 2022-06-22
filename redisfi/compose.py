@@ -102,7 +102,7 @@ class DeployCommand(ComposeCommandsBase):
 
         config['env'].append('VSS_URL=http://vss-wsapi:7777\n')
 
-        config['profiles'].append('deployed')
+        config['profiles'].append('deployed-prebuilt')
         config['profiles'].append('vss-pull')
         
         return config

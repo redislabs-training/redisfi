@@ -1,5 +1,5 @@
 ARG BASE
-FROM {BASE}
+FROM ${BASE}
 
 ENV INSTALL_DIR=/opt/redisfi
 

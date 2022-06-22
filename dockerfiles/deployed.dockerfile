@@ -1,5 +1,5 @@
 ARG BASE
-FROM {BASE}
+FROM ${BASE}
 
 ARG DOMAIN
 ARG CERT_NAME
@@ -12,4 +12,4 @@ WORKDIR /etc/nginx/sites-enabled
 RUN ln -s ../sites-available/redisfi.conf .
 RUN rm default
 
-RUN certbot install --nginx -d ${DOMAIN} --cert-name={CERT_NAME} --redirect
+RUN certbot install --nginx -d ${DOMAIN} --cert-name=${CERT_NAME} --redirect
