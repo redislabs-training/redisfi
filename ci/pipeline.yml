@@ -54,7 +54,7 @@ jobs:
   - name: build-oss-container
     plan:
       - get: redisfi
-        trigger: true
+        # trigger: true
       - task: build
         privileged: true
         file: redisfi/ci/build.yml
@@ -95,7 +95,7 @@ jobs:
         trigger: true
       - task: build
         privileged: true
-        file: redisfi/ci/build.yml
+        file: redisfi/ci/build-from-ssl-base.yml
         params:
           CONTEXT: redisfi
           DOCKERFILE: redisfi/dockerfiles/app.dockerfile
