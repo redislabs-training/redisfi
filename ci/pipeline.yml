@@ -32,9 +32,9 @@ resources:
     type: registry-image
     icon: docker
     source:
-      repository: timeartist/redisfi-base
-      username: timeartist
-      password: ((auth-docker))
+      repository: ((internal-repository))
+      username: _json_key
+      password: ((auth-gcp-sa))
   - name: redisfi-vss-container
     type: registry-image
     icon: docker
@@ -58,8 +58,7 @@ jobs:
           BUILD_ARG_GCP_AUTH: ((auth-gcp-sa))
           BUILD_ARG_NOTIFICATION_EMAIL: ((letsencrypt-email))
           BUILD_ARG_STAGING: ((letsencrypt-staging))
-          BUILD_ARG_LE_DOMAIN: ((letsencrypt-domain))
-          BUILD_ARG_NX_DOMAIN: ((nginx-domain))
+          BUILD_ARG_DOMAIN: ((base-domain))
       - put: redisfi-base-container
         params:
           image: image/image.tar

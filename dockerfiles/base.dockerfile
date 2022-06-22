@@ -7,28 +7,26 @@ RUN pip3 install poetry certbot-nginx certbot-dns-google
 
 ARG GCP_AUTH
 ARG NOTIFICATION_EMAIL
-ARG LE_DOMAIN
-ARG NX_DOMAIN
+ARG DOMAIN
 ARG STAGING=--test-cert
-ENV INSTALL_DIR=/opt/langar
-ENV LE_DOMAIN=${LE_DOMAIN}
-ENV NX_DOMAIN=${NX_DOMAIN}
+
+ENV INSTALL_DIR=/opt/redisfi
+ENV DOMAIN=${DOMAIN}
 
 WORKDIR /tmp
-RUN echo ${GCP_AUTH} > /tmp/auth.json && chmod 600 /tmp/auth.json && certbot certonly ${STAGING} --dns-google -d ${LE_DOMAIN} -m ${NOTIFICATION_EMAIL} --agree-tos --dns-google-credentials=/tmp/auth.json && rm /tmp/auth.json
+RUN echo ${GCP_AUTH} > /tmp/auth.json && chmod 600 /tmp/auth.json && certbot certonly ${STAGING} --dns-google -d ${DOMAIN} -m ${NOTIFICATION_EMAIL} --agree-tos --dns-google-credentials=/tmp/auth.json && rm /tmp/auth.json
 ## It's possible to separate out the above from the below to not recreate the cert each time, but requires a secure container registry to store the output in
 ## In that scenario, you'd make the below `FROM` the output of above.
 
-ENV INSTALL_DIR=/opt/redisfi
 WORKDIR ${INSTALL_DIR}
 COPY . .
 RUN poetry install
 
-RUN envsubst '${NX_DOMAIN}' < nginx.conf > /etc/nginx/sites-available/redisfi.conf
+# RUN envsubst '${NX_DOMAIN}' < nginx.conf > /etc/nginx/sites-available/redisfi.conf
 
-WORKDIR /etc/nginx/sites-enabled
-RUN ln -s ../sites-available/redisfi.conf .
-RUN rm default
+# WORKDIR /etc/nginx/sites-enabled
+# RUN ln -s ../sites-available/redisfi.conf .
+# RUN rm default
 
-RUN certbot install --nginx -d ${NX_DOMAIN} --cert-name=${LE_DOMAIN} --redirect
+# RUN certbot install --nginx -d ${NX_DOMAIN} --cert-name=${LE_DOMAIN} --redirect
 

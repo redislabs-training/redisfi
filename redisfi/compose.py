@@ -17,6 +17,7 @@ class RunCommand(Command):
         {--vss-redis-url=redis://redis:6379 : Location of the Redis Server for VSS to use - Defaults to Pulling Container Locally}
         {--vss-url=http://vss-wsapi:7777 : Location of VSS microservice}
         {--mock : Start mock live adapter}
+        {--skip-vss : Don't include the VSS part of the Demo}
     '''
 
     def handle(self):
@@ -32,6 +33,12 @@ class RunCommand(Command):
         else:
             profiles.append('pull')
         
+        if not self.option('skip-vss'):
+            if 'pull' in profiles:
+                profiles.append('vss-pull')
+            else:
+                profiles.append('vss-build')
+            
         if self.option('mock'):
             env.append('MOCK=1\n')
 

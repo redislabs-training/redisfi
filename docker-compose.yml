@@ -27,7 +27,7 @@ services:
     ports:
      - 7777:7777
     profiles:
-      - pull
+      - vss-pull
   vss-loader-pull:
     env_file: .env
     image: timeartist/redisfi-vss
@@ -37,10 +37,12 @@ services:
     volumes:
       - /tmp/redisfi_work_dir:/tmp:rw
     profiles:
-      - pull
+      - vss-pull
   frontend-build:
     env_file: .env
-    build: .
+    build:
+      context: .
+      dockerfile: dockerfiles/local.dockerfile
     command: poetry run redisfi web server
     container_name: frontend
     ports:
@@ -49,7 +51,9 @@ services:
       - build
   bridge-build:
     env_file: .env
-    build: .
+    build:
+      context: .
+      dockerfile: dockerfiles/local.dockerfile
     command: poetry run redisfi bridge up ${ALPACA_KEY} ${ALPACA_SECRET}
     container_name: bridge
     profiles:
@@ -62,7 +66,7 @@ services:
     ports:
      - 7777:7777
     profiles:
-      - build
+      - vss-build
   vss-loader-build:
     env_file: .env
     build: ../redisfi-vss
@@ -72,7 +76,7 @@ services:
     volumes:
       - /tmp/redisfi_work_dir:/tmp:rw
     profiles:
-      - build
+      - vss-build
   redis:
     image: redislabs/redisearch:2.4.3
     ports: 
