@@ -21,20 +21,27 @@ resources:
   #   source:
   #     repository: redislabs/redis
   #     tag: latest
-  - name: redisfi-container
+  - name: redisfi-oss-container
     type: registry-image
     icon: docker
     source:
       repository: timeartist/redisfi
       username: timeartist
       password: ((auth-docker))
-  - name: redisfi-base-container
+  - name: redisfi-ssl-base-container
     type: registry-image
     icon: docker
     source:
-      repository: ((internal-repository))
+      repository: ((internal-repository-ssl-base))
       username: _json_key
-      password: ((auth-gcp-sa))
+      password: ((auth-gcp-te))
+  - name: redisfi-app-base-container
+    type: registry-image
+    icon: docker
+    source:
+      repository: ((internal-repository-app=base))
+      username: _json_key
+      password: ((auth-gcp-te))
   - name: redisfi-vss-container
     type: registry-image
     icon: docker
@@ -44,39 +51,56 @@ resources:
       password: ((auth-docker))
 
 jobs: 
-  - name: build-container-base
+  - name: build-oss-container
     plan:
       - get: redisfi
-        # params:
-        #   format: oci
+        trigger: true
       - task: build
         privileged: true
         file: redisfi/ci/build.yml
         params:
           CONTEXT: redisfi
-          DOCKERFILE: redisfi/dockerfiles/base.dockerfile
-          BUILD_ARG_GCP_AUTH: ((auth-gcp-sa))
-          BUILD_ARG_NOTIFICATION_EMAIL: ((letsencrypt-email))
-          BUILD_ARG_STAGING: ((letsencrypt-staging))
-          BUILD_ARG_DOMAIN: ((base-domain))
-      - put: redisfi-base-container
+          DOCKERFILE: redisfi/dockerfiles/local.dockerfile
+      - put: redisfi-oss-container
         params:
           image: image/image.tar
           version: 99.99.99
           bump_aliases: true
-  - name: build-container
+  - name: build-ssl-base-container
     plan:
       - get: redisfi
-        # trigger: true
-        # params:
-        #   format: oci
       - task: build
         privileged: true
         file: redisfi/ci/build.yml
         params:
           CONTEXT: redisfi
-          DOCKERFILE: redisfi/dockerfiles/full.dockerfile
-      - put: redisfi-container
+          DOCKERFILE: redisfi/dockerfiles/ssl.dockerfile
+          BUILD_ARG_GCP_AUTH: ((auth-gcp-sa))
+          BUILD_ARG_NOTIFICATION_EMAIL: ((letsencrypt-email))
+          BUILD_ARG_STAGING: ((letsencrypt-staging))
+          BUILD_ARG_DOMAIN: ((base-domain))
+      - put: redisfi-ssl-base-container
+        params:
+          image: image/image.tar
+          version: 99.99.99
+          bump_aliases: true
+  - name: build-app-base-container
+    plan:
+      - get: redisfi-ssl-base-container
+        trigger: true
+        passed: [build-ssl-base-container]
+        params:
+          format: oci
+      - get: redisfi
+        trigger: true
+      - task: build
+        privileged: true
+        file: redisfi/ci/build.yml
+        params:
+          CONTEXT: redisfi
+          DOCKERFILE: redisfi/dockerfiles/app.dockerfile
+          IMAGE_ARG_BASE: redisfi-ssl-base-container/image.tar
+      - put: redisfi-app-base-container
         params:
           image: image/image.tar
           version: 99.99.99

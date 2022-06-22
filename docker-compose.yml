@@ -18,6 +18,7 @@ services:
     pull_policy: always
     profiles:
       - pull
+      - deployed-prebuilt
   vss-wsapi-pull:
     env_file: .env
     image: timeartist/redisfi-vss
@@ -77,9 +78,21 @@ services:
       - /tmp/redisfi_work_dir:/tmp:rw
     profiles:
       - vss-build
+  frontend-deployed-prebuilt:
+    env_file: .env
+    build:
+      context: .
+      dockerfile: dockerfiles/deployed.dockerfile
+    command: poetry run redisfi web server
+    container_name: frontend
+    ports:
+      - 8000:8000
+    profiles:
+      - deployed-prebuilt
   redis:
     image: redislabs/redisearch:2.4.3
     ports: 
      - 6379:6379
     profiles:
       - pull_redis
+  

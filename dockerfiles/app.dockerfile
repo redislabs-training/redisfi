@@ -1,0 +1,10 @@
+ARG BASE
+FROM {BASE}
+
+ENV INSTALL_DIR=/opt/redisfi
+
+WORKDIR ${INSTALL_DIR}
+COPY . .
+RUN poetry install
+
+ENV PYTHONUNBUFFERED=1

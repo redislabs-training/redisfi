@@ -4,7 +4,48 @@ from clikit.api.io.flags import  DEBUG
 from cleo import Command, Application
 from redisfi.tool.commands import ToolBase
 
-class RunCommand(Command):
+class ComposeCommandsBase(Command):
+    def handle(self):
+        self._handle(**self._configure())
+
+    def _configure(self):
+        config = {'cmd': ['docker-compose'],
+                  'up_cmd':['up'],
+                  'profiles':[],
+                  'env':[]}
+        
+        if self.option('mock'):
+            config['env'].append('MOCK=1\n')
+
+        alpaca_key = self.argument('alpaca-api-key')
+        alpaca_secret = self.argument('alpaca-api-secret-key')
+        
+        config['env'].append(f'ALPACA_KEY={alpaca_key}\n')
+        config['env'].append(f'ALPACA_SECRET={alpaca_secret}\n')
+        
+        return config
+
+    def _handle(self, redis_url:str, vss_redis_url:str, cmd:list, up_cmd:list, profiles:list, env:list, **_):
+        env.append(f'REDIS_URL={redis_url}\n')
+        env.append(f'VSS_REDIS_URL={vss_redis_url}\n')
+        
+        if 'redis://redis:6379' in (redis_url, vss_redis_url):
+            profiles.append('pull_redis')
+        
+        for profile in profiles:
+            cmd.extend(['--profile', profile])
+
+        with open('.env', 'w') as f:
+            f.writelines(env)
+
+        cmd.extend(up_cmd)
+
+        self.line(str(cmd), verbosity=DEBUG)
+
+        with Popen(cmd) as p:
+            p.communicate()
+
+class UpCommmand(ComposeCommandsBase):
     '''
     Use docker compose to run RedisFI
 
@@ -20,62 +61,55 @@ class RunCommand(Command):
         {--skip-vss : Don't include the VSS part of the Demo}
     '''
 
-    def handle(self):
-
-        cmd = ['docker-compose']
-        up_cmd = ['up']
-        profiles = []
-        env = []
-
+    def _configure(self):
+        config = super()._configure()
+        config['redis_url'] = self.option('redis-url')
+        config['vss_redis_url'] = self.option('vss-redis-url')
+        
+        config['env'].append(f'VSS_URL={self.option("vss-url")}\n')
+        
         if self.option('build'):
-            profiles.append('build')
-            up_cmd.append('--build')
+            config['profiles'].append('build')
+            config['up_cmd'].append('--build')
+            if not self.option('skip-vss'):
+                config['profiles'].append('vss-build')
         else:
-            profiles.append('pull')
-        
-        if not self.option('skip-vss'):
-            if 'pull' in profiles:
-                profiles.append('vss-pull')
-            else:
-                profiles.append('vss-build')
-            
-        if self.option('mock'):
-            env.append('MOCK=1\n')
-
-
-        alpaca_key = self.argument('alpaca-api-key')
-        alpaca_secret = self.argument('alpaca-api-secret-key')
-        vss_url = self.option('vss-url')
-        redis_url = self.option('redis-url')
-        vss_redis_url = self.option('vss-redis-url')
-        
-        env.append(f'ALPACA_KEY={alpaca_key}\n')
-        env.append(f'ALPACA_SECRET={alpaca_secret}\n')
-        env.append(f'VSS_URL={vss_url}\n')
-        env.append(f'REDIS_URL={redis_url}\n')
-        env.append(f'VSS_REDIS_URL={vss_redis_url}\n')
-
-        if 'redis://redis:6379' in (redis_url, vss_redis_url):
-            profiles.append('pull_redis')
-        
-        for profile in profiles:
-            cmd.extend(['--profile', profile])
+            config['profiles'].append('pull')
+            if not self.option('skip-vss'):
+                config['profiles'].append('vss-pull')
 
         if self.option('detach'):
-            up_cmd.append('-d')
+            config['up_cmd'].append('-d')
 
-        with open('.env', 'w') as f:
-            f.writelines(env)
+        return config
+            
 
-        cmd.extend(up_cmd)
+class DeployCommand(ComposeCommandsBase):
+    '''
+    Use Docker Compose to run app on a server with SSL, optionally using a prebuilt base image
 
-        self.line(str(cmd), verbosity=DEBUG)
+    deploy
+        {alpaca-api-key : API key for Alpaca}
+        {alpaca-api-secret-key : API secret key for Alpaca}
+        {vss-redis-url : Location of the Redis Server for VSS to use}
+        {--mock : Start mock live adapter}
+    '''
 
-        with Popen(cmd) as p:
-            p.communicate()
+    def _configure(self):
+        config = super()._configure()
+        config['redis_url'] = 'redis://redis:6379'
+        config['vss_redis_url'] = self.argument('vss-redis-url')
+
+        config['env'].append('VSS_URL=http://vss-wsapi:7777\n')
+
+        config['profiles'].append('deployed')
+        config['profiles'].append('vss-pull')
+        
+        return config
 
 def run():
     app = Application(name='redisfi-compose')
-    app.add(RunCommand())
+    app.add(UpCommmand())
     app.add(ToolBase())
+    app.add(DeployCommand())
     app.run()
