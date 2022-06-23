@@ -47,6 +47,7 @@ jobs:
           ALPACA_KEY: ((alpaca-key))
           ALPACA_SECRET: ((alpaca-secret))
           MOCK: ((mock))
+          BASE_CONTAINER: ((base-container))
   - name: build-dbs
     plan:
       - get: redisfi

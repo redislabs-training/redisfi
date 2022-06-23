@@ -1,8 +1,11 @@
-from subprocess import Popen
+from os import environ
+from subprocess import run as _run_cmd, Popen
 
 from clikit.api.io.flags import  DEBUG
 from cleo import Command, Application
 from redisfi.tool.commands import ToolBase
+
+run_cmd = lambda cmd: _run_cmd(cmd, shell=True)
 
 class ComposeCommandsBase(Command):
     def handle(self):
@@ -86,21 +89,43 @@ class UpCommmand(ComposeCommandsBase):
 
 class DeployCommand(ComposeCommandsBase):
     '''
-    Use Docker Compose to run app on a server with SSL, optionally using a prebuilt base image
+    Use Docker Compose to run app on a server with SSL, requires using a prebuilt base image.
 
     deploy
+        {domain : Domain Name that we're Running As}
         {alpaca-api-key : API key for Alpaca}
         {alpaca-api-secret-key : API secret key for Alpaca}
         {vss-redis-url : Location of the Redis Server for VSS to use}
+        {base-container-url : Location of container built using ssl.dockerfile + app.dockerfile}
         {--mock : Start mock live adapter}
     '''
+
+    def handle(self):
+        self._config = self._configure()
+        self._authorize_and_pull_base_container()
+        self._handle(**self._config)
+
+    def _authorize_and_pull_base_container(self):
+        run_cmd(f"echo '{environ['BASE_CONTAINER_AUTH']}' > auth.json")
+        run_cmd(f"gcloud auth activate-service-account --key-file auth.json")
+        run_cmd('gcloud auth configure-docker')
+        run_cmd(f'docker pull {self._config["base_container_url"]}')
+        run_cmd(f'docker logout {self._config["base_container_url"]}')
+        run_cmd(f'rm auth.json')
 
     def _configure(self):
         config = super()._configure()
         config['redis_url'] = 'redis://redis:6379'
         config['vss_redis_url'] = self.argument('vss-redis-url')
+        config['base_container_url'] = self.argument('base-container-url')
+        
+        domain = self.argument('domain')
+        cert_name = '.'.join(domain.split('.')[1:])
 
         config['env'].append('VSS_URL=http://vss-wsapi:7777\n')
+        config['env'].append(f'BASE={config["base_container_url"]}\n')
+        config['env'].append(f'DOMAIN={domain}\n')
+        config['env'].append(f'CERT_NAME={cert_name}\n')
 
         config['profiles'].append('deployed-prebuilt')
         config['profiles'].append('vss-pull')

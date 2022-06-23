@@ -83,6 +83,10 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/deployed.dockerfile
+      args:
+        BASE: ${BASE}
+        DOMAIN: ${DOMAIN}
+        CERT_NAME: ${CERT_NAME}
     command: poetry run redisfi web server
     container_name: frontend
     ports:

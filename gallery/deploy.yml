@@ -6,13 +6,15 @@ image_resource:
     repository: taylorsilva/dcind
 params: 
   PROJECT: ((gcp-sa))
-  AUTH_JSON: ((auth-gcp-sa))
+  SA_AUTH_JSON: ((auth-gcp-sa))
+  BASE_CONTAINER_AUTH: ((auth-gcp-te))
   GOOGLE_APPLICATION_CREDENTIALS: /tmp/auth.json
   WORKSPACE: redisfi-test
   NAME_SLUG: test.fi
   ALPACA_KEY:
   ALPACA_SECRET:
   MOCK: 
+  BASE_CONTAINER:
 inputs:
   - name: redisfi
 run:
@@ -38,15 +40,15 @@ run:
       poetry run redisfi-compose tool create_db -H db-$NAME_SLUG.exhibit.redis.gallery -u admin@redis.com -p redis123 -s 42949672960 -S 12
 
       ## deploy app
-      echo $AUTH_JSON > /tmp/auth.json
+      echo $SA_AUTH_JSON > /tmp/auth.json
       chmod 400 /tmp/auth.json
       apk add jq
       docker run -dt --name GC gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
       docker cp /tmp/auth.json GC:/tmp/auth.json 
       docker exec GC gcloud auth activate-service-account --key-file=/tmp/auth.json
-      docker exec GC gcloud compute --project=redislabs-sales-pivotal firewall-rules create $WORKSPACE-allow-8000 --direction=INGRESS --priority=1000 --network=$WORKSPACE-vpc --action=ALLOW --rules=tcp:8000 --source-ranges=0.0.0.0/0 --target-tags=allow-8000
-      createOutput=$(docker exec GC gcloud compute instances create $WORKSPACE-app --project=$PROJECT --zone=us-west4-a --image-family=redisfi --machine-type=e2-standard-8 --network=$WORKSPACE-vpc --subnet=$WORKSPACE-subnet --tags=allow-8000 --metadata=startup-script="cd /opt/redisfi && sudo poetry run redisfi-compose up $ALPACA_KEY $ALPACA_SECRET -d --vss-redis-url=redis://redis-6379.int.db-$NAME_SLUG.exhibit.redis.gallery:6379 $MOCK" --format="json")
+      docker exec GC gcloud compute --project=$PROJECT firewall-rules create $WORKSPACE-allow-8000 --direction=INGRESS --priority=1000 --network=$WORKSPACE-vpc --action=ALLOW --rules=tcp:8000 --source-ranges=0.0.0.0/0 --target-tags=allow-8000
+      createOutput=$(docker exec GC gcloud compute instances create $WORKSPACE-app --project=$PROJECT --zone=us-west4-a --image-family=redisfi --machine-type=e2-standard-8 --network=$WORKSPACE-vpc --subnet=$WORKSPACE-subnet --tags=allow-8000 --metadata=startup-script="export BASE_CONTAINER_AUTH=$BASE_CONTAINER_AUTH && cd /opt/redisfi && sudo poetry run redisfi-compose deploy $ALPACA_KEY $ALPACA_SECRET redis://redis-6379.int.db-$NAME_SLUG.exhibit.redis.gallery:6379 $BASE_CONTAINER $MOCK" --format="json")
       appIP=$(echo $createOutput | jq -r .[0].networkInterfaces[0].accessConfigs[0].natIP)
-      docker exec GC gcloud beta dns --project=redislabs-sales-pivotal record-sets transaction start --zone="exhibit"
-      docker exec GC gcloud beta dns --project=redislabs-sales-pivotal record-sets transaction add $appIP --name="$NAME_SLUG.exhibit.redis.gallery." --ttl="30" --type="A" --zone="exhibit"
-      docker exec GC gcloud beta dns --project=redislabs-sales-pivotal record-sets transaction execute --zone="exhibit"
+      docker exec GC gcloud beta dns --project=$PROJECT record-sets transaction start --zone="exhibit"
+      docker exec GC gcloud beta dns --project=$PROJECT record-sets transaction add $appIP --name="$NAME_SLUG.exhibit.redis.gallery." --ttl="30" --type="A" --zone="exhibit"
+      docker exec GC gcloud beta dns --project=$PROJECT record-sets transaction execute --zone="exhibit"
