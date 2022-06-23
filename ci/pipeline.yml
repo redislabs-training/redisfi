@@ -39,7 +39,7 @@ resources:
     type: registry-image
     icon: docker
     source:
-      repository: ((internal-repository-app=base))
+      repository: ((internal-repository-app-base))
       username: _json_key
       password: ((auth-gcp-te))
   - name: redisfi-vss-container
