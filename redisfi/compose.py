@@ -1,5 +1,6 @@
 from os import environ
 from subprocess import run as _run_cmd, Popen
+from base64 import b64decode
 
 from clikit.api.io.flags import  DEBUG
 from cleo import Command, Application
@@ -106,7 +107,7 @@ class DeployCommand(ComposeCommandsBase):
         self._handle(**self._config)
 
     def _authorize_and_pull_base_container(self):
-        run_cmd(f"echo '{environ['BASE_CONTAINER_AUTH']}' > auth.json")
+        run_cmd(f"echo '{b64decode(environ['BASE_CONTAINER_AUTH']).decode('ascii')}' > auth.json")
         run_cmd(f"gcloud auth activate-service-account --key-file auth.json")
         run_cmd('gcloud auth configure-docker')
         run_cmd(f'docker pull {self._config["base_container_url"]}')
