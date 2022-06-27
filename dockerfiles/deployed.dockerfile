@@ -13,3 +13,5 @@ RUN ln -s ../sites-available/redisfi.conf .
 RUN rm default
 
 RUN certbot install --nginx -d ${DOMAIN} --cert-name ${CERT_NAME} --redirect
+
+WORKDIR ${INSTALL_DIR}
