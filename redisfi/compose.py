@@ -1,4 +1,3 @@
-from os import environ
 from subprocess import run as _run_cmd, Popen
 from base64 import b64decode
 
@@ -97,9 +96,11 @@ class DeployCommand(ComposeCommandsBase):
         {alpaca-api-key : API key for Alpaca}
         {alpaca-api-secret-key : API secret key for Alpaca}
         {vss-redis-url : Location of the Redis Server for VSS to use}
-        {base-container-url : Location of container built using ssl.dockerfile + app.dockerfile}
+        {base-container-url : (GCP Based) Location of container built using ssl.dockerfile + app.dockerfile}
+        {encoded-credentials : Base64 encoded (GCP) creds for above container}
         {--mock : Start mock live adapter}
     '''
+    ## this function is rather bespoke for redis [the company] internal needs - it could be more generic if needed
 
     def handle(self):
         self._config = self._configure()
@@ -107,7 +108,9 @@ class DeployCommand(ComposeCommandsBase):
         self._handle(**self._config)
 
     def _authorize_and_pull_base_container(self):
-        run_cmd(f"echo '{b64decode(environ['BASE_CONTAINER_AUTH']).decode('ascii')}' > auth.json")
+        with open('auth.json', 'w') as f:
+            f.write(self._config['container_auth_json'])
+
         run_cmd(f"gcloud auth activate-service-account --key-file auth.json")
         run_cmd('gcloud auth configure-docker')
         run_cmd(f'docker pull {self._config["base_container_url"]}')
@@ -119,6 +122,7 @@ class DeployCommand(ComposeCommandsBase):
         config['redis_url'] = 'redis://redis:6379'
         config['vss_redis_url'] = self.argument('vss-redis-url')
         config['base_container_url'] = self.argument('base-container-url')
+        config['container_auth_json'] = b64decode(self.argument('encoded-credentials')).decode('ascii')
         
         domain = self.argument('domain')
         cert_name = '.'.join(domain.split('.')[1:])
