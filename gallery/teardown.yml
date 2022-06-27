@@ -29,4 +29,4 @@ run:
       docker exec GC gcloud beta dns --project=redislabs-sales-pivotal record-sets transaction remove $appIP --zone="exhibit" --type="A" --name="$NAME_SLUG.exhibit.redis.gallery." --ttl="30"
       docker exec GC gcloud beta dns --project=redislabs-sales-pivotal record-sets transaction execute --zone="exhibit" 
       docker exec GC gcloud --quiet compute instances delete $WORKSPACE-app --project=$PROJECT --zone=us-west4-a
-      docker exec GC gcloud --quiet compute --project=redislabs-sales-pivotal firewall-rules delete $WORKSPACE-allow-8000 
+      docker exec GC gcloud --quiet compute --project=redislabs-sales-pivotal firewall-rules delete $WORKSPACE-allow-ssl 

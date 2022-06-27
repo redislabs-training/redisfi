@@ -18,9 +18,9 @@ run:
   args:
     - -cex
     - |
-      timeout 2100 bash -c 'until $(curl --output /dev/null --silent --head --fail -k http://'"$NAME_SLUG"'.exhibit.redis.gallery:8000/research/healthcheck); do printf "." && sleep 30; done'
+      timeout 2100 bash -c 'until $(curl --output /dev/null --silent --head --fail -k https://'"$NAME_SLUG"'.exhibit.redis.gallery/research/healthcheck); do printf "." && sleep 30; done'
       
       cd docent
       pip3 install poetry
       poetry install
-      poetry run docent set_outputs $GUID $SECRET app_url=http://$NAME_SLUG.exhibit.redis.gallery:8000
+      poetry run docent set_outputs $GUID $SECRET app_url=https://$NAME_SLUG.exhibit.redis.gallery
