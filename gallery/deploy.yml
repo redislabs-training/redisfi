@@ -52,11 +52,11 @@ run:
       encodedCreds=$(base64 -w 0 /tmp/te-auth.json)
 
       ## deploy container and pull out the external IP
-      createOutput=$(docker exec GC gcloud compute instances create $WORKSPACE-app --project=$PROJECT --zone=us-west4-a --image-family=redisfi --machine-type=e2-standard-8 --network=$WORKSPACE-vpc --subnet=$WORKSPACE-subnet --tags=allow-8000 --metadata=startup-script="cd /opt/redisfi && sudo poetry run redisfi-compose deploy -vvv $MOCK $NAME_SLUG.exhibit.redis.gallery $ALPACA_KEY $ALPACA_SECRET redis://redis-6379.int.db-$NAME_SLUG.exhibit.redis.gallery:6379 $BASE_CONTAINER $encodedCreds" --format="json")
+      createOutput=$(docker exec GC gcloud compute instances create $WORKSPACE-app --project=$PROJECT --zone=us-west4-a --image-family=redisfi --machine-type=e2-standard-8 --network=$WORKSPACE-vpc --subnet=$WORKSPACE-subnet --tags=allow-ssl --metadata=startup-script="cd /opt/redisfi && sudo poetry run redisfi-compose deploy $MOCK $NAME_SLUG.exhibit.redis.gallery $ALPACA_KEY $ALPACA_SECRET redis://redis-6379.int.db-$NAME_SLUG.exhibit.redis.gallery:6379 $BASE_CONTAINER $encodedCreds" --format="json")
       appIP=$(echo $createOutput | jq -r .[0].networkInterfaces[0].accessConfigs[0].natIP)
       
       ## setup networking pieces - firewall and DNS
-      docker exec GC gcloud compute --project=$PROJECT firewall-rules create $WORKSPACE-allow-8000 --direction=INGRESS --priority=1000 --network=$WORKSPACE-vpc --action=ALLOW --rules=tcp:8000 --source-ranges=0.0.0.0/0 --target-tags=allow-8000
+      docker exec GC gcloud compute --project=$PROJECT firewall-rules create $WORKSPACE-allow-ssl --direction=INGRESS --priority=1000 --network=$WORKSPACE-vpc --action=ALLOW --rules=tcp:443 --source-ranges=0.0.0.0/0 --target-tags=allow-ssl
       docker exec GC gcloud beta dns --project=$PROJECT record-sets transaction start --zone="exhibit"
       docker exec GC gcloud beta dns --project=$PROJECT record-sets transaction add $appIP --name="$NAME_SLUG.exhibit.redis.gallery." --ttl="30" --type="A" --zone="exhibit"
       docker exec GC gcloud beta dns --project=$PROJECT record-sets transaction execute --zone="exhibit"
