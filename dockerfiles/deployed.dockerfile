@@ -15,3 +15,6 @@ RUN rm default
 RUN certbot install --nginx -d ${DOMAIN} --cert-name ${CERT_NAME} --redirect
 
 WORKDIR ${INSTALL_DIR}
+
+ENV PYTHONUNBUFFERED=1
+CMD nginx && poetry run redisfi web server
