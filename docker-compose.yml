@@ -49,6 +49,7 @@ services:
       - 8000:8000
     profiles:
       - build
+    command: poetry run redisfi web server
   bridge-build:
     env_file: .env
     build:
@@ -88,7 +89,7 @@ services:
         CERT_NAME: ${CERT_NAME}
     container_name: frontend
     ports:
-      - 8000:8000
+      - 443:443
     profiles:
       - deployed-prebuilt
   redis:
