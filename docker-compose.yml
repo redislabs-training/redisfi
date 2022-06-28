@@ -44,7 +44,7 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/local.dockerfile
-    command: nginx && poetry run redisfi web server
+    command: "nginx && poetry run redisfi web server"
     container_name: frontend
     ports:
       - 8000:8000
@@ -87,7 +87,7 @@ services:
         BASE: ${BASE}
         DOMAIN: ${DOMAIN}
         CERT_NAME: ${CERT_NAME}
-    command: nginx && poetry run redisfi web server
+    command: "nginx && poetry run redisfi web server"
     container_name: frontend
     ports:
       - 8000:8000
