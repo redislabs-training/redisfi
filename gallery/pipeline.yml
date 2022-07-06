@@ -26,7 +26,7 @@ jobs:
           NAME_SLUG: ((hostname)).fi
           MACHINE_TYPE: e2-standard-8
           TF_VAR_re_license: ((redisfi-cluster-license))
-          TF_VAR_cluster_password: ((secret))
+          SECRET: ((secret))
     on_failure:
       task: teardown
       file: docent/gallery/cluster/destroy.yml
@@ -49,6 +49,7 @@ jobs:
           ALPACA_SECRET: ((alpaca-secret))
           MOCK: ((mock))
           BASE_CONTAINER: ((base-container))
+          SECRET: ((secret))
   - name: build-dbs
     plan:
       - get: redisfi
