@@ -11,22 +11,24 @@ def account_history(account):
     redis = current_app.config['REDIS']
     start, end = request.args.get('start', 0), request.args.get('end', 'inf')
     symbol = request.args.get('symbol')
+    log_guid = request.args.get('log_guid')
 
     if not (start or start == 0) or not end: # 0 is valid, but also false, so if false make sure not zero
         return 'invalid start/end value', 400
 
-    results = DB.get_transactions(redis, account=account, start=start, end=end, symbol=symbol)
+    results = DB.get_transactions(redis, account=account, start=start, end=end, symbol=symbol, log_guid=log_guid)
     return dumps(results)
 
 @api.route('/account/<int:account>/value/<string:symbol>')
 def account_portfolio_value(account, symbol):
     redis = current_app.config['REDIS']
     start, end = request.args.get('start', 0), request.args.get('end', 'inf')
+    log_guid = request.args.get('log_guid')
 
     if not (start or start == 0) or not end: # 0 is valid, but also false, so if false make sure not zero
         return 'invalid start/end value', 400
     
-    results = DB.get_asset_portfolio_value(redis, account, symbol, start, end)
+    results = DB.get_asset_portfolio_value(redis, account, symbol, start, end, log_guid=log_guid)
     return dumps(results)
 
 
@@ -34,11 +36,12 @@ def account_portfolio_value(account, symbol):
 def asset_history(symbol:str):
     redis = current_app.config['REDIS']
     start, end = request.args.get('start', 0), request.args.get('end', 'inf')
+    log_guid = request.args.get('log_guid')
 
     if not (start or start == 0) or not end: # 0 is valid, but also false, so if false make sure not zero
         return 'invalid start/end value', 400
 
-    results = DB.get_asset_history(redis, symbol, start, end)
+    results = DB.get_asset_history(redis, symbol, start, end, log_guid=log_guid)
     return dumps(results)
 
 @api.route('/asset/<string:symbol>/prices')
@@ -55,20 +58,31 @@ def asset_latest(symbol:str):
 def asset_trades(symbol:str):
     redis = current_app.config['REDIS']
     start, end = request.args.get('start', 0), request.args.get('end', 'inf')
+    log_guid = request.args.get('log_guid')
     
     if not (start or start == 0) or not end: # 0 is valid, but also false, so if false make sure not zero
         return 'invalid start/end value', 400
 
-    results = DB.get_trades(redis, symbol, start, end)
+    results = DB.get_trades(redis, symbol, start, end, log_guid=log_guid)
     return dumps(results)
     
 @api.route('/fund/<int:account>/<string:fund>/value')
 def fund_value(account, fund):
     redis = current_app.config['REDIS']
     start, end, = request.args.get('start', 0), request.args.get('end', 'inf')
+    log_guid = request.args.get('log_guid')
 
     if not (start or start == 0) or not end: # 0 is valid, but also false, so if false make sure not zero
         return 'invalid start/end value', 400
 
-    results = DB.get_fund_value_aggregate(redis, account, fund, start, end)
+    results = DB.get_fund_value_aggregate(redis, account, fund, start, end, log_guid=log_guid)
     return dumps(results)
+
+@api.route('/commands/<string:guid>')
+def commands(guid: str):
+    redis = current_app.config['REDIS']
+    commands, last_id = DB.get_commands(redis, guid)
+    return dumps({'commands':commands, 'last_id':last_id})
+
+
+    

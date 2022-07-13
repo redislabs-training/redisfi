@@ -1,7 +1,6 @@
-from json import loads
+from json import loads, dumps
 from datetime import datetime, timedelta
-from pprint import pp
-
+from time import perf_counter
 
 from redis import Redis
 from redis.exceptions import ResponseError
@@ -18,6 +17,7 @@ LARGE_PAGE_SIZE = 1000000
 _average_bar     = lambda bar: (bar['high'] + bar['low'])/2
 _key_asset       = lambda symbol: f'asset:{symbol.upper()}'
 _key_bars        = lambda symbol, timestamp: f'bars:{symbol.upper()}:{int(timestamp) if timestamp else ""}'
+_key_commands    = lambda guid: f'commands:{guid}'
 _key_fund        = lambda id: f'fund:{id}'
 _key_trade       = lambda symbol, timestamp: f'trade:{symbol.upper()}:{int(timestamp) if timestamp else ""}'
 _key_portfolio   = lambda account: f'portfolio:{account}'
@@ -25,32 +25,38 @@ _key_portfolio_v = lambda account, symbol, timestamp: f'portfolio_value:{account
 _key_transaction = lambda account, symbol, timestamp: f'transaction:{account}:{symbol.upper() if symbol else ""}:{int(timestamp) if timestamp else ""}'
 
 
-def get_asset(redis: Redis, symbol: str):
-    data =  redis.json().get(_key_asset(symbol))
+def get_asset(redis: Redis, symbol: str, log_guid=None):
+    key = _key_asset(symbol)
+
+    start = perf_counter()
+    data =  redis.json().get(key)
+    end = perf_counter()
+    
+    set_or_print_commands(redis, log_guid, f'JSON.GET {key} $', (end-start)*1000)
     if not any(data['price'].values()):
-        data['price']['historic'] = get_asset_price_historic(redis, symbol)
+        data['price']['historic'] = get_asset_price_historic(redis, symbol, log_guid=log_guid)
     return data
 
-
-def get_asset_history(redis: Redis, symbol: str, start=0, end='inf', page=(0, LARGE_PAGE_SIZE), asc=False):
+def get_asset_history(redis: Redis, symbol: str, start=0, end='inf', page=(0, LARGE_PAGE_SIZE), asc=False, log_guid=None):
     idx = index_bar(redis)
     query = Query(f'@symbol:{symbol} @timestamp:[{start},{end}]').sort_by('timestamp', asc=asc).paging(*page)
-    print(_build_search_query(idx, query))
-    return _deserialize_results(idx.search(query))
+    results = idx.search(query)
+    set_or_print_commands(redis, log_guid, _build_search_query(idx, query), results.duration)
+    return _deserialize_results(results)
 
 
-def get_fund_assets_metadata_and_latest(redis: Redis, account: int, symbols: list):
+def get_fund_assets_metadata_and_latest(redis: Redis, account: int, symbols: list, log_guid=None):
     assets = {}
     for symbol in symbols:
-        assets[symbol] = get_asset(redis, symbol)
-        assets[symbol]['price']['historic'] = get_asset_price_historic(redis, symbol)
+        assets[symbol] = get_asset(redis, symbol, log_guid=log_guid)
+        assets[symbol]['price']['historic'] = get_asset_price_historic(redis, symbol, log_guid=log_guid)
         valid_price = assets[symbol]['price']['live'] or assets[symbol]['price']['mock'] or assets[symbol]['price']['historic']
-        assets[symbol]['last_transaction'] = get_transactions(redis, account=account, symbol=symbol, page=(0,1))[0]
+        assets[symbol]['last_transaction'] = get_transactions(redis, account=account, symbol=symbol, page=(0,1), log_guid=log_guid)[0]
         assets[symbol]['growth_percent'] = ((assets[symbol]['last_transaction']['balance'] * valid_price) / assets[symbol]['last_transaction']['total_spent']) * 100
     
     return assets
 
-def get_fund_value_aggregate(redis: Redis, account: int, fund: str, start=0, end='inf', asc=False, page=(0, LARGE_PAGE_SIZE)):
+def get_fund_value_aggregate(redis: Redis, account: int, fund: str, start=0, end='inf', asc=False, page=(0, LARGE_PAGE_SIZE), log_guid=None):
     if asc:
         wrapper_class = Asc
     else:
@@ -63,20 +69,27 @@ def get_fund_value_aggregate(redis: Redis, account: int, fund: str, start=0, end
           .group_by(['@timestamp'], reduce.sum('@value').alias('value'))\
           .sort_by(wrapper_class('@timestamp')).limit(*page)
 
+    start = perf_counter()
     results = idx.aggregate(agg)
+    end = perf_counter()
     
-    print(_build_agg_query(idx, agg))
+    set_or_print_commands(redis, log_guid, _build_agg_query(idx, agg), (end-start)*1000)
     return [(int(row[1]), float(row[3])) for row in results.rows]
     
    
-def get_asset_portfolio_value(redis: Redis, account: int, symbol: str, start=0, end='inf', asc=False, page=(0, LARGE_PAGE_SIZE)):
+def get_asset_portfolio_value(redis: Redis, account: int, symbol: str, start=0, end='inf', asc=False, page=(0, LARGE_PAGE_SIZE), log_guid=None):
     idx = index_asset_portfolio_value(redis)
     query = Query(f'@account:{account} @symbol:{symbol.upper()} @timestamp:[{start},{end}]').sort_by('timestamp', asc=asc).paging(*page)
-    print(_build_search_query(idx, query))
-    return _deserialize_results(idx.search(query))
+    results = idx.search(query)
+    set_or_print_commands(redis, log_guid, _build_search_query(idx, query), results.duration)
+    return _deserialize_results(results)
 
-def get_asset_prices(redis: Redis, symbol: str):
-    resp = redis.json().get(_key_asset(symbol), '$.price')
+def get_asset_prices(redis: Redis, symbol: str, log_guid=None):
+    key = _key_asset(symbol)
+    start = perf_counter()
+    resp = redis.json().get(key, '$.price')
+    end = perf_counter()
+    set_or_print_commands(redis, log_guid, f'JSON.GET {key} $.price', (end-start)*1000)
 
     if resp is not None:
         data = resp[0]
@@ -87,16 +100,17 @@ def get_asset_prices(redis: Redis, symbol: str):
             resp = data
     
     if not any(resp.values()):    
-        resp['historic'] =  get_asset_price_historic(redis, symbol)
+        resp['historic'] =  get_asset_price_historic(redis, symbol, log_guid=log_guid)
     
     return resp
 
 
-def get_asset_price_historic(redis: Redis, symbol: str, start=0, end='inf'):
+def get_asset_price_historic(redis: Redis, symbol: str, start=0, end='inf', log_guid=None):
     idx = index_bar(redis)
     query = Query(f'@symbol:{symbol} @timestamp:[{start},{end}]').sort_by('timestamp', asc=False).paging(0, 1)
-    print(_build_search_query(idx, query))
-    return _average_bar(_deserialize_results(idx.search(query))[0])
+    results = idx.search(query)
+    set_or_print_commands(redis, log_guid, _build_search_query(idx, query), results.duration)
+    return _average_bar(_deserialize_results(results)[0])
 
 
 def get_asset_price_live(redis: Redis, symbol: str):
@@ -106,43 +120,63 @@ def get_asset_price_live(redis: Redis, symbol: str):
 def get_asset_price_mock(redis: Redis, symbol: str):
     return redis.json().get(_key_asset(symbol), '$.price.mock')
 
+def get_commands(redis: Redis, guid: str, start_at=None) -> tuple:
+    data = redis.xrange(_key_commands(guid), start_at or '-', '+')
+    ret = []
+    
+    for item in data:
+        obj = {}
+        for k, v in item[1].items():
+            obj[k.decode('ascii')] = v.decode('ascii')
 
-def get_fund(redis: Redis, id: str):
-    return redis.json().get(_key_fund(id))
+        ret.append(obj)
 
-def get_portfolio(redis: Redis, account: int, percent_change_timeframe=timedelta(days=1)):
+    last_id = data[-1][0].decode('ascii')
+    
+    return ret, last_id
+
+def get_fund(redis: Redis, id: str, log_guid=None):
+    key = _key_fund(id)
+    start = perf_counter()
+    data = redis.json().get(key)
+    end = perf_counter()
+    set_or_print_commands(redis, log_guid, f'JSON.GET {key} $', (end-start)*1000)
+    return data
+
+def get_portfolio(redis: Redis, account: int, percent_change_timeframe=timedelta(days=1), log_guid=None):
     portfolio = redis.json().get(_key_portfolio(account))
     portfolio['price'] = {}
     assets = list(portfolio['crypto'].keys()) + list(portfolio['stocks'].keys()) + list(portfolio['etfs'].keys())
 
     for symbol in assets:
-        prices = get_asset_prices(redis, symbol)
+        prices = get_asset_prices(redis, symbol, log_guid=log_guid)
 
         end = int((datetime.utcnow() - percent_change_timeframe).timestamp())
-        old_price = get_asset_price_historic(redis, symbol, end=end)
+        old_price = get_asset_price_historic(redis, symbol, end=end, log_guid=log_guid)
 
         price = prices['live'] or prices['mock'] or prices['historic']
         prices['percent_change'] = (price / old_price) * 100
 
         portfolio['price'][symbol] = prices
 
-    portfolio['retire'] = get_fund(redis, portfolio['retire'])
-    last_transaction_agg = get_fund_value_aggregate(redis, account, portfolio['retire']['id'], page=(0, 1))
+    portfolio['retire'] = get_fund(redis, portfolio['retire'], log_guid=log_guid)
+    last_transaction_agg = get_fund_value_aggregate(redis, account, portfolio['retire']['id'], page=(0, 1), log_guid=log_guid)
     last_timestamp, portfolio['retire']['value'] = last_transaction_agg[0]
     last_timestamp -= 1
-    old_price = get_fund_value_aggregate(redis, account, portfolio['retire']['id'], end=last_timestamp, page=(0, 1))[0][1]
+    old_price = get_fund_value_aggregate(redis, account, portfolio['retire']['id'], end=last_timestamp, page=(0, 1), log_guid=log_guid)[0][1]
     portfolio['retire']['percent_change'] = (portfolio['retire']['value']/old_price) * 100
 
     return portfolio
 
-def get_trades(redis: Redis, symbol: str, start=0, end='inf', page=(0, LARGE_PAGE_SIZE)):
+def get_trades(redis: Redis, symbol: str, start=0, end='inf', page=(0, LARGE_PAGE_SIZE), log_guid=None):
     idx = index_trade(redis)
     query = Query(f'@symbol:{symbol} @timestamp:[{start},{end}]').sort_by('timestamp', asc=False).paging(*page)
-    print(_build_search_query(idx, query))
-    return _deserialize_results(idx.search(query))
+    results = idx.search(query)
+    set_or_print_commands(redis, log_guid, _build_search_query(idx, query), results.duration)
+    return _deserialize_results()
 
 
-def get_transactions(redis: Redis, account: int=None, symbol: str=None, start=0, end='inf', page=(0, LARGE_PAGE_SIZE), asc=False):
+def get_transactions(redis: Redis, account:int=None, symbol:str=None, start=0, end='inf', page=(0, LARGE_PAGE_SIZE), asc=False, log_guid=None):
     idx = index_transaction(redis)
 
     if symbol is not None:
@@ -156,8 +190,9 @@ def get_transactions(redis: Redis, account: int=None, symbol: str=None, start=0,
         account_query = ''
 
     query = Query(f'@timestamp:[{start},{end}]{symbol_query}{account_query}').sort_by('timestamp', asc=asc).paging(*page)
-    print(_build_search_query(idx, query))
-    return _deserialize_results(idx.search(query))
+    results = idx.search(query)
+    set_or_print_commands(redis, log_guid, _build_search_query(idx, query), results.duration)
+    return _deserialize_results(results)
 
 def index_asset(redis: Redis):
     idx = redis.ft(_key_asset('idx').lower())
@@ -251,11 +286,12 @@ def index_transaction(redis:Redis):
 
     return idx
 
-def search_assets(redis: Redis, query: str):
+def search_assets(redis: Redis, query: str, log_guid=None):
     idx = index_asset(redis)
     query = Query(query).paging(0, LARGE_PAGE_SIZE)
-    print(_build_search_query(idx, query))
-    return _deserialize_results(idx.search(query))
+    results = idx.search(query)
+    set_or_print_commands(redis, log_guid, _build_search_query(idx, query), results.duration)
+    return _deserialize_results(results)
 
 
 def set_asset(redis: Redis, symbol: str, name: str, description: str, website: str=None, 
@@ -314,6 +350,13 @@ def set_bar(redis: Redis, symbol: str, timestamp: int, open: float,
 
     redis.json().set(key, Path.rootPath(), obj)
 
+def set_or_print_commands(redis: Redis, guid: str, command: str, time=0):
+    if guid is not None:
+        if type(command) is not str:
+            command = dumps(command)
+        redis.xadd(_key_commands(guid), {'command':command, 'time':time})
+    else:
+        print(command)
 
 def set_fund(redis: Redis, name: str, description: str, assets: list):
     id = name.replace(" ", "").lower()

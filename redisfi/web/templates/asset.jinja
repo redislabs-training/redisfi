@@ -22,10 +22,16 @@
         <a class="nav-link" href="/research/">Research</a>
     </li>
 </ul>
-<form class="d-flex" action="/search">
-    <input class="form-control me-2" type="search" name="query" placeholder="Search" aria-label="Search">
-    <button class="btn btn-outline-success" type="submit">Search</button>
-</form>
+<ul class="navbar-nav ms-auto">
+    <form class="d-flex" action="/search">
+        <input class="form-control me-2" type="search" name="query" placeholder="Search" aria-label="Search">
+        <button class="btn btn-outline-success" type="submit">Search</button>
+    </form>
+    &nbsp;&nbsp;
+    <li class="nav-item">
+        <a class="nav-link active" data-bs-toggle="offcanvas" href="#commandsView" aria-controls="commandsView"><i class="bi bi-terminal"></i></a>
+    </li>
+</ul>
 <div>&nbsp;</div>
 {% endblock %}
 {% block body %}
@@ -164,7 +170,7 @@
 
   function makeChartLive() {
 
-    $.getJSON('/api/asset/{{asset.symbol}}/trades', (data) => {
+    $.getJSON('/api/asset/{{asset.symbol}}/trades?log_guid={{log_guid}}', (data) => {
         trades = [];
         for(let i=0; i<data.length; i++){
           trades.push([data[i].timestamp * 1000, parseFloat(data[i].price.toFixed(2))]);
@@ -179,7 +185,7 @@
   function setChartTimeframe(timeframe) { 
     live = false;
 
-    $.getJSON(`/api/asset/{{asset.symbol}}/history?start=${timeframe}`, (data) => {
+    $.getJSON(`/api/asset/{{asset.symbol}}/history?start=${timeframe}&log_guid={{log_guid}}`, (data) => {
       const barsPriceData  = barsToTimeseries(data);
       const newSeries = [{data:barsPriceData}];
       chart.updateSeries(newSeries);
@@ -189,7 +195,7 @@
   function showAllHistory() {
     live = false;
 
-    $.getJSON('/api/asset/{{asset.symbol}}/history', (data) => {
+    $.getJSON('/api/asset/{{asset.symbol}}/history&log_guid={{log_guid}}', (data) => {
       const barsPriceData  = barsToTimeseries(data);
       const newSeries = [{data:barsPriceData}];
       chart.updateSeries(newSeries);
@@ -212,7 +218,7 @@
     const socket = io();
     
     
-    $.getJSON('/api/asset/{{asset.symbol}}/history?start={{day}}', (data) => {
+    $.getJSON('/api/asset/{{asset.symbol}}/history?start={{day}}&log_guid={{log_guid}}', (data) => {
       const barsPriceData  = barsToTimeseries(data);
       
       const series =  [{
@@ -240,7 +246,7 @@
 
 
     });
-    
+    populateRedisCommands('{{log_guid}}');
   });
 
 </script>

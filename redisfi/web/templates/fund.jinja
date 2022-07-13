@@ -24,11 +24,18 @@
     <li class="nav-item">
         <a class="nav-link" href="/research/">Research</a>
     </li>
+
 </ul>
-<form class="d-flex" action="/search">
-    <input class="form-control me-2" type="search" name="query" placeholder="Search" aria-label="Search">
-    <button class="btn btn-outline-success" type="submit">Search</button>
-</form>
+<ul class="navbar-nav ms-auto">
+    <form class="d-flex" action="/search">
+        <input class="form-control me-2" type="search" name="query" placeholder="Search" aria-label="Search">
+        <button class="btn btn-outline-success" type="submit">Search</button>
+    </form>
+    &nbsp;&nbsp;
+    <li class="nav-item">
+        <a class="nav-link active" data-bs-toggle="offcanvas" href="#commandsView" aria-controls="commandsView"><i class="bi bi-terminal"></i></a>
+    </li>
+</ul>
 <div>&nbsp;</div>
 {% endblock %}
 {% block body %}
@@ -125,9 +132,9 @@
     symbols.forEach((symbol) => {
         let url;
         if (parseInt(timeframe) === 0) {
-            url = `/api/account/{{account}}/transactions?symbol=${symbol}`;
+            url = `/api/account/{{account}}/transactions?symbol=${symbol}&log_guid={{log_guid}}`;
         } else {
-            url = `/api/account/{{account}}/value/${symbol}?start=${timeframe}`;
+            url = `/api/account/{{account}}/value/${symbol}?start=${timeframe}&log_guid={{log_guid}}`;
         }
 
         promises.push($.getJSON(url).then((data) => {
@@ -213,6 +220,7 @@
             });
         }
         setChartTimeframe(0);
+        populateRedisCommands('{{log_guid}}');
     });
 </script>
 {% endblock %}

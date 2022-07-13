@@ -5,6 +5,8 @@ from os import environ
 from subprocess import Popen
 from datetime import datetime, timedelta
 from pprint import pp
+from uuid import uuid4
+from time import perf_counter
 
 from flask_socketio import SocketIO
 from flask import Flask, redirect, render_template, Response, request
@@ -41,6 +43,8 @@ ninty_days_ago = lambda: int((_now() - timedelta(days=90)).timestamp())
 a_year_ago = lambda: int((_now() - timedelta(days=DAYS_IN_YEAR)).timestamp())
 time_kwargs = lambda: {'now':now(), 'day':one_day_ago(), 'week':one_week_ago(), 'thirty':thirty_days_ago(), 'ninty':ninty_days_ago(), 'year':a_year_ago()}
 
+_log_guid = lambda: str(uuid4())
+
 def _truncate_description(description):
     desc_list = description.split(' ')
 
@@ -71,27 +75,34 @@ def landing():
 @app.route('/overview')
 def portfolio():
     redis = app.config['REDIS']
-    portfolio_data = DB.get_portfolio(redis, ACCOUNT) 
-    pp(portfolio_data)
+    log_guid = _log_guid()
+    
+    start = perf_counter()
+    portfolio_data = DB.get_portfolio(redis, ACCOUNT, log_guid=log_guid)
+    end = perf_counter()
+    total_db_time = (end - start)*1000
+    
     portfolio_data['balance'] = _sum_portfolio_balance(portfolio_data)
-    return render_template('overview.jinja', account=ACCOUNT, portfolio=portfolio_data, **time_kwargs())
+    return render_template('overview.jinja', account=ACCOUNT, portfolio=portfolio_data, log_guid=log_guid, total_db_time=total_db_time, **time_kwargs())
 
 @app.route('/search')
 def search():
     redis = app.config['REDIS']
     query = request.args.get('query')
+    log_guid = _log_guid()
 
     if query:
-        results = DB.search_assets(redis, query)
+        start = perf_counter()
+        results = DB.search_assets(redis, query, log_guid=log_guid)
         
         for result in results:
             if result['price']['live'] is None and result['price']['mock'] is None:
-                result['price']['historic'] = DB.get_asset_price_historic(redis, result['symbol'])
+                result['price']['historic'] = DB.get_asset_price_historic(redis, result['symbol'], log_guid=log_guid)
             else:
                 result['price']['historic'] = ''
+        end = perf_counter()
         
-        
-        return render_template('results.jinja', results=results)
+        return render_template('results.jinja', results=results, log_guid=log_guid, total_db_time=(end-start)*1000)
 
     else:
         return redirect('/')
@@ -99,12 +110,17 @@ def search():
 @app.route('/asset/<string:symbol>')
 def asset(symbol:str):
     redis = app.config['REDIS']
-    asset_data = DB.get_asset(redis, symbol)
+    log_guid = _log_guid()
     
+    start = perf_counter()
+    asset_data = DB.get_asset(redis, symbol, log_guid=log_guid)
+    end = perf_counter()
+    total_db_time = (end - start)*1000
+
     asset_data['description'] = _truncate_description(asset_data['description'])
 
     if asset_data:
-        return render_template('asset.jinja', asset=asset_data, **time_kwargs())
+        return render_template('asset.jinja', asset=asset_data, log_guid=log_guid, total_db_time=total_db_time, **time_kwargs())
     else:
         return Response(status=404)
 
@@ -112,15 +128,18 @@ def asset(symbol:str):
 @app.route('/fund/<string:name>')
 def fund(name:str):
     redis : Redis = app.config['REDIS']
-    fund_data = DB.get_fund(redis, name)
+    log_guid = _log_guid()
+
+    start = perf_counter()
+    fund_data = DB.get_fund(redis, name, log_guid=log_guid)
 
     if fund_data:
-        fund_data['assets']  = DB.get_fund_assets_metadata_and_latest(redis, ACCOUNT, fund_data['assets'].keys())
-        fund_data['balance'] = DB.get_fund_value_aggregate(redis, ACCOUNT, name, page=(0, 1))[0][1]
+        fund_data['assets']  = DB.get_fund_assets_metadata_and_latest(redis, ACCOUNT, fund_data['assets'].keys(), log_guid=log_guid)
+        fund_data['balance'] = DB.get_fund_value_aggregate(redis, ACCOUNT, name, page=(0, 1), log_guid=log_guid)[0][1]
+        end = perf_counter()
+        total_db_time = (end - start)*1000
 
-        pp(fund_data)
-
-        return render_template('fund.jinja', fund=fund_data, account=ACCOUNT, **time_kwargs())
+        return render_template('fund.jinja', fund=fund_data, account=ACCOUNT, log_guid=log_guid, total_db_time=total_db_time, **time_kwargs())
 
     else:
         return Response(status=404)
