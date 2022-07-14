@@ -161,7 +161,7 @@
 {% endblock %}
 {% block js %}
 <script type="text/javascript">
-
+  const POLL_INTERVAL = 1000;
 
   let chart = new ApexCharts(document.querySelector("#chart"), chartOptions);
 
@@ -195,7 +195,7 @@
   function showAllHistory() {
     live = false;
 
-    $.getJSON('/api/asset/{{asset.symbol}}/history&log_guid={{log_guid}}', (data) => {
+    $.getJSON('/api/asset/{{asset.symbol}}/history?log_guid={{log_guid}}', (data) => {
       const barsPriceData  = barsToTimeseries(data);
       const newSeries = [{data:barsPriceData}];
       chart.updateSeries(newSeries);
@@ -246,7 +246,7 @@
 
 
     });
-    populateRedisCommands('{{log_guid}}');
+    pollRedisCommands('{{log_guid}}', populateRedisCommands('{{log_guid}}'), POLL_INTERVAL);
   });
 
 </script>

@@ -1,4 +1,15 @@
 
+## Redis Commands View
+On any page, click the Console Icon at the top right of the page to see the Redis Commands used for that page.  They're shown in order, with each of their given latencies next to them, with the total latency at the top. 
+
+- Total latency is all server side DB operations, including any internal bookkeeping or post processing.  (This includes sending the commands themselves to the stream to be read by this window later)
+- `JSON` commands are round trip latency, as the client doesn't return Redis reported latency
+- `FT` commands are Redis reported latency.
+
+The goal here, obviously, is to show how quickly Redis is able to process so much data to be able to render the page. 
+
+For the Investments portion, we have ~150k keys on a single shard; for the VSS, we have 2.2M on 12.
+
 ## Investments - RediSearch+JSON
 The first portion of the demo looks to create a consumer investment portal (think a cross between Robinhood and your Retirement account).  On every page, the prices are live and change as they update to reflect market changes.
 

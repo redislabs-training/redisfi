@@ -121,19 +121,14 @@ def get_asset_price_mock(redis: Redis, symbol: str):
     return redis.json().get(_key_asset(symbol), '$.price.mock')
 
 def get_commands(redis: Redis, guid: str, start_at=None) -> tuple:
-    data = redis.xrange(_key_commands(guid), start_at or '-', '+')
-    ret = []
+    data = redis.xrange(_key_commands(guid), f'({start_at}' if start_at else'-', '+')
     
-    for item in data:
-        obj = {}
-        for k, v in item[1].items():
-            obj[k.decode('ascii')] = v.decode('ascii')
+    if data:
+        last_id = data[-1][0]
+    else:
+        last_id = start_at
 
-        ret.append(obj)
-
-    last_id = data[-1][0].decode('ascii')
-    
-    return ret, last_id
+    return [record[1] for record in data], last_id
 
 def get_fund(redis: Redis, id: str, log_guid=None):
     key = _key_fund(id)

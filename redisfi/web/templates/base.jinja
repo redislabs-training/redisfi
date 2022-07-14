@@ -121,8 +121,8 @@
         
         $('#searchForm').submit();
       }
-      function populateRedisCommands(guid) {
-        $.getJSON(`/api/commands/${guid}`, (data) => {
+      
+      function unpackCommandsJSONandUpdateCommandView(data) {
           let commands = data['commands'];
           let time = '';
           for (i in commands) {
@@ -132,6 +132,19 @@
 
             $('.redis-commands-output').append(`<li class="redis-command">> ${commands[i]['command']} ${time}</li>\n<li class="redis-command">&nbsp;</li>`);
           }
+          return data['last_id'];
+        }
+      
+      function populateRedisCommands(guid) {return $.getJSON(`/api/commands/${guid}`, unpackCommandsJSONandUpdateCommandView);}
+      function updateRedisCommands(guid, lastId) {return $.getJSON(`/api/commands/${guid}?start_at=${lastId}`, unpackCommandsJSONandUpdateCommandView)}
+
+      function pollRedisCommands(guid, promise, pollInterval) {
+        
+          Promise.resolve(promise).then((data) => {
+          var newPromise = updateRedisCommands(guid, data['last_id']);
+          setTimeout(() => {
+            pollRedisCommands(guid, newPromise, pollInterval);
+          }, pollInterval);
         })
       }
     </script>

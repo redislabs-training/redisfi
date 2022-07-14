@@ -81,7 +81,9 @@ def fund_value(account, fund):
 @api.route('/commands/<string:guid>')
 def commands(guid: str):
     redis = current_app.config['REDIS']
-    commands, last_id = DB.get_commands(redis, guid)
+    start_at = request.args.get('start_at')
+
+    commands, last_id = DB.get_commands(redis, guid, start_at)
     return dumps({'commands':commands, 'last_id':last_id})
 
 

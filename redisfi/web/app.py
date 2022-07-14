@@ -30,7 +30,7 @@ app.register_blueprint(research_api, url_prefix='/research/api')
 
 app.config['ACCOUNT'] = ACCOUNT
 app.config['SECRET_KEY'] = 'supersecret!'
-app.config['REDIS'] = Redis.from_url(REDIS_URL)
+app.config['REDIS'] = Redis.from_url(REDIS_URL, decode_responses=True)
 app.config['VSS_URL'] = environ.get('VSS_URL', 'http://localhost:7777')
 
 DAYS_IN_YEAR = 365.26
