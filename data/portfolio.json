@@ -1,1 +1,9 @@
-{"account": 710, "stocks": {"SPCE": 210, "AMC": 400, "SOFI": 250}, "etfs": {"QQQ": 75, "SPY": 250}, "retire": "retire2050", "crypto": {"ETHUSD": 20}}
+{
+    "account": 710,
+    "components": {
+        "retire": "retire.710",
+        "stocks": "stocks.710",
+        "etfs"  : "etfs.710",
+        "crypto": "crypto.710"
+    }
+}

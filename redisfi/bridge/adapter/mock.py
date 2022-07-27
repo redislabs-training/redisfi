@@ -11,35 +11,49 @@ from redisfi.bridge.adapter.base import BaseAdapter
 DAYS_IN_YEAR = 365.26
 
 class TransactionGenerator(BaseAdapter):
-    def __init__(self, years_to_generate: float, interval: int, amount_to_invest_per_interval: float, account=710, fund='retire2050', **kwargs):
+    def __init__(self, years_to_generate: float, interval: int, amount_to_invest_per_interval: float, account=710, **kwargs):
         super().__init__(**kwargs)
         self.years_to_generate = years_to_generate
         self.interval = timedelta(weeks=interval)
         self.amount_to_invest_per_interval = amount_to_invest_per_interval
         self.account = account
-        self.fund_data = DB.get_fund(self.redis, fund)
+        self.components = DB.get_portfolio(self.redis, account)['components']
 
     def run(self):
-        moment = datetime.utcnow() - timedelta(days=DAYS_IN_YEAR*self.years_to_generate) 
+        original_moment = datetime.utcnow() - timedelta(days=DAYS_IN_YEAR*self.years_to_generate) 
         balances, total_spent = {}, {}
         
         with self.redis.pipeline(transaction=False) as pipe:
-            while moment <= datetime.utcnow():
-                timestamp = int(moment.timestamp())
-                for symbol, percentage in self.fund_data['assets'].items():
-                    bar = DB.get_asset_history(self.redis, symbol, end=timestamp, page=(0, 1))[0]
-                    price = bar['close'] 
-                    amount_to_spend = self.amount_to_invest_per_interval * percentage
-                    shares = amount_to_spend / price
-                    balances[symbol] = shares + balances.get(symbol, 0)
-                    total_spent[symbol] = amount_to_spend + total_spent.get(symbol, 0)
-
-                    DB.set_transaction(pipe, self.account, timestamp, shares, symbol, price, balances[symbol], total_spent[symbol], self.fund_data['id'])
-
-                    self.cli.line(f'<info>timestamp:</info> <comment>{timestamp}</comment><info> | price: </info><comment>{price}</comment><info> | shares: </info><comment>{shares}</comment><info> | balance: </info><comment>{balances[symbol]}</comment>', verbosity=VERBOSE)
+            
+            ## components are percentages of a purchase broken over different assets, so for example, 
+            ## if you spend 300 a week and .5 of a component is REDIS then you'd spend 150 dollars on REDIS stock 
+            ##
+            ## we go through each component, and iterate over the amount of time since the beginning to now in 
+            ## given intervals and make a purchase at the price at that point in time.
+            ## 
+            ## collectively, these make up the portfolio
+            for component_name, component in self.components.items():
+                moment = original_moment
                 
-                pipe.execute()
-                moment = moment + self.interval
+                ## for each component, iterate through time by self.interval steps to create a transaction at that moment in time
+                while moment <= datetime.utcnow():
+                    timestamp = int(moment.timestamp())
+                    for symbol, asset_data in component['assets'].items():
+                        bar = DB.get_asset_history(self.redis, symbol, end=timestamp, page=(0, 1))
+                        if bar:
+                            bar = bar[0]
+                            price = bar['close'] 
+                            amount_to_spend = self.amount_to_invest_per_interval * asset_data['percentage_of_component']
+                            shares = amount_to_spend / price 
+                            balances[symbol] = shares + balances.get(symbol, 0)
+                            total_spent[symbol] = amount_to_spend + total_spent.get(symbol, 0)
+
+                            DB.set_transaction(pipe, self.account, timestamp, shares, symbol, price, balances[symbol], total_spent[symbol], component_name)
+
+                            self.cli.line(f'<info>timestamp:</info> <comment>{timestamp}</comment><info> | price: </info><comment>{price}</comment><info> | shares: </info><comment>{shares}</comment><info> | balance: </info><comment>{balances[symbol]}</comment>', verbosity=VERBOSE)
+                    
+                    pipe.execute()
+                    moment += self.interval
 
 class TransactionPriceMapper(BaseAdapter):
     def __init__(self, account=710, **kwargs) -> None:

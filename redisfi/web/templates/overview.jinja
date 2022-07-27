@@ -49,85 +49,74 @@
         </div>
         <div class="row">
             <div class="col-md border bg-light">
-                    <h4 class="p-3 text-center"><a class="link-dark" href="/fund/{{portfolio.retire.id}}">Retirement</a> - $<span class="price" id="401k-price">{{ "{:,.2f}".format(portfolio.retire.value) }}</span></h4>
-                    <div class="chart" id="chart-401k"></div>
+                    <h4 class="p-3 text-center"><a class="link-dark" href="/component/retire">Retirement</a> - <span id="retire-balance">{{'$' + "{:,.2f}".format(portfolio.components.retire.value) }}</span></h4>
+                    <div class="chart" id="chart-retire"></div>
             </div>
             <div class="col-md border bg-light">
-                <h4 class="p-3 text-center">Crypto</h4>
+                <h4 class="p-3 text-center"><a class="link-dark" href="/component/crypto">Crypto</a> - <span id="crypto-balance">{{ '$' + "{:,.2f}".format(portfolio.components.crypto.value) }}</span></h4>
                 <div class="chart" id="chart-crypto"></div>
-                <table class="table table-striped table-hover bg-light">
-                    <thead>
-                      <tr>
-                        <th scope="col">Symbol</th>
-                        <th scope="col">Coins Owned</th>
-                        <th scope="col">Price</th>
-                        <th scope="col">1 day change</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for symbol, shares_owned in portfolio.crypto.items() %}
-                        <tr>
-                            <th scope="row">&nbsp;&nbsp;<a class="link-dark crypto" href="/asset/{{symbol}}">{{symbol}}</a></th>
-                            <td id="{{symbol}}-sharesOwned">{{shares_owned}}</td>
-                            <td><span class="price text-center" id="{{symbol}}-price">{{ '$'+"{:,.2f}".format(portfolio.price[symbol].live or portfolio.price[symbol].mock or portfolio.price[symbol].historic) }}</span></td>
-                            <td>{{ '%0.2f' | format(portfolio.price[symbol].percent_change) }}%</td>
-                        </tr>
-                      {% endfor %}
-                    </tbody>
-                </table> 
             </div>
         </div>
         <div class="row">
             <div class="col-md border bg-light">
-                <h4 class="p-3 text-center">Stocks</h4>
-                <div class="chart" id="chart-stock"></div>
+                <h4 class="p-3 text-center"><a class="link-dark" href="/component/stocks">Stocks</a> - <span id="stocks-balance">{{ '$' + "{:,.2f}".format(portfolio.components.stocks.value) }}</span></h4>
+                <div class="chart" id="chart-stocks"></div>
             </div>
-            
             <div class="col-md border bg-light">
-                <h4 class="p-3 text-center">Long Term Investments</h4>
-                <div class="chart" id="chart-etf"></div>
+                <h4 class="p-3 text-center"><a class="link-dark" href="/component/etfs">Long Term Investments</a> - <span id="etfs-balance">{{ '$' + "{:,.2f}".format(portfolio.components.etfs.value) }}</span></h4>
+                <div class="chart" id="chart-etfs"></div>
             </div>
         </div>
     </div>
 </div>
-<div class="hidden" id="401k-sharesOwned">1</div>
-{% for symbol, shares_owned in portfolio.stocks.items() %}
-    <div class="invisible">    
-        <div class="hidden stock">{{symbol}}</div>
-        <div class="hidden price" id="{{symbol}}-price">{{ portfolio.price[symbol].live or portfolio.price[symbol].mock or portfolio.price[symbol].historic }}</div>
-        <div class="hidden" id="{{symbol}}-sharesOwned">{{shares_owned}}</div>
-    </div>
-{% endfor %}
-{% for symbol, shares_owned in portfolio.etfs.items() %}
-    <div class="invisible">
-        <div class="hidden etf">{{symbol}}</div>
-        <div class="hidden price" id="{{symbol}}-price">{{ portfolio.price[symbol].live or portfolio.price[symbol].mock or portfolio.price[symbol].historic }}</div>
-        <div class="hidden" id="{{symbol}}-sharesOwned">{{shares_owned}}</div>
-    </div>
-{% endfor %}
+<div class="invisible">
+    {% for component_name, component in portfolio.components.items() %}
+            {% for asset in component.assets.values() %}
+                <div class="hidden {{component_name}}">{{asset.symbol}}</div>
+                <div class="hidden price" id="{{component_name}}-{{asset.symbol}}-price">{{ asset.price.live or asset.price.mock or asset.price.historic }}</div>
+                <div class="hidden" id="{{asset.symbol}}-sharesOwned">{{asset.last_transaction.balance}}</div>
+            {% endfor %}
+    {% endfor %}
+</div>
 {% endblock %}
 {% block js %}
 <script type="text/javascript">
     const charts = {};
     const prices = {};
-    const symbols = [];
-    let lastBalance = 0;
+    const symbols = {};
+    const kinds = ['retire', 'stocks', 'crypto', 'etfs']
+    const balances = {};
+    kinds.forEach((kind) => {
+        balances[kind] = 0
+    })
+    let grandTotal = 0;
     
     function sumPricesAndUpdateBalance() {
         let sum = 0;
-        
-        symbols.forEach((symbol) => {
-            const sharesOwned = parseFloat($(`#${symbol}-sharesOwned`).text());
-            sum = sharesOwned * prices[symbol] + sum;
+        kinds.forEach((kind) => {
+            let subtotal = 0;
+            symbols[kind].forEach((symbol) => {
+                const sharesOwned = parseFloat($(`#${symbol}-sharesOwned`).text());
+                subtotal = (sharesOwned * prices[symbol]) + subtotal;
+                {# console.log(`IN AGG: component: ${kind} sharesOwned: ${sharesOwned} symbol: ${symbol} price: ${prices[symbol]}`) #}
+            });
+            
+            if (subtotal.toFixed(2) != balances[kind].toFixed(2)){
+                if  (subtotal > balances[kind]) { flashColorAndUpdateNumber(`#${kind}-balance`, GREEN_COLOR, 'black', subtotal) }
+                else { flashColorAndUpdateNumber(`#${kind}-balance`, RED_COLOR, 'black', subtotal) }
+            }
+            {# console.log(`SUB AGG: component: ${kind} subtotal: ${subtotal}`) #}
+            balances[kind] = subtotal;
+            sum = subtotal + sum;
         });
 
-        if (sum > lastBalance) {
+        if (sum > grandTotal) {
             flashColorAndUpdateNumber('#balance', GREEN_COLOR, 'white', sum);
-        } else if(lastBalance > sum) {
+        } else if(grandTotal > sum) {
             flashColorAndUpdateNumber('#balance', RED_COLOR, 'white', sum);
         }
 
-        lastBalance = sum;
+        grandTotal = sum;
     }
 
     function unpackPromisesAndUpdateSeries(promises, chart) {
@@ -137,29 +126,14 @@
     }
 
   function setChart(chart, chartSymbols, type) { 
-
-    if (type === '401k') {
-        $.getJSON('/api/fund/{{account}}/{{portfolio.retire.id}}/value?log_guid={{log_guid}}', (data) => {
-            let seriesData = []
-            data.forEach((item) => {
-                seriesData.push([item[0] * 1000, parseFloat(item[1].toFixed(2))]);
-            })
-            let series = [{name: '{{portfolio.retire.name}}', data:seriesData}];
-            chart.updateSeries(series);
+    $.getJSON(`/api/component/{{account}}/${type}/value?log_guid={{log_guid}}`, (data) => {
+        let seriesData = []
+        data.forEach((item) => {
+            seriesData.push([item[0] * 1000, parseFloat(item[1].toFixed(2))]);
         })
-    } else {
-        const promises = [];
-
-        chartSymbols.forEach((symbol) => {
-            promises.push($.getJSON(`/api/asset/${symbol}/history?start={{day}}&log_guid={{log_guid}}`).then((data) => {
-                const barsPriceData  = barsToTimeseries(data);
-                return {name:symbol, data:barsPriceData};
-            }));
-        });
-
-        unpackPromisesAndUpdateSeries(promises, chart);
-    }
-    
+        let series = [{name: `${type.charAt(0).toUpperCase()}${type.substring(1)}`, data:seriesData}];
+        chart.updateSeries(series);
+    })
   }
 
     $(() => {
@@ -178,6 +152,7 @@
             for (let i=0; i<chartSymbolLinks.length; i++) {
                 chartSymbols.push(chartSymbolLinks[i].textContent)
             }
+            symbols[which] = chartSymbols;
             setChart(chart, chartSymbols, which);
         }
 
@@ -185,22 +160,14 @@
 
         for (let i=0; i < assets.length; i++) {
             let price = parseFloat(assets[i].textContent.replace(/,/g, ''));
-            //assets[i].textContent = price.toFixed(2);
-            let [symbol, _] = assets[i].id.split('-');
-            symbols.push(symbol);
+            const [component, symbol, _] = assets[i].id.split('-');
             prices[symbol] = price;
-
+            {# console.log(`ORIGINAL: component: ${component} symbol: ${symbol} price: ${price}`) #}
             socket.on('updates.'+symbol, (data) => {
-                //assets[i].textContent = data.price.toFixed(2);
                 let selector = `#${assets[i].id}`;
-
-                if (data.price > prices[symbol]) {
-                    flashColorAndUpdateNumber(selector, GREEN_COLOR, 'black', data.price);
-                } else if (data.price < prices[symbol]) {
-                    flashColorAndUpdateNumber(selector, RED_COLOR, 'black', data.price);
-                }
-
+                flashColorAndUpdateNumber(selector, 'black', 'black', data.price);
                 prices[symbol] = data.price;
+                {# console.log(`UPDATE: symbol: ${symbol} price: ${data.price}`) #}
                 sumPricesAndUpdateBalance();
             });
         }

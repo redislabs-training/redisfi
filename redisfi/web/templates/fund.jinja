@@ -41,11 +41,13 @@
 {% block body %}
 <div class="container-fluid container-main">
     <div class="container-fluid container-data">
-            <div class="row summary">
-                <div class="col-4">
-                    Plan: {{fund.name}}
+            {% if fund.name %}
+                <div class="row summary">
+                    <div class="col-4">
+                        Plan: {{fund.name}}
+                    </div>
                 </div>
-            </div>
+            {% endif %}
             <div class="row summary summary-bottom">
                  <div class="col-8">
                     Balance:&nbsp;&nbsp;<span id="balance">{{ '$' + "{:,.2f}".format(fund.balance) }}</span>
@@ -67,12 +69,14 @@
         </div>
         <div class="row"><div class="col-lg spacer">&nbsp;</div></div>
         <div class="row">
-            <div class="col-md">
-                <div class="p-2 bg-dark" id="description">
-                    <h5>Description:</h5><hr>
-                    <p class="p-2">{{ fund.description }}</p>
-                </div>
-            </div> 
+            {% if fund.description %}
+                <div class="col-md">
+                    <div class="p-2 bg-dark" id="description">
+                        <h5>Description:</h5><hr>
+                        <p class="p-2">{{ fund.description }}</p>
+                    </div>
+                </div> 
+            {% endif %}
             <div class="col-lg">
                 <form id="assets-search" class="d-flex" action="/search">
                     <input class="form-control me-2" type="search" name="query" placeholder="Search" aria-label="Search">

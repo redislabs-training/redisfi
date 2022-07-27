@@ -5,7 +5,7 @@ from cleo import Command
 
 from redisfi.bridge.adapter.alpaca import AlpacaLive, AlpacaHistoric
 from redisfi.bridge.adapter.yahoo import YahooFinanceMetadata, YahooFinanceHistoric
-from redisfi.bridge.adapter.file import JSONMetadataFileLoader, JSONFundMetadataFileLoader, JSONPortfolioMetadataFileLoader
+from redisfi.bridge.adapter.file import JSONMetadataFileLoader, JSONComponentMetadataFileLoader, JSONPortfolioMetadataFileLoader
 from redisfi.bridge.adapter.mock import RNGPriceGenerator, TransactionGenerator, TransactionPriceMapper
 
 
@@ -61,7 +61,7 @@ class BridgeMetadata(BridgeTask):
     metadata
     '''
 
-    adapters = [JSONFundMetadataFileLoader, JSONMetadataFileLoader, JSONPortfolioMetadataFileLoader, YahooFinanceMetadata]
+    adapters = [JSONComponentMetadataFileLoader, JSONMetadataFileLoader, JSONPortfolioMetadataFileLoader, YahooFinanceMetadata]
 
 
 class BridgePriceHistoric(BridgeTask):
@@ -126,7 +126,6 @@ class BridgePortfolioGenerator(BridgeTask):
     '''
 
     adapters = [TransactionGenerator, TransactionPriceMapper]
-    #adapters = [TransactionPriceMapper]
 
     def _adapter_config(self: Command) -> dict:
         adapter_config = super()._adapter_config()

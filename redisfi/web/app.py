@@ -4,7 +4,6 @@ monkey.patch_all()
 from os import environ
 from subprocess import Popen
 from datetime import datetime, timedelta
-from pprint import pp
 from uuid import uuid4
 from time import perf_counter
 
@@ -53,21 +52,6 @@ def _truncate_description(description):
     else:
         return ' '.join(desc_list)
 
-def _sum_portfolio_balance(portfolio: dict):
-    balance = portfolio['retire']['value']
-
-    assets = {}
-    assets.update(portfolio['stocks'])
-    assets.update(portfolio['crypto'])
-    assets.update(portfolio['etfs'])
-
-    for asset, shares_owned in assets.items():
-        prices = portfolio['price'][asset]
-        price = prices['live'] or prices['mock'] or prices['historic']
-        balance += price * shares_owned
-
-    return balance
-
 @app.route('/')
 def landing():
     return render_template('landing.jinja')
@@ -82,7 +66,8 @@ def portfolio():
     end = perf_counter()
     total_db_time = (end - start)*1000
     
-    portfolio_data['balance'] = _sum_portfolio_balance(portfolio_data)
+    portfolio_data['balance'] = sum([component['value'] for component in portfolio_data['components'].values()])
+
     return render_template('overview.jinja', account=ACCOUNT, portfolio=portfolio_data, log_guid=log_guid, total_db_time=total_db_time, **time_kwargs())
 
 @app.route('/search')
@@ -125,17 +110,17 @@ def asset(symbol:str):
         return Response(status=404)
 
 
-@app.route('/fund/<string:name>')
-def fund(name:str):
+@app.route('/component/<string:name>')
+def component(name:str):
     redis : Redis = app.config['REDIS']
     log_guid = _log_guid()
-
+    id = f'{name}.{ACCOUNT}'
+    
     start = perf_counter()
-    fund_data = DB.get_fund(redis, name, log_guid=log_guid)
-
+    fund_data = DB.get_component_metadata(redis, id, log_guid=log_guid)
     if fund_data:
-        fund_data['assets']  = DB.get_fund_assets_metadata_and_latest(redis, ACCOUNT, fund_data['assets'].keys(), log_guid=log_guid)
-        fund_data['balance'] = DB.get_fund_value_aggregate(redis, ACCOUNT, name, page=(0, 1), log_guid=log_guid)[0][1]
+        fund_data['assets']  = DB.get_assets_metadata_and_latest(redis, ACCOUNT, fund_data['assets'].keys(), log_guid=log_guid)
+        fund_data['balance'] = DB.get_component_value_aggregate(redis, ACCOUNT, name, page=(0, 1), log_guid=log_guid)[0][1]
         end = perf_counter()
         total_db_time = (end - start)*1000
 

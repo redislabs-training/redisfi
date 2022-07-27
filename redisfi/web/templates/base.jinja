@@ -38,7 +38,7 @@
     </nav>
     <div class="offcanvas offcanvas-end" tabindex="-1" id="commandsView" aria-labelledby="commandsView">
       <div class="offcanvas-header">
-        <h5 class="offcanvas-title brand-red">Redis Commands Output {{"({:,.2f} ms)".format(total_db_time) if total_db_time}}</h5>
+        <h5 class="offcanvas-title brand-red">Redis Commands Output <span id="commands-count"></span>{{"({:,.2f} ms)".format(total_db_time) if total_db_time}}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
       </div>
       <div class="offcanvas-body">
@@ -125,6 +125,7 @@
       function unpackCommandsJSONandUpdateCommandView(data) {
           let commands = data['commands'];
           let time = '';
+          if (commands.length > 0) {$('#commands-count').text(`(${commands.length} total)`)}
           for (i in commands) {
             
             if (commands[i]['time'] != '0') {time = `(${parseFloat(commands[i]['time']).toFixed(2)} ms)`;} 
