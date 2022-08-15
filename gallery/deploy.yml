@@ -37,8 +37,7 @@ run:
       
       ## create db
       cd redisfi
-      apk add py3-pip
-      pip3 install poetry 
+      curl -sSL https://install.python-poetry.org | POETRY_HOME=/usr/local python3 -
       poetry install --no-dev
       poetry run redisfi-compose tool create_db -H db-$NAME_SLUG.exhibit.redis.gallery -u admin@redis.com -p $CLUSTER_PASS -s 42949672960 -S 12
       
