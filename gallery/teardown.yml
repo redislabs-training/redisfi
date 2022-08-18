@@ -10,6 +10,8 @@ params:
   GOOGLE_APPLICATION_CREDENTIALS: /tmp/auth.json
   WORKSPACE: redisfi-test
   NAME_SLUG: test.fi
+  DNS_STEM: exhibit.redis.gallery
+  DNS_ZONE: exhibit
 run:
   path: bash
   args:
@@ -24,9 +26,9 @@ run:
       docker run -dt --name GC gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
       docker cp /tmp/auth.json GC:/tmp/auth.json 
       docker exec GC gcloud auth activate-service-account --key-file=/tmp/auth.json
-      appIP=$(docker exec GC gcloud compute instances describe $WORKSPACE-app --project=redislabs-sales-pivotal --zone=us-west4-a --format="json" | jq -r .networkInterfaces[0].accessConfigs[0].natIP)
-      docker exec GC gcloud beta dns --project=redislabs-sales-pivotal record-sets transaction start --zone="exhibit"
-      docker exec GC gcloud beta dns --project=redislabs-sales-pivotal record-sets transaction remove $appIP --zone="exhibit" --type="A" --name="$NAME_SLUG.exhibit.redis.gallery." --ttl="30"
-      docker exec GC gcloud beta dns --project=redislabs-sales-pivotal record-sets transaction execute --zone="exhibit" 
+      appIP=$(docker exec GC gcloud compute instances describe $WORKSPACE-app --project=$PROJECT --zone=us-west4-a --format="json" | jq -r .networkInterfaces[0].accessConfigs[0].natIP)
+      docker exec GC gcloud beta dns --project=$PROJECT record-sets transaction start --zone="$DNS_ZONE"
+      docker exec GC gcloud beta dns --project=$PROJECT record-sets transaction remove $appIP --zone="$DNS_ZONE" --type="A" --name="$NAME_SLUG.$DNS_STEM." --ttl="30"
+      docker exec GC gcloud beta dns --project=$PROJECT record-sets transaction execute --zone="$DNS_ZONE" 
       docker exec GC gcloud --quiet compute instances delete $WORKSPACE-app --project=$PROJECT --zone=us-west4-a
-      docker exec GC gcloud --quiet compute --project=redislabs-sales-pivotal firewall-rules delete $WORKSPACE-allow-ssl 
+      docker exec GC gcloud --quiet compute --project=$PROJECT firewall-rules delete $WORKSPACE-allow-ssl 
