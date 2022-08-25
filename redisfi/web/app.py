@@ -58,6 +58,7 @@ def landing():
 
 @app.route('/overview')
 def portfolio():
+    
     redis = app.config['REDIS']
     log_guid = _log_guid()
     
@@ -65,7 +66,7 @@ def portfolio():
     portfolio_data = DB.get_portfolio(redis, ACCOUNT, log_guid=log_guid)
     end = perf_counter()
     total_db_time = (end - start)*1000
-    
+
     portfolio_data['balance'] = sum([component['value'] for component in portfolio_data['components'].values()])
 
     return render_template('overview.jinja', account=ACCOUNT, portfolio=portfolio_data, log_guid=log_guid, total_db_time=total_db_time, **time_kwargs())

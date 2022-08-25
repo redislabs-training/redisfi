@@ -1,8 +1,9 @@
+from uuid import uuid4
+
 import requests
 from flask import Blueprint, current_app, request, render_template, Response
 
 from redisfi.web.research.api import facets
-from redisfi.web.research.utils import escape_special_characters
 
 research = Blueprint('research', __name__)
 
@@ -20,6 +21,8 @@ TRENDING_SEARCHES = ["exposure to Russian operations",
                      "concerns over protests",
                      "unintended reputational damage",
                      "weakening demand and consumer confidence"]
+
+_log_guid = lambda: str(uuid4())
 
 @research.route('/')
 def overview():
@@ -41,13 +44,15 @@ def healthcheck():
 def full_text():
     query = request.args.get('query')
     url = current_app.config.get('VSS_URL')
-    resp = requests.get(url, params={'filter':query})
+    log_guid = _log_guid()
+    resp = requests.get(url, params={'filter':query, 'log_guid':log_guid})
     resp_data = resp.json()
-    return render_template('research/results-ft.html', **resp_data, query=query)
+    return render_template('research/results-ft.html', **resp_data, query=query, log_guid=log_guid)
 
 @research.route('/vss')
 def vss(query=None, _filter=None):
     query = query or request.args.get('query')
+    log_guid = _log_guid()
     if type(query) == list:
         query = query[0]
     
@@ -57,12 +62,12 @@ def vss(query=None, _filter=None):
     elif type(_filter) == list:
         _filter = _filter[0]
      
-    params = {'term':query, 'filter':_filter}
+    params = {'term':query, 'filter':_filter, 'log_guid':log_guid}
     url = current_app.config.get('VSS_URL')
     resp = requests.get(url, params=params)
     resp_data = resp.json()
     resp_data['results'] = filter(lambda result: result['COMPANY_NAME'] != 'N/A', resp_data['results'])
-    return render_template('research/results-vss.html', **resp_data, facets=facets(query, _filter, serialize=False), query=query, filter=_filter)
+    return render_template('research/results-vss.html', **resp_data, facets=facets(query, _filter, serialize=False), query=query, filter=_filter, log_guid=log_guid)
 
 @research.route('/faceted-search', methods=['POST'])
 def faceted_search():
