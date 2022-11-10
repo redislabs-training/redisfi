@@ -76,11 +76,12 @@ class UpCommmand(ComposeCommandsBase):
             config['up_cmd'].append('--build')
             if self.option('with-vss'):
                 config['profiles'].append('vss-build')
-                config['env'].append('VSS=1')
+                config['env'].append('VSS=1\n')
         else:
             config['profiles'].append('pull')
             if self.option('with-vss'):
                 config['profiles'].append('vss-pull')
+                config['env'].append('VSS=1\n')
 
         if self.option('detach'):
             config['up_cmd'].append('-d')
@@ -132,6 +133,7 @@ class DeployCommand(ComposeCommandsBase):
         config['env'].append(f'BASE={config["base_container_url"]}\n')
         config['env'].append(f'DOMAIN={domain}\n')
         config['env'].append(f'CERT_NAME={cert_name}\n')
+        config['env'].append('VSS=1\n')
 
         config['profiles'].append('deployed-prebuilt')
         config['profiles'].append('vss-pull')
