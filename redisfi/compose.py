@@ -12,7 +12,7 @@ class ComposeCommandsBase(Command):
         self._handle(**self._configure())
 
     def _configure(self):
-        config = {'cmd': ['docker-compose'],
+        config = {'cmd': ['docker-compose', '--log-level', 'ERROR'],
                   'up_cmd':['up'],
                   'profiles':[],
                   'env':[]}
@@ -61,7 +61,7 @@ class UpCommmand(ComposeCommandsBase):
         {--vss-redis-url=redis://redis:6379 : Location of the Redis Server for VSS to use - Defaults to Pulling Container Locally}
         {--vss-url=http://vss-wsapi:7777 : Location of VSS microservice}
         {--mock : Start mock live adapter}
-        {--skip-vss : Don't include the VSS part of the Demo}
+        {--with-vss : Don't include the VSS part of the Demo}
     '''
 
     def _configure(self):
@@ -74,11 +74,12 @@ class UpCommmand(ComposeCommandsBase):
         if self.option('build'):
             config['profiles'].append('build')
             config['up_cmd'].append('--build')
-            if not self.option('skip-vss'):
+            if self.option('with-vss'):
                 config['profiles'].append('vss-build')
+                config['env'].append('VSS=1')
         else:
             config['profiles'].append('pull')
-            if not self.option('skip-vss'):
+            if self.option('with-vss'):
                 config['profiles'].append('vss-pull')
 
         if self.option('detach'):

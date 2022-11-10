@@ -1,7 +1,10 @@
 from os import environ
 from subprocess import Popen
+from time import sleep
 
 from cleo import Command
+from redis import Redis
+from redis.exceptions import BusyLoadingError
 
 from redisfi.bridge.adapter.alpaca import AlpacaLive, AlpacaHistoric
 from redisfi.bridge.adapter.yahoo import YahooFinanceMetadata, YahooFinanceHistoric
@@ -151,13 +154,29 @@ class BridgeUp(Command):
         {--years-to-generate=5 : Number of years to generate transaction data for}
         {--interval=2 : Generate a transaction every n weeks}
         {--amount-to-invest=300 : Amount to invest each interval}
+        {--no-flush : Don't flush the redis DB}
     '''
 
     def handle(self):
-        global_args = ['--redis-url', environ.get('REDIS_URL', self.option('redis-url'))]
+        redis_url = environ.get('REDIS_URL', self.option('redis-url'))
+        global_args = ['--redis-url', redis_url]
         global_args.extend(['--assets', self.option('assets')])
         global_args.extend(['--crypto', self.option('crypto')])
         alpaca_key, alpaca_secret = self.argument('alpaca-api-key'), self.argument('alpaca-api-secret-key')
+
+        if not self.option('no-flush'):
+            flushed = False
+            tries = 0
+            while not flushed:
+                try:
+                    tries += 1
+                    Redis.from_url(redis_url).flushall()
+                    flushed = True
+                except:
+                    sleep(1)
+                    if tries > 30:
+                        self.line_error('Unable to Flush Redis - rerun with --no-flush')
+                        return 1
         
         with Popen(['poetry', 'run', 'redisfi', 'bridge', 'metadata', '--ansi'] + global_args) as p:
             p.communicate()

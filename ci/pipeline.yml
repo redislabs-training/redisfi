@@ -25,7 +25,7 @@ resources:
     type: registry-image
     icon: docker
     source:
-      repository: timeartist/redisfi
+      repository: technicalenablement/redisfi
       username: timeartist
       password: ((auth-docker))
   - name: redisfi-ssl-base-container
@@ -46,7 +46,7 @@ resources:
     type: registry-image
     icon: docker
     source:
-      repository: timeartist/redisfi-vss
+      repository: technicalenablement/redisfi-vss
       username: timeartist
       password: ((auth-docker))
 

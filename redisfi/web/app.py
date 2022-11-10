@@ -30,6 +30,7 @@ app.register_blueprint(research_api, url_prefix='/research/api')
 app.config['ACCOUNT'] = ACCOUNT
 app.config['SECRET_KEY'] = 'supersecret!'
 app.config['REDIS'] = Redis.from_url(REDIS_URL, decode_responses=True)
+app.config['VSS'] = environ.get('VSS', 0)
 app.config['VSS_URL'] = environ.get('VSS_URL', 'http://localhost:7777')
 
 DAYS_IN_YEAR = 365.26
@@ -69,7 +70,7 @@ def portfolio():
 
     portfolio_data['balance'] = sum([component['value'] for component in portfolio_data['components'].values()])
 
-    return render_template('overview.jinja', account=ACCOUNT, portfolio=portfolio_data, log_guid=log_guid, total_db_time=total_db_time, **time_kwargs())
+    return render_template('overview.jinja', account=ACCOUNT, portfolio=portfolio_data, log_guid=log_guid, total_db_time=total_db_time, VSS=app.config['VSS'], **time_kwargs())
 
 @app.route('/search')
 def search():
@@ -88,7 +89,7 @@ def search():
                 result['price']['historic'] = ''
         end = perf_counter()
         
-        return render_template('results.jinja', results=results, log_guid=log_guid, total_db_time=(end-start)*1000)
+        return render_template('results.jinja', results=results, log_guid=log_guid, total_db_time=(end-start)*1000, VSS=app.config['VSS'])
 
     else:
         return redirect('/')
@@ -106,7 +107,7 @@ def asset(symbol:str):
     asset_data['description'] = _truncate_description(asset_data['description'])
 
     if asset_data:
-        return render_template('asset.jinja', asset=asset_data, log_guid=log_guid, total_db_time=total_db_time, **time_kwargs())
+        return render_template('asset.jinja', asset=asset_data, log_guid=log_guid, total_db_time=total_db_time, VSS=app.config['VSS'], **time_kwargs())
     else:
         return Response(status=404)
 
@@ -125,7 +126,7 @@ def component(name:str):
         end = perf_counter()
         total_db_time = (end - start)*1000
 
-        return render_template('fund.jinja', fund=fund_data, account=ACCOUNT, log_guid=log_guid, total_db_time=total_db_time, **time_kwargs())
+        return render_template('fund.jinja', fund=fund_data, account=ACCOUNT, log_guid=log_guid, total_db_time=total_db_time, VSS=app.config['VSS'], **time_kwargs())
 
     else:
         return Response(status=404)
