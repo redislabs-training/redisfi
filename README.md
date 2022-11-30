@@ -29,7 +29,7 @@ poetry install --no-dev
 poetry run redisfi-compose
 ```
 
-Once the dependancies are installed, you can use `poetry run redisfi-compose up ALPACA_API_KEY ALPACA_SECRET` to start using remote containers or add the `--build` arg to build it locally.  Once running, you can access the site by going to lcoalhost:8000
+Once the dependancies are installed, you can use `poetry run redisfi-compose up ALPACA_API_KEY ALPACA_SECRET` to start using remote containers or add the `--build` arg to build it locally.  Once running, you can access the site by going to localhost:8000
 
 ## full
 
