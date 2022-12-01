@@ -1,0 +1,54 @@
+
+{
+    "variables": {
+        "packer_source": "packer",
+        "base_image": "ubuntu-1804-bionic-v20210825",
+        "rs_version": "6.2.10",
+        "rs_release": "83",
+        "rs_os_download_file_end": "bionic-amd64",
+        "rs_s3_path": "redis-enterprise-software-downloads",
+        "image_name": "redisfi-cluster-packer-{{timestamp}}",
+        "image_family_name": "redisfi-cluster",
+        "machine_type": "n1-standard-4",
+        "disk_size": "20",
+        "ssh_user": "packer"
+    },
+    "builders": [{
+        "type": "googlecompute",
+        "account_file": "{{user `gcp_credentials_file`}}",
+        "project_id": "{{user `gcp_project`}}",
+        "source_image": "{{user `base_image`}}",
+        "image_name": "{{user `image_name`}}",
+        "image_family": "{{user `image_family_name`}}",
+        "ssh_username": "{{user `ssh_user`}}",
+        "zone": "us-west3-a",
+        "machine_type": "{{user `machine_type`}}",
+        "disk_size": "{{user `disk_size`}}",
+        "disk_type": "pd-ssd",
+        "network":"packer",
+        "subnetwork":"packer-subnet",
+        "metadata": {
+            "enable-oslogin": "false"
+        }
+    }],
+    "provisioners": [{
+        "type": "shell",
+        "environment_vars": [
+            "RS_TMP_DIR=/tmp/rs-download",
+            "RS_DOWNLOAD_BASE_URL=https://s3.amazonaws.com/{{user `rs_s3_path`}}/{{user `rs_version`}}/",
+            "RS_DOWNLOAD_TAR=redislabs-{{user `rs_version`}}-{{user `rs_release`}}-{{user `rs_os_download_file_end`}}.tar"
+        ],
+        "execute_command": "sudo -s bash -c '{{ .Vars }} {{ .Path }}'",
+        "inline": [
+            "apt-get update && apt-get install -y curl",
+            "echo 'DNSStubListener=no' >> /etc/systemd/resolved.conf",
+            "mv /etc/resolv.conf /etc/resolv.conf.orig",
+            "ln -s /run/systemd/resolve/resolv.conf /etc/resolv.conf",
+            "service systemd-resolved restart",
+            "mkdir $RS_TMP_DIR && cd $RS_TMP_DIR",
+            "wget -c ${RS_DOWNLOAD_BASE_URL}${RS_DOWNLOAD_TAR} && tar xvf $RS_DOWNLOAD_TAR",
+            "./install.sh -y ",
+            "timeout 300 bash -c 'until $(curl --output /dev/null --silent --head --fail -k https://localhost:9443/v1/bootstrap); do printf \".\" && sleep 3; done'"
+        ]
+    }]
+}

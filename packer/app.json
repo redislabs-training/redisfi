@@ -1,0 +1,43 @@
+{
+    "variables": {
+        "packer_source": "packer",
+        "base_image": "ubuntu-2004-focal-v20220419",
+        "image_name": "redisfi-packer-{{timestamp}}",
+        "image_family_name": "redisfi",
+        "machine_type": "n1-standard-4",
+        "disk_size": "100",
+        "ssh_user": "packer"
+    },
+    "builders": [{
+        "type": "googlecompute",
+        "account_file": "{{user `gcp_credentials_file`}}",
+        "project_id": "{{user `gcp_project`}}",
+        "source_image": "{{user `base_image`}}",
+        "image_name": "{{user `image_name`}}",
+        "image_family": "{{user `image_family_name`}}",
+        "ssh_username": "{{user `ssh_user`}}",
+        "zone": "us-west3-a",
+        "machine_type": "{{user `machine_type`}}",
+        "disk_size": "{{user `disk_size`}}",
+        "disk_type": "pd-ssd",
+        "network":"packer",
+        "subnetwork":"packer-subnet",
+        "metadata": {
+            "enable-oslogin": "false"
+        }
+    }],
+    "provisioners": [{
+        "type": "shell",
+        "execute_command": "sudo -s bash -c '{{ .Vars }} {{ .Path }}'",
+        "inline": [
+            "cd /opt",
+            "apt-get update && apt-get install -y docker.io python3-pip",
+            "curl -SL https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64 -o /usr/local/bin/docker-compose",
+            "chmod +x /usr/local/bin/docker-compose",
+            "pip3 install poetry",
+            "mkdir redisfi-vss",
+            "git clone https://{{user `auth_github`}}@github.com/redislabs-training/redisfi && cd redisfi",
+            "poetry install --no-dev"
+        ]
+    }]
+}
