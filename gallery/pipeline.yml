@@ -26,6 +26,7 @@ jobs:
           NAME_SLUG: ((hostname)).fi
           MACHINE_TYPE: e2-standard-8
           TF_VAR_re_license: ((redisfi-cluster-license))
+          TF_VAR_re_image_family: redisfi-cluster
           SECRET: ((secret))
     on_failure:
       task: teardown
