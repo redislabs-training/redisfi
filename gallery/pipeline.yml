@@ -27,6 +27,8 @@ jobs:
           MACHINE_TYPE: e2-standard-8
           TF_VAR_re_license: ((redisfi-cluster-license))
           TF_VAR_re_image_family: redisfi-cluster
+          REGION: us-west4
+          ZONE: us-west4-a
           SECRET: ((secret))
     on_failure:
       task: teardown
@@ -34,6 +36,8 @@ jobs:
       params:
           NAME_SLUG: ((hostname)).fi
           WORKSPACE: redisfi-((guid))
+          REGION: us-west4
+          ZONE: us-west4-a
   - name: deploy-app
     plan:
       - get: docent

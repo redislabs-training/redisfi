@@ -14,12 +14,13 @@ params:
   GUID: guid
   SECRET: secret
   DNS_STEM: exhibit.redis.gallery
+  TIMEOUT: 2700
 run:
   path: bash
   args:
     - -cex
     - |
-      timeout 2100 bash -c 'until $(curl --output /dev/null --silent --head --fail -k https://'"$NAME_SLUG.$DNS_STEM"'/research/healthcheck); do printf "." && sleep 30; done'
+      timeout $TIMEOUT bash -c 'until $(curl --output /dev/null --silent --head --fail -k https://'"$NAME_SLUG.$DNS_STEM"'/research/healthcheck); do printf "." && sleep 30; done'
       cd docent
       pip3 install poetry
       poetry install
