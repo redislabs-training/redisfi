@@ -4,10 +4,10 @@ from time import sleep
 
 from cleo import Command
 from redis import Redis
-from redis.exceptions import BusyLoadingError
 
 from redisfi.bridge.adapter.alpaca import AlpacaLive, AlpacaHistoric
-from redisfi.bridge.adapter.yahoo import YahooFinanceMetadata, YahooFinanceHistoric
+from redisfi.bridge.adapter.yahoo import YahooFinanceHistoric
+from redisfi.bridge.adapter.yh import YHFinanceMetadata
 from redisfi.bridge.adapter.file import JSONMetadataFileLoader, JSONComponentMetadataFileLoader, JSONPortfolioMetadataFileLoader
 from redisfi.bridge.adapter.mock import RNGPriceGenerator, TransactionGenerator, TransactionPriceMapper
 
@@ -62,9 +62,15 @@ class BridgeMetadata(BridgeTask):
     Run company metadata data ingest 
 
     metadata
+        {yh-finance-api-key : API Key for YH Finance}
     '''
 
-    adapters = [JSONComponentMetadataFileLoader, JSONMetadataFileLoader, JSONPortfolioMetadataFileLoader, YahooFinanceMetadata]
+    adapters = [JSONComponentMetadataFileLoader, JSONMetadataFileLoader, JSONPortfolioMetadataFileLoader, YHFinanceMetadata]
+    
+    def _adapter_config(self: Command) -> dict:
+        adapter_config = super()._adapter_config()
+        adapter_config['yh_finance_api_key'] = self.argument('yh-finance-api-key')
+        return adapter_config
 
 
 class BridgePriceHistoric(BridgeTask):
@@ -146,6 +152,7 @@ class BridgeUp(Command):
     up
         {alpaca-api-key : Alpaca API key}
         {alpaca-api-secret-key : Alpaca API Secret}
+        {yh-finance-api-key : API Key for YH Finance}
         {--hourly=1 : Number of days to extract hourly data}
         {--mock : Launch mock price updates instead of live}
         {--mock-asset-random-price-range=.001 : Multiplier to determine range for assets (base_price*multiplier = gaussian std deviation)}
@@ -163,6 +170,7 @@ class BridgeUp(Command):
         global_args.extend(['--assets', self.option('assets')])
         global_args.extend(['--crypto', self.option('crypto')])
         alpaca_key, alpaca_secret = self.argument('alpaca-api-key'), self.argument('alpaca-api-secret-key')
+        yh_api_key = self.argument('yh-finance-api-key')
 
         if not self.option('no-flush'):
             flushed = False
@@ -178,7 +186,7 @@ class BridgeUp(Command):
                         self.line_error('Unable to Flush Redis - rerun with --no-flush')
                         return 1
         
-        with Popen(['poetry', 'run', 'redisfi', 'bridge', 'metadata', '--ansi'] + global_args) as p:
+        with Popen(['poetry', 'run', 'redisfi', 'bridge', 'metadata', yh_api_key, '--ansi'] + global_args) as p:
             p.communicate()
             if p.returncode != 0:
                 return p.returncode

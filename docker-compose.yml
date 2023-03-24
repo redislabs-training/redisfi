@@ -13,7 +13,7 @@ services:
   bridge-pull:
     env_file: .env
     image: technicalenablement/redisfi
-    command: poetry run redisfi bridge up ${ALPACA_KEY} ${ALPACA_SECRET}
+    command: poetry run redisfi bridge up ${ALPACA_KEY} ${ALPACA_SECRET} ${YH_API_KEY}
     container_name: bridge
     pull_policy: always
     profiles:
@@ -55,7 +55,7 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/local.dockerfile
-    command: poetry run redisfi bridge up ${ALPACA_KEY} ${ALPACA_SECRET}
+    command: poetry run redisfi bridge up ${ALPACA_KEY} ${ALPACA_SECRET} ${YH_API_KEY}
     container_name: bridge
     profiles:
       - build

@@ -102,37 +102,37 @@
                   <div class="row bg-light">
                     {% if asset.financial.previous_close %}
                       <div class="col-sm p-2">
-                        <span><strong>Close:</strong>&nbsp;&nbsp;${{'%0.2f' | format(asset.financial.previous_close)}}</span>
+                        <span><strong>Close:</strong>&nbsp;&nbsp;${{asset.financial.previous_close}}</span>
                       </div>
                     {% endif %}
                     {% if asset.financial.open %}
                       <div class="col-sm p-2">
-                        <span><strong>Open:</strong>&nbsp;&nbsp;${{'%0.2f' | format(asset.financial.open)}}</span>
+                        <span><strong>Open:</strong>&nbsp;&nbsp;${{asset.financial.open}}</span>
                       </div>
                     {% endif %}
                     {% if asset.financial.high %}
                       <div class="col-sm p-2">
-                        <span><strong>High:</strong>&nbsp;&nbsp;${{'%0.2f' | format(asset.financial.high)}}</span>
+                        <span><strong>High:</strong>&nbsp;&nbsp;${{asset.financial.high}}</span>
                       </div>
                     {% endif %}
                     {% if asset.financial.low %}
                       <div class="col-sm p-2">
-                        <span><strong>Low:</strong>&nbsp;&nbsp;${{'%0.2f' | format(asset.financial.low)}}</span>
+                        <span><strong>Low:</strong>&nbsp;&nbsp;${{asset.financial.low}}</span>
                       </div>
                     {% endif %}
                     {% if asset.financial['52_week_high']%}
                       <div class="col-sm p-2">
-                        <span><strong>52 Week High:</strong>&nbsp;&nbsp;${{'%0.2f' | format(asset.financial['52_week_high'])}}</span>
+                        <span><strong>52 Week High:</strong>&nbsp;&nbsp;${{asset.financial['52_week_high']}}</span>
                       </div>
                     {% endif %}
                     {% if asset.financial['52_week_low']%}
                       <div class="col-sm p-2">
-                        <span><strong>52 Week Low:</strong>&nbsp;&nbsp;${{'%0.2f' | format(asset.financial['52_week_low'])}}</span>
+                        <span><strong>52 Week Low:</strong>&nbsp;&nbsp;${{asset.financial['52_week_low']}}</span>
                       </div>
                     {% endif %}
                     {% if asset.financial['52_day_average']%}
                       <div class="col-sm p-2">
-                        <span><strong>50 Day Average:</strong>&nbsp;&nbsp;${{'%0.2f' | format(asset.financial['50_day_average'])}}</span>
+                        <span><strong>50 Day Average:</strong>&nbsp;&nbsp;${{asset.financial['50_day_average']}}</span>
                       </div>
                     {% endif %}
                   </div>

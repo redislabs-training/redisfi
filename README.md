@@ -20,6 +20,14 @@ RedisFI uses Alpaca's API to gather historic and live market data.  In order to 
 - This should take you to the `Live Trading` console.  Click the `Live Trading` drop down and click into the paper account.  This [link](https://app.alpaca.markets/paper/dashboard/overview) should take you there after you're logged in.
 - On the bottom right there's a `Your API Keys` box.  Click `View` and then click the `Generate New` button.  It should show you an API key and Secret Key.  Copy those into the configuration panel below.  You can either come back here to regenerate new ones, or save those to use for future deployments. 
 
+### YHFinance API
+RedisFI also uses YH Finance  to gather historic and live market data.  In order to use it, you'll need to set up an account and API keys for a paper trading account.
+
+- Navigate to [financeapi.net](https://financeapi.net/)
+- Click the Sign In link in the top right, and then click the Create Account tab.
+- The free tier of the API is sufficient to run RedisFI, but not several times/day.  
+- Once you're signed up, your API key can be found [here](https://financeapi.net/dashboard).
+
 ## compose
 
 `redisfi-compose` is a lightweight CLI really just meant to run RedisFI using Docker Containers.  If you only want to use it, you can install a smaller set of dependancies which will be faster/easier.

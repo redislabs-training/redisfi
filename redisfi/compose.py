@@ -22,9 +22,11 @@ class ComposeCommandsBase(Command):
 
         alpaca_key = self.argument('alpaca-api-key')
         alpaca_secret = self.argument('alpaca-api-secret-key')
+        yh_api_key = self.argument('yh-finance-api-key')
         
         config['env'].append(f'ALPACA_KEY={alpaca_key}\n')
         config['env'].append(f'ALPACA_SECRET={alpaca_secret}\n')
+        config['env'].append(f'YH_API_KEY={yh_api_key}\n')
         
         return config
 
@@ -55,6 +57,7 @@ class UpCommmand(ComposeCommandsBase):
     up
         {alpaca-api-key : API key for Alpaca}
         {alpaca-api-secret-key : API secret key for Alpaca}
+        {yh-finance-api-key : API Key for YH Finance}
         {--b|build : Build containers from local source}
         {--d|detach : Run in Detached Mode}
         {--redis-url=redis://redis:6379 : Location of Redis Server to Use - Defaults to Pulling Container Locally}
@@ -97,6 +100,7 @@ class DeployCommand(ComposeCommandsBase):
         {domain : Domain Name that we're Running As}
         {alpaca-api-key : API key for Alpaca}
         {alpaca-api-secret-key : API secret key for Alpaca}
+        {yh-finance-api-key : API Key for YH Finance}
         {vss-redis-url : Location of the Redis Server for VSS to use}
         {base-container-url : (GCP Based) Location of container built using ssl.dockerfile + app.dockerfile}
         {encoded-credentials : Base64 encoded (GCP) creds for above container}

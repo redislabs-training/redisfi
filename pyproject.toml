@@ -13,6 +13,8 @@ python = ">3.8 <3.10"
 cleo = "^0.8.1"
 redis = "4.1.4"
 requests = "^2.27.1"
+yahoo-finance = "^1.4.0"
+yh-finance = "^0.0.6"
 
 [tool.poetry.dev-dependencies]
 alpaca-trade-api = "^1.5.0"
@@ -21,7 +23,7 @@ gunicorn = "^20.1.0"
 Flask-SocketIO = "^5.1.1"
 gevent = "^21.12.0"
 gevent-websocket = "^0.10.1"
-yfinance = "^0.1.70"
+yfinance = "^0.2.6"
 
 
 [build-system]
