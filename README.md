@@ -37,7 +37,7 @@ poetry install --no-dev
 poetry run redisfi-compose
 ```
 
-Once the dependancies are installed, you can use `poetry run redisfi-compose up ALPACA_API_KEY ALPACA_SECRET` to start using remote containers or add the `--build` arg to build it locally.  Once running, you can access the site by going to localhost:8000
+Once the dependancies are installed, you can use `poetry run redisfi-compose up ALPACA_API_KEY ALPACA_SECRET YH_API_KEY` to start using remote containers or add the `--build` arg to build it locally.  Once running, you can access the site by going to localhost:8000
 
 ## full
 
@@ -49,4 +49,4 @@ poetry run redisfi
 
 To run locally, you need a Redis Instance.  Default is `localhost:6379`.  See `--help` to see how to set other than default.
 
-There are two components, a bridge and a webserver.  The bridge integrates all the external data and loads it into Redis.  You can start it with `poetry run redisfi bridge up ALPACA_API_KEY ALPACA_SECRET`, which will load all the various data in the correct order and start the live price adapter. Once it's done, you can start the webserver by running `poetry run redisfi web server`.  Add `--mock` to the bridge and `--debug` to the webserver to enable more of a developer mode.
+There are two components, a bridge and a webserver.  The bridge integrates all the external data and loads it into Redis.  You can start it with `poetry run redisfi bridge up ALPACA_API_KEY ALPACA_SECRET YH_API_KEY`, which will load all the various data in the correct order and start the live price adapter. Once it's done, you can start the webserver by running `poetry run redisfi web server`.  Add `--mock` to the bridge and `--debug` to the webserver to enable more of a developer mode.
