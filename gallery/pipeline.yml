@@ -52,6 +52,7 @@ jobs:
           NAME_SLUG: ((hostname)).fi
           ALPACA_KEY: ((alpaca-key))
           ALPACA_SECRET: ((alpaca-secret))
+          YH_API_KEY: ((yh-api-key))
           MOCK: ((mock))
           BASE_CONTAINER: ((base-container))
           SECRET: ((secret))
