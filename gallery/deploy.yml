@@ -15,6 +15,7 @@ params:
   DNS_STEM: exhibit.redis.gallery
   ALPACA_KEY:
   ALPACA_SECRET:
+  YH_API_KEY:
   MOCK: 
   BASE_CONTAINER:
   SECRET: 
@@ -38,10 +39,10 @@ run:
       curl -k -u "admin@redis.com:$CLUSTER_PASS" -F "module=@json.zip" https://db-$NAME_SLUG.$DNS_STEM:9443/v1/modules
       
       ## create db
-      cd redisfi
-      curl -sSL https://install.python-poetry.org | POETRY_HOME=/usr/local python3 -
-      poetry install --no-dev
-      poetry run redisfi-compose tool create_db -H db-$NAME_SLUG.$DNS_STEM -u admin@redis.com -p $CLUSTER_PASS -s 42949672960 -S 12
+      # cd redisfi
+      # curl -sSL https://install.python-poetry.org | POETRY_HOME=/usr/local python3 -
+      # poetry install --no-dev
+      # poetry run redisfi-compose tool create_db -H db-$NAME_SLUG.$DNS_STEM -u admin@redis.com -p $CLUSTER_PASS -s 42949672960 -S 12
       
       ## get gcloud container up and authorized
       docker run -dt --name GC gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
@@ -55,7 +56,7 @@ run:
       encodedCreds=$(base64 -w 0 /tmp/te-auth.json)
 
       ## deploy container and pull out the external IP
-      createOutput=$(docker exec GC gcloud compute instances create $WORKSPACE-app --project=$PROJECT --zone=us-west4-a --image-family=redisfi --machine-type=e2-standard-8 --network=$WORKSPACE-vpc --subnet=$WORKSPACE-subnet --tags=allow-ssl --metadata=startup-script="cd /opt/redisfi && sudo poetry run redisfi-compose deploy $MOCK $NAME_SLUG.$DNS_STEM $ALPACA_KEY $ALPACA_SECRET redis://redis-6379.int.db-$NAME_SLUG.$DNS_STEM:6379 $BASE_CONTAINER $encodedCreds" --format="json")
+      createOutput=$(docker exec GC gcloud compute instances create $WORKSPACE-app --project=$PROJECT --zone=us-west4-a --image-family=redisfi --machine-type=e2-standard-8 --network=$WORKSPACE-vpc --subnet=$WORKSPACE-subnet --tags=allow-ssl --metadata=startup-script="cd /opt/redisfi && sudo poetry run redisfi-compose deploy $MOCK $NAME_SLUG.$DNS_STEM $ALPACA_KEY $ALPACA_SECRET $YH_API_KEY redis://redis-6379.int.db-$NAME_SLUG.$DNS_STEM:6379 $BASE_CONTAINER $encodedCreds" --format="json")
       appIP=$(echo $createOutput | jq -r .[0].networkInterfaces[0].accessConfigs[0].natIP)
       
       ## setup networking pieces - firewall and DNS
