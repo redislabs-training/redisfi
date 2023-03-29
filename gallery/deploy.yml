@@ -39,10 +39,10 @@ run:
       curl -k -u "admin@redis.com:$CLUSTER_PASS" -F "module=@json.zip" https://db-$NAME_SLUG.$DNS_STEM:9443/v1/modules
       
       ## create db
-      # cd redisfi
-      # curl -sSL https://install.python-poetry.org | POETRY_HOME=/usr/local python3 -
-      # poetry install --no-dev
-      # poetry run redisfi-compose tool create_db -H db-$NAME_SLUG.$DNS_STEM -u admin@redis.com -p $CLUSTER_PASS -s 42949672960 -S 12
+      cd redisfi
+      curl -sSL https://install.python-poetry.org | POETRY_HOME=/usr/local python3 -
+      poetry install --no-dev
+      poetry run redisfi-compose tool create_db -H db-$NAME_SLUG.$DNS_STEM -u admin@redis.com -p $CLUSTER_PASS -s 42949672960 -S 12
       
       ## get gcloud container up and authorized
       docker run -dt --name GC gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
