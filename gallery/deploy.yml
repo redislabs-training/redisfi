@@ -40,7 +40,7 @@ run:
       
       ## create db
       cd redisfi
-      curl -sSL https://install.python-poetry.org | POETRY_HOME=/usr/local python3 -
+      curl -sSL https://install.python-poetry.org | POETRY_VERSION=1.5.0 POETRY_HOME=/usr/local python3 -
       poetry install --no-dev
       poetry run redisfi-compose tool create_db -H db-$NAME_SLUG.$DNS_STEM -u admin@redis.com -p $CLUSTER_PASS -s 42949672960 -S 12
       

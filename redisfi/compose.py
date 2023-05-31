@@ -64,7 +64,7 @@ class UpCommmand(ComposeCommandsBase):
         {--vss-redis-url=redis://redis:6379 : Location of the Redis Server for VSS to use - Defaults to Pulling Container Locally}
         {--vss-url=http://vss-wsapi:7777 : Location of VSS microservice}
         {--mock : Start mock live adapter}
-        {--with-vss : Don't include the VSS part of the Demo}
+        {--with-vss : Include the VSS part of the Demo}
     '''
 
     def _configure(self):
