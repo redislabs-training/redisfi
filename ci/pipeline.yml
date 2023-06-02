@@ -49,6 +49,10 @@ resources:
       repository: technicalenablement/redisfi-vss
       username: timeartist
       password: ((auth-docker))
+  - name: every-friday
+    type: time
+    source:
+      days: [Friday]
 
 jobs: 
   - name: build-oss-container
@@ -69,6 +73,8 @@ jobs:
   - name: build-ssl-base-container
     plan:
       - get: redisfi
+      - get: every-friday
+        trigger: true
       - task: build
         privileged: true
         file: redisfi/ci/build.yml
