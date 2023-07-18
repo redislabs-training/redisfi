@@ -31,10 +31,13 @@ class YHFinanceMetadata(BaseAdapter):
             
         
     def _make_request(self, symbol:str) -> dict:
-        resp = requests.get(f'https://yfapi.net/v11/finance/quoteSummary/{symbol}?lang=en&region=US&modules=price%2CassetProfile%2CsummaryDetail%2Cearnings',
-                            headers={'x-api-key': self.api_key,
-                                     'accept': 'application/json'})
-        data = resp.json()['quoteSummary']['result'][0]
+        data = {}
+        modules = ['price', 'assetProfile', 'summaryDetail', 'earnings']
+        for module in modules:
+          resp = requests.get(f'https://yfapi.net/v11/finance/quoteSummary/{symbol}?lang=en&region=US&modules={module}',
+                              headers={'x-api-key': self.api_key,
+                                      'accept': 'application/json'})
+          data[module] = resp.json()['quoteSummary']['result'][0].get(module, {})
         self.cli.line(f'YHFinanceMetadata._make_request() - {symbol} - {pformat(data)}', verbosity=DEBUG)
         return data
 
