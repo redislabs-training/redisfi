@@ -37,7 +37,14 @@ class YHFinanceMetadata(BaseAdapter):
           resp = requests.get(f'https://yfapi.net/v11/finance/quoteSummary/{symbol}?lang=en&region=US&modules={module}',
                               headers={'x-api-key': self.api_key,
                                       'accept': 'application/json'})
-          data[module] = resp.json()['quoteSummary']['result'][0].get(module, {})
+          # adding a check to make sure the result data exists - some of the 'earnings' are mot being returned for some symbols
+          json_data = resp.json()
+          quote_summary = json_data.get('quoteSummary', {})
+          result = quote_summary.get('result')
+          if result and isinstance(result, list) and len(result) > 0:
+            data[module] = result[0].get(module, {})
+          else:
+            data[module] = {}
         self.cli.line(f'YHFinanceMetadata._make_request() - {symbol} - {pformat(data)}', verbosity=DEBUG)
         return data
 
