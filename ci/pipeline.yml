@@ -165,7 +165,7 @@ jobs:
         vars:
           gcp_project: ((gcp-sa))
           gcp_credentials_file: ./redisfi/gcp-service-account.json
-          gh_auth: ((auth-gh))
+          auth_github: ((auth-github))
 
   - name: build-cluster-gcp-image
     plan:
