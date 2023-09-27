@@ -1,10 +1,9 @@
-
 {
     "variables": {
         "packer_source": "packer",
         "base_image": "ubuntu-1804-bionic-v20210825",
-        "rs_version": "6.2.10",
-        "rs_release": "83",
+        "rs_version": "7.2.4",
+        "rs_release": "64",
         "rs_os_download_file_end": "bionic-amd64",
         "rs_s3_path": "redis-enterprise-software-downloads",
         "image_name": "redisfi-cluster-packer-{{timestamp}}",
@@ -25,8 +24,8 @@
         "machine_type": "{{user `machine_type`}}",
         "disk_size": "{{user `disk_size`}}",
         "disk_type": "pd-ssd",
-        "network":"packer",
-        "subnetwork":"packer-subnet",
+        "network": "packer",
+        "subnetwork": "packer-subnet",
         "metadata": {
             "enable-oslogin": "false"
         }

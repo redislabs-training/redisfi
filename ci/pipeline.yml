@@ -1,3 +1,10 @@
+resource_types:
+
+  - name: packer
+    type: registry-image
+    source:
+      repository: technicalenablement/packer-with-plugins
+      tag: latest
 resources:
   - name: redisfi
     type: git
@@ -49,6 +56,10 @@ resources:
       repository: technicalenablement/redisfi-vss
       username: timeartist
       password: ((auth-docker))
+  - name: build-gcp-image
+    icon: google-cloud
+    type: packer
+
   - name: every-friday
     type: time
     source:
@@ -125,3 +136,63 @@ jobs:
           image: image/image.tar
           version: 99.99.99
           bump_aliases: true
+  - name: build-app-gcp-image
+    plan:
+    - get: redisfi
+      trigger: true
+    - task: service-account
+      config:
+        platform: linux
+        image_resource:
+          type: registry-image
+          source:
+            repository: busybox 
+        inputs:
+        - name: redisfi
+        outputs:
+        - name: redisfi
+        run:
+          path: sh
+          args:
+          - -cx
+          - |
+            ls -l .
+            echo '((auth-gcp-sa))' > redisfi/gcp-service-account.json
+    - put: build-gcp-image
+      params:
+        template: ./redisfi/packer/app.json
+        objective: build
+        vars:
+          gcp_project: ((gcp-sa))
+          gcp_credentials_file: ./redisfi/gcp-service-account.json
+          auth_github: ((auth-github))
+
+  - name: build-cluster-gcp-image
+    plan:
+    - get: redisfi
+      trigger: true
+    - task: service-account
+      config:
+        platform: linux
+        image_resource:
+          type: registry-image
+          source:
+            repository: busybox 
+        inputs:
+        - name: redisfi
+        outputs:
+        - name: redisfi
+        run:
+          path: sh
+          args:
+          - -cx
+          - |
+            ls -l .
+            echo '((auth-gcp-sa))' > redisfi/gcp-service-account.json
+    - put: build-gcp-image
+      params:
+        template: ./redisfi/packer/cluster.json
+        objective: build
+        vars:
+          gcp_project: ((gcp-sa))
+          gcp_credentials_file: ./redisfi/gcp-service-account.json
