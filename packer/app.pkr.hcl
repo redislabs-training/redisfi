@@ -73,7 +73,7 @@ build {
       "chmod +x /usr/local/bin/docker-compose", 
       "pip3 install poetry", 
       "mkdir redisfi-vss",
-      "git clone https://{{user `auth_github`}}@github.com/redislabs-training/redisfi && cd redisfi", 
+      "git clone https://${var.auth_github}@github.com/redislabs-training/redisfi && cd redisfi", 
       "cd redisfi", 
       "poetry install --no-dev"]
   }
