@@ -1,9 +1,14 @@
 resource_types:
 
+  # - name: packer
+  #   type: registry-image
+  #   source:
+  #     repository: technicalenablement/packer-with-plugins
+  #     tag: latest
   - name: packer
-    type: registry-image
+    type: docker-image
     source:
-      repository: technicalenablement/packer-with-plugins
+      repository: mitodl/concourse-packer-resource
       tag: latest
 resources:
   - name: redisfi
@@ -136,7 +141,7 @@ jobs:
           image: image/image.tar
           version: 99.99.99
           bump_aliases: true
-  - name: build-app-gcp-image
+  - name: build-gcp-images
     plan:
     - get: redisfi
       trigger: true
@@ -147,52 +152,27 @@ jobs:
           type: registry-image
           source:
             repository: busybox 
-        inputs:
-        - name: redisfi
         outputs:
-        - name: redisfi
+        - name: cred-files
         run:
           path: sh
           args:
           - -cx
           - |
             ls -l .
-            echo '((auth-gcp-sa))' > redisfi/gcp-service-account.json
+            echo '((auth-gcp-sa))' > cred-files/gcp-service-account.json
     - put: build-gcp-image
       params:
-        template: ./redisfi/packer/app.json
+        template: redisfi/packer/app.pkr.hcl
         objective: build
         vars:
           gcp_project: ((gcp-sa))
-          gcp_credentials_file: ./redisfi/gcp-service-account.json
+          gcp_credentials_file: cred-files/gcp-service-account.json
           auth_github: ((auth-github))
-
-  - name: build-cluster-gcp-image
-    plan:
-    - get: redisfi
-      trigger: true
-    - task: service-account
-      config:
-        platform: linux
-        image_resource:
-          type: registry-image
-          source:
-            repository: busybox 
-        inputs:
-        - name: redisfi
-        outputs:
-        - name: redisfi
-        run:
-          path: sh
-          args:
-          - -cx
-          - |
-            ls -l .
-            echo '((auth-gcp-sa))' > redisfi/gcp-service-account.json
     - put: build-gcp-image
       params:
-        template: ./redisfi/packer/cluster.json
+        template: redisfi/packer/cluster.pkr.hcl
         objective: build
         vars:
           gcp_project: ((gcp-sa))
-          gcp_credentials_file: ./redisfi/gcp-service-account.json
+          gcp_credentials_file: cred-files/gcp-service-account.json
