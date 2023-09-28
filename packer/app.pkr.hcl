@@ -14,7 +14,7 @@ variable "ssh_user" {
 }
 variable "base_image" {
   type    = string
-  default = "ubuntu-2004-focal-v20220419"
+  default = "ubuntu-2004-focal-v20230918"
 }
 
 variable "disk_size" {
