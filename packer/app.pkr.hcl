@@ -67,13 +67,13 @@ build {
   provisioner "shell" {
     execute_command = "sudo -s bash -c '{{ .Vars }} {{ .Path }}'"
     inline          = [
-      "cp -R redisfi /opt/", 
       "cd /opt", 
       "apt-get update && apt-get install -y docker.io python3-pip", 
       "curl -SL https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64 -o /usr/local/bin/docker-compose", 
       "chmod +x /usr/local/bin/docker-compose", 
       "pip3 install poetry", 
-      "mkdir redisfi-vss", 
+      "mkdir redisfi-vss",
+      "git clone https://{{user `auth_github`}}@github.com/redislabs-training/redisfi && cd redisfi", 
       "cd redisfi", 
       "poetry install --no-dev"]
   }

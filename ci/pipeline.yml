@@ -160,10 +160,10 @@ jobs:
           - -cx
           - |
             ls -l .
-            echo '((auth-gcp-sa-b64))' | base64 --decode > cred-files/gcp-service-account.json
+            echo '((auth-gcp-sa-b64))' | base64 -d > cred-files/gcp-service-account.json
     - put: build-gcp-image
       params:
-        template: ./redisfi/packer/app.pkr.hcl
+        template: redisfi/packer/app.pkr.hcl
         objective: build
         vars:
           gcp_project: ((gcp-sa))
@@ -171,7 +171,7 @@ jobs:
           auth_github: ((auth-github))
     - put: build-gcp-image
       params:
-        template: ./redisfi/packer/cluster.pkr.hcl
+        template: redisfi/packer/cluster.pkr.hcl
         objective: build
         vars:
           gcp_project: ((gcp-sa))
