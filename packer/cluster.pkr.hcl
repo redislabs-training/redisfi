@@ -85,7 +85,16 @@ build {
   provisioner "shell" {
     environment_vars = ["RS_TMP_DIR=/tmp/rs-download", "RS_DOWNLOAD_BASE_URL=https://s3.amazonaws.com/${var.rs_s3_path}/${var.rs_version}/", "RS_DOWNLOAD_TAR=redislabs-${var.rs_version}-${var.rs_release}-${var.rs_os_download_file_end}.tar"]
     execute_command  = "sudo -s bash -c '{{ .Vars }} {{ .Path }}'"
-    inline           = ["apt-get update && apt-get install -y curl", "echo 'DNSStubListener=no' >> /etc/systemd/resolved.conf", "mv /etc/resolv.conf /etc/resolv.conf.orig", "ln -s /run/systemd/resolve/resolv.conf /etc/resolv.conf", "service systemd-resolved restart", "mkdir $RS_TMP_DIR && cd $RS_TMP_DIR", "wget -c $${RS_DOWNLOAD_BASE_URL}$${RS_DOWNLOAD_TAR} && tar xvf $RS_DOWNLOAD_TAR", "./install.sh -y ", "timeout 300 bash -c 'until $(curl --output /dev/null --silent --head --fail -k https://localhost:9443/v1/bootstrap); do printf \".\" && sleep 3; done'"]
+    inline           = [
+      "apt-get update && apt-get install -y curl", 
+      "echo 'DNSStubListener=no' >> /etc/systemd/resolved.conf", 
+      "mv /etc/resolv.conf /etc/resolv.conf.orig", 
+      "ln -s /run/systemd/resolve/resolv.conf /etc/resolv.conf", 
+      "service systemd-resolved restart", 
+      "mkdir $RS_TMP_DIR && cd $RS_TMP_DIR", 
+      "wget -c $${RS_DOWNLOAD_BASE_URL}$${RS_DOWNLOAD_TAR} && tar xvf $RS_DOWNLOAD_TAR", 
+      "./install.sh -y ", 
+      "timeout 300 bash -c 'until $(curl --output /dev/null --silent --head --fail -k https://localhost:9443/v1/bootstrap); do printf \".\" && sleep 3; done'"]
   }
 
 }
