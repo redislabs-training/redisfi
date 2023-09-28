@@ -160,7 +160,7 @@ jobs:
           - -cx
           - |
             ls -l .
-            echo '((auth-gcp-sa))' > cred-files/gcp-service-account.json
+            echo '((auth-gcp-sa-json))' > cred-files/gcp-service-account.json
     - put: build-gcp-image
       params:
         template: ./redisfi/packer/app.pkr.hcl
