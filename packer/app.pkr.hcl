@@ -1,4 +1,17 @@
 
+variable "gcp_credentials_file" {
+  type    = string
+}
+variable "gcp_project" {
+  type    = string
+}
+variable "auth_github" {
+  type    = string
+}
+variable "ssh_user" {
+  type    = string
+  default = "packer"
+}
 variable "base_image" {
   type    = string
   default = "ubuntu-2004-focal-v20220419"

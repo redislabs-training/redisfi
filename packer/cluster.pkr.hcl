@@ -1,4 +1,9 @@
-
+variable "gcp_credentials_file" {
+  type    = string
+}
+variable "gcp_project" {
+  type    = string
+}
 variable "base_image" {
   type    = string
   default = "ubuntu-1804-bionic-v20210825"
