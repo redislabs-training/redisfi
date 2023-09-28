@@ -37,11 +37,6 @@ variable "packer_source" {
   default = "packer"
 }
 
-variable "ssh_user" {
-  type    = string
-  default = "packer"
-}
-
 locals { timestamp = regex_replace(timestamp(), "[- TZ:]", "") }
 
 locals {
