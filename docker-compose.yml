@@ -8,6 +8,9 @@ services:
     container_name: frontend
     ports:
       - 8000:8000
+    depends_on:
+      redis:
+        condition: service_healthy
     profiles:
       - pull
   bridge-pull:
@@ -16,6 +19,9 @@ services:
     command: poetry run redisfi bridge up ${ALPACA_KEY} ${ALPACA_SECRET} ${YH_API_KEY}
     container_name: bridge
     pull_policy: always
+    depends_on:
+      redis:
+        condition: service_healthy
     profiles:
       - pull
       - deployed-prebuilt
@@ -27,6 +33,9 @@ services:
     pull_policy: always
     ports:
      - 7777:7777
+    depends_on:
+      redis:
+        condition: service_healthy
     profiles:
       - vss-pull
   vss-loader-pull:
@@ -37,6 +46,9 @@ services:
     pull_policy: always
     volumes:
       - /tmp/redisfi_work_dir:/tmp:rw
+    depends_on:
+      redis:
+        condition: service_healthy
     profiles:
       - vss-pull
   frontend-build:
@@ -47,6 +59,9 @@ services:
     container_name: frontend
     ports:
       - 8000:8000
+    depends_on:
+      redis:
+        condition: service_healthy
     profiles:
       - build
     command: poetry run redisfi web server
@@ -59,6 +74,9 @@ services:
     container_name: bridge
     profiles:
       - build
+    depends_on:
+      redis:
+        condition: service_healthy
   vss-build:
     env_file: .env
     build: ../redisfi-vss
@@ -68,6 +86,9 @@ services:
      - 7777:7777
     profiles:
       - vss-build
+    depends_on:
+      redis:
+        condition: service_healthy
   vss-loader-build:
     env_file: .env
     build: ../redisfi-vss
@@ -78,6 +99,9 @@ services:
       - /tmp/redisfi_work_dir:/tmp:rw
     profiles:
       - vss-build
+    depends_on:
+      redis:
+        condition: service_healthy
   frontend-deployed-prebuilt:
     env_file: .env
     build:
@@ -92,10 +116,17 @@ services:
       - 443:443
     profiles:
       - deployed-prebuilt
+    depends_on:
+      redis:
+        condition: service_healthy
   redis:
     image: redislabs/redisearch:2.4.3
     ports: 
      - 6379:6379
     profiles:
       - pull_redis
-  
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
