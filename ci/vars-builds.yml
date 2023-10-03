@@ -1,0 +1,2 @@
+internal-repository-ssl-base: gcr.io/redislabs-university/redisfi-ssl-base
+internal-repository-app-base: gcr.io/redislabs-university/redisfi-app-base
