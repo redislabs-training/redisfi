@@ -36,7 +36,7 @@ variable "rs_os_download_file_end" {
 
 variable "rs_release" {
   type    = string
-  default = "64"
+  default = "83"
 }
 
 variable "rs_s3_path" {
@@ -46,7 +46,7 @@ variable "rs_s3_path" {
 
 variable "rs_version" {
   type    = string
-  default = "7.2.4"
+  default = "6.2.10"
 }
 
 variable "ssh_user" {
