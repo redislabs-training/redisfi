@@ -144,6 +144,7 @@ jobs:
   - name: build-gcp-images
     plan:
     - get: redisfi
+    - get: every-friday
       trigger: true
     - task: service-account
       config:
