@@ -55,11 +55,11 @@ def _create_db_payload(db_name, db_size, db_port, db_modules, shard_count):
                 "type": "redis",
                 "port": db_port,
                 "sharding":True,
-                "shards_count":shard_count,
-                "shard_key_regex":[
-                    { 'regex': '.*\\{(?< tag >.*)\\}.*' }, 
-                    { 'regex': '(?< tag >.*)' }
-                ] 
+                "shards_count":shard_count
+                # "shard_key_regex":[
+                #     { 'regex': '.*\\{(?< tag >.*)\\}.*' }, 
+                #     { 'regex': '(?< tag >.*)' }
+                # ] 
               }
 
     if db_modules is not None:
