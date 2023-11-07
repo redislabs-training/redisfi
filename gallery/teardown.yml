@@ -10,7 +10,7 @@ params:
   GOOGLE_APPLICATION_CREDENTIALS: /tmp/auth.json
   WORKSPACE: redisfi-test
   NAME_SLUG: test.fi
-  DNS_STEM: exhibit.redis.gallery
+  DNS_STEM: exhibit.demo.gallery.redis.com
   DNS_ZONE: exhibit
 run:
   path: bash

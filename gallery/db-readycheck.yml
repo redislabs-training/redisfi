@@ -13,7 +13,7 @@ params:
   NAME_SLUG: redisfi.test
   GUID: guid
   SECRET: secret
-  DNS_STEM: exhibit.redis.gallery
+  DNS_STEM: exhibit.demo.gallery.redis.com
   TIMEOUT: 2700
 run:
   path: bash
