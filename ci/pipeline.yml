@@ -38,7 +38,7 @@ resources:
     icon: docker
     source:
       repository: technicalenablement/redisfi
-      username: timeartist
+      username: ((docker-user))
       password: ((auth-docker))
   - name: redisfi-ssl-base-container
     type: registry-image
@@ -59,7 +59,7 @@ resources:
     icon: docker
     source:
       repository: technicalenablement/redisfi-vss
-      username: timeartist
+      username: ((docker-user))
       password: ((auth-docker))
   - name: build-gcp-image
     icon: google-cloud
