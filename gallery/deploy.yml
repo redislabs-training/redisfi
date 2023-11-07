@@ -12,7 +12,7 @@ params:
   WORKSPACE: redisfi-test
   NAME_SLUG: test.fi
   DNS_ZONE: exhibit
-  DNS_STEM: exhibit.redis.gallery
+  DNS_STEM: exhibit.demo.gallery.redis.com
   ALPACA_KEY:
   ALPACA_SECRET:
   YH_API_KEY:
