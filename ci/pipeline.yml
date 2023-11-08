@@ -65,10 +65,10 @@ resources:
     icon: google-cloud
     type: packer
 
-  - name: every-friday
-    type: time
-    source:
-      days: [Friday]
+  # - name: every-friday
+  #   type: time
+  #   source:
+  #     days: [Friday]
 
 jobs: 
   - name: build-oss-container
@@ -89,7 +89,7 @@ jobs:
   - name: build-ssl-base-container
     plan:
       - get: redisfi
-      - get: every-friday
+      # - get: every-friday
         trigger: true
       - task: build
         privileged: true
@@ -97,7 +97,7 @@ jobs:
         params:
           CONTEXT: redisfi
           DOCKERFILE: redisfi/dockerfiles/ssl.dockerfile
-          BUILD_ARG_GCP_AUTH: ((auth-gcp-sa))
+          BUILD_ARG_GCP_AUTH: ((gcp-sa-b64))
           BUILD_ARG_NOTIFICATION_EMAIL: ((letsencrypt-email))
           BUILD_ARG_STAGING: ((letsencrypt-staging))
           BUILD_ARG_DOMAIN: ((base-domain))
@@ -144,7 +144,7 @@ jobs:
   - name: build-gcp-images
     plan:
     - get: redisfi
-    - get: every-friday
+    # - get: every-friday
       trigger: true
     - task: service-account
       config:
@@ -161,7 +161,7 @@ jobs:
           - -cx
           - |
             ls -l .
-            echo '((auth-gcp-sa-b64))' | base64 -d > cred-files/gcp-service-account.json
+            echo "((auth-gcp-sa-b64))" | base64 -d > cred-files/gcp-service-account.json
     - put: build-gcp-image
       params:
         template: redisfi/packer/app.pkr.hcl
